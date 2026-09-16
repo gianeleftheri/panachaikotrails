@@ -20,11 +20,13 @@ define( 'PANACHAIKO_TRAILS_DIR', plugin_dir_path( __FILE__ ) );
 require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-post-types.php';
 require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-meta.php';
 require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-rest.php';
+require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-importer.php';
 
 function panachaiko_trails_boot(): void {
     Panachaiko_Trails_Post_Types::init();
     Panachaiko_Trails_Meta::init();
     Panachaiko_Trails_REST::init();
+    Panachaiko_Trails_Importer::init();
 }
 add_action( 'plugins_loaded', 'panachaiko_trails_boot' );
 

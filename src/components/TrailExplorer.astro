@@ -1,21 +1,28 @@
+---
+import TrailTopbar from './TrailTopbar.astro';
+import RouteBuilder from './RouteBuilder.astro';
+import TrailDrawer from './TrailDrawer.astro';
+import MapOverlays from './MapOverlays.astro';
+---
+
 <div class="trail-app" data-trail-app>
   <div id="map" aria-label="Διαδραστικός χάρτης μονοπατιών"></div>
-  <header class="topbar">
-    <div class="brand">
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true"><path d="M3 23 11 9l4.5 7L19 11l8 12H3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="11" cy="6" r="1.4" fill="currentColor"/></svg>
-      <div><h1>Παναχαϊκό</h1><p>Δίκτυο μονοπατιών · δεδομένα ΟΦΥΠΕΚΑ</p></div>
+  <TrailTopbar />
+  <RouteBuilder />
+
+  <aside class="panel left-panel" id="trailPanel">
+    <div class="left-panel-head">
+      <div class="count-row">
+        <div><strong id="trail-count">0</strong>μονοπάτια</div>
+        <div><strong id="total-length">0</strong>χλμ συνολικά</div>
+      </div>
     </div>
-    <div class="legend" aria-label="Υπόμνημα"><span><i class="line existing"></i>Υπάρχον</span><span><i class="line planned"></i>Σχεδιαζόμενο</span></div>
-    <button class="menu-button" type="button" data-menu-button aria-expanded="false"><span aria-hidden="true">☰</span> Μονοπάτια</button>
-  </header>
-  <aside class="trail-panel" data-trail-panel>
-    <div class="summary"><div><strong data-trail-count>0</strong><span>μονοπάτια</span></div><div><strong data-total-length>0</strong><span>χλμ συνολικά</span></div></div>
-    <div class="trail-list" data-trail-list></div>
+    <div class="trail-list" id="trail-list"></div>
   </aside>
-  <aside class="details" data-details aria-live="polite">
-    <button class="details-close" type="button" data-details-close aria-label="Κλείσιμο">×</button>
-    <div data-details-content><p class="empty-kicker">ΠΛΗΡΟΦΟΡΙΕΣ ΔΙΑΔΡΟΜΗΣ</p><h2>Επίλεξε ένα μονοπάτι</h2><p class="empty-copy">Πάτησε σε μία διαδρομή στον χάρτη ή στη λίστα για να δεις τα χαρακτηριστικά και το υψομετρικό της εύρος.</p></div>
-  </aside>
+
+  <TrailDrawer />
+  <MapOverlays />
   <noscript>Ο διαδραστικός χάρτης χρειάζεται ενεργοποιημένη JavaScript.</noscript>
 </div>
+
 <script>import '../scripts/trail-map';</script>

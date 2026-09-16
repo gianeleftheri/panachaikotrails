@@ -1,25 +1,20 @@
 ---
+import TrailExplorer from '../components/TrailExplorer.astro';
 import '../styles/global.css';
 
-const pageTitle = 'Panachaiko Trails';
-const description = 'Ανακάλυψε μονοπάτια και διαδρομές στο Παναχαϊκό όρος.';
+const title = 'Panachaiko Trails | Δίκτυο μονοπατιών Παναχαϊκού';
+const description = 'Διαδραστικός χάρτης του δικτύου μονοπατιών στο Παναχαϊκό όρος.';
 ---
 
 <!doctype html>
 <html lang="el">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#12201a" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{pageTitle}</title>
+    <title>{title}</title>
   </head>
-  <body>
-    <main>
-      <p class="eyebrow">ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ</p>
-      <h1>Panachaiko<br /><span>Trails</span></h1>
-      <p class="intro">{description}</p>
-      <p class="status">Η πρώτη έκδοση του project είναι έτοιμη για ανάπτυξη.</p>
-    </main>
-  </body>
+  <body><TrailExplorer /></body>
 </html>

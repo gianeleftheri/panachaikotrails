@@ -1,12 +1,11 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Trail, TrailCollection, TrailPoint } from '../types/trail';
+import { loadInitialTrails, refreshTrailsFromCms } from './trail-data';
 
-type TrailDataModule = { key: string; trail: Trail };
 type UserPosition = { lat: number; lng: number; accuracy: number };
 
-const trailModules = import.meta.glob<TrailDataModule>('../data/trails/*.json', { eager: true, import: 'default' });
-const trails: TrailCollection = Object.values(trailModules).reduce<TrailCollection>((all, item) => ({ ...all, [item.key]: item.trail }), {});
+let trails: TrailCollection = loadInitialTrails();
 const app = document.querySelector<HTMLElement>('[data-trail-app]');
 
 if (app) {
@@ -48,7 +47,7 @@ if (app) {
 
   const layers = new Map<string, L.FeatureGroup>();
   const allBounds: L.LatLngExpression[] = [];
-  const codes = Object.keys(trails).sort((a, b) => trails[b].length_km - trails[a].length_km);
+  let codes: string[] = [];
   let selectedCode: string | null = null;
   let userPosition: UserPosition | null = null;
   let watchId: number | null = null;
@@ -116,8 +115,10 @@ if (app) {
   });
 
   const fillDrawer = (code: string, trail: Trail) => {
+    const statusLabel = trail.status === 'investigation' ? 'υπό διερεύνηση' : trail.existing ? 'υπάρχει' : 'σχεδιάζεται';
+    const elevationRange = trail.elev_min === null || trail.elev_max === null ? '—' : `${trail.elev_min}–${trail.elev_max} μ`;
     tdCardBar.style.background = trail.color;
-    tdTitleBlock.innerHTML = `<div class="trail-card-code">${code}<span class="status-pill ${trail.existing ? 'status-existing' : 'status-planned'}">${trail.existing ? 'υπάρχει' : 'σχεδιάζεται'}</span></div><div class="trail-card-title">${trail.name}</div>`;
+    tdTitleBlock.innerHTML = `<div class="trail-card-code">${code}<span class="status-pill ${trail.existing ? 'status-existing' : 'status-planned'}">${statusLabel}</span></div><div class="trail-card-title">${trail.name}</div>`;
     tdTabs.hidden = false;
     const count = (id: string, value: number) => { const el = document.getElementById(id); if (el) el.textContent = value ? ` (${value})` : ''; };
     count('tdCountNotes', trail.notes.length); count('tdCountPhotos', trail.photos.length); count('tdCountVideos', trail.videos.length);
@@ -125,7 +126,7 @@ if (app) {
     const notes = document.querySelector<HTMLElement>('.td-panel[data-panel="notes"]');
     const photos = document.querySelector<HTMLElement>('.td-panel[data-panel="photos"]');
     const videos = document.querySelector<HTMLElement>('.td-panel[data-panel="videos"]');
-    if (info) info.innerHTML = `<div class="stat-grid"><div class="stat-box"><span class="label">Απόσταση</span><span class="value">${trail.length_km.toFixed(2)} χλμ</span></div><div class="stat-box"><span class="label">Υψόμετρο</span><span class="value">${trail.elev_min}–${trail.elev_max} μ</span></div><div class="stat-box"><span class="label">Ανάβαση</span><span class="value moss">+${trail.gain_m} μ</span></div><div class="stat-box"><span class="label">Κατάβαση</span><span class="value">−${trail.loss_m} μ</span></div></div><div class="section-label">Υψομετρικό προφίλ</div><div class="elevation-wrap">${elevationSvg(trail)}</div>`;
+    if (info) info.innerHTML = `<div class="stat-grid"><div class="stat-box"><span class="label">Απόσταση</span><span class="value">${trail.length_km.toFixed(2)} χλμ</span></div><div class="stat-box"><span class="label">Υψόμετρο</span><span class="value">${elevationRange}</span></div><div class="stat-box"><span class="label">Ανάβαση</span><span class="value moss">+${trail.gain_m} μ</span></div><div class="stat-box"><span class="label">Κατάβαση</span><span class="value">−${trail.loss_m} μ</span></div></div><div class="section-label">Υψομετρικό προφίλ</div><div class="elevation-wrap">${elevationSvg(trail)}</div>`;
     if (notes) notes.innerHTML = trail.notes.length ? `<div class="notes-list">${trail.notes.map(n => `<div class="note-item"><div class="note-item-title">${n.title ?? 'Σημείο διαδρομής'}</div>${n.text}</div>`).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί ενδείξεις ακόμα.</div>';
     if (photos) photos.innerHTML = '<div class="empty-note">Δεν έχουν προστεθεί φωτογραφίες ακόμα.</div>';
     if (videos) videos.innerHTML = '<div class="empty-note">Δεν έχουν προστεθεί βίντεο ακόμα.</div>';
@@ -143,7 +144,7 @@ if (app) {
     routeModeToggle?.classList.add('show');
   };
 
-  const selectTrail = (code: string) => {
+  const selectTrail = (code: string, fly = true) => {
     const trail = trails[code]; if (!trail) return;
     if (selectedCode) {
       layers.get(selectedCode)?.eachLayer(layer => { if (layer instanceof L.Polyline) layer.setStyle(styleFor(trails[selectedCode!])); });
@@ -153,27 +154,60 @@ if (app) {
     const group = layers.get(code);
     group?.eachLayer(layer => { if (layer instanceof L.Polyline) { layer.setStyle(styleFor(trail, true)); layer.bringToFront(); } });
     document.getElementById(`row-${code}`)?.classList.add('active');
-    if (group?.getBounds().isValid()) map.flyToBounds(group.getBounds(), { padding: [80, 80], duration: .9, maxZoom: 15 });
+    if (fly && group?.getBounds().isValid()) map.flyToBounds(group.getBounds(), { padding: [80, 80], duration: .9, maxZoom: 15 });
     fillDrawer(code, trail); openDrawer(); updateDistanceBadge();
     if (view3dTitle) view3dTitle.textContent = `3D · ${code} — ${trail.name}`;
   };
 
-  let totalLength = 0;
-  codes.forEach(code => {
-    const trail = trails[code]; totalLength += trail.length_km;
-    const group = L.featureGroup().addTo(map); layers.set(code, group);
-    trail.segments.forEach(segment => {
-      const points: L.LatLngExpression[] = segment.map(([lng, lat]) => [lat, lng]); points.forEach(p => allBounds.push(p));
-      L.polyline(points, styleFor(trail)).addTo(group).on('click', e => { L.DomEvent.stopPropagation(e); selectTrail(code); });
+  const renderTrails = (nextTrails: TrailCollection, fitMap: boolean) => {
+    const previousSelection = selectedCode;
+    selectedCode = null;
+    trails = nextTrails;
+    codes = Object.keys(trails).sort((a, b) => trails[b].length_km - trails[a].length_km);
+
+    layers.forEach(group => map.removeLayer(group));
+    layers.clear();
+    allBounds.length = 0;
+    trailList.replaceChildren();
+
+    if (rbTrailSelect) {
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = '— Διάλεξε μονοπάτι —';
+      rbTrailSelect.replaceChildren(placeholder);
+    }
+
+    let totalLength = 0;
+    codes.forEach(code => {
+      const trail = trails[code]; totalLength += trail.length_km;
+      const group = L.featureGroup().addTo(map); layers.set(code, group);
+      trail.segments.forEach(segment => {
+        const points: L.LatLngExpression[] = segment.map(([lng, lat]) => [lat, lng]); points.forEach(p => allBounds.push(p));
+        L.polyline(points, styleFor(trail)).addTo(group).on('click', e => { L.DomEvent.stopPropagation(e); selectTrail(code); });
+      });
+      const row = document.createElement('button'); row.type = 'button'; row.className = 'trail-row'; row.id = `row-${code}`;
+      row.innerHTML = `<span class="trail-row-text"><span class="trail-row-code">${code}</span><span class="trail-row-name">${trail.name}</span></span><span class="trail-row-dist">${trail.length_km.toFixed(1)}χλμ</span>`;
+      row.addEventListener('click', () => { selectTrail(code); trailPanel.classList.remove('open'); trailMenuToggle?.classList.remove('open'); }); trailList.append(row);
+      if (rbTrailSelect) { const option = document.createElement('option'); option.value = code; option.textContent = `${code} — ${trail.name}`; rbTrailSelect.append(option); }
     });
-    const row = document.createElement('button'); row.type = 'button'; row.className = 'trail-row'; row.id = `row-${code}`;
-    row.innerHTML = `<span class="trail-row-text"><span class="trail-row-code">${code}</span><span class="trail-row-name">${trail.name}</span></span><span class="trail-row-dist">${trail.length_km.toFixed(1)}χλμ</span>`;
-    row.addEventListener('click', () => { selectTrail(code); trailPanel.classList.remove('open'); trailMenuToggle?.classList.remove('open'); }); trailList.append(row);
-    if (rbTrailSelect) { const option = document.createElement('option'); option.value = code; option.textContent = `${code} — ${trail.name}`; rbTrailSelect.append(option); }
+
+    const countElement = document.getElementById('trail-count');
+    const lengthElement = document.getElementById('total-length');
+    if (countElement) countElement.textContent = String(codes.length);
+    if (lengthElement) lengthElement.textContent = totalLength.toFixed(1);
+    if (fitMap && allBounds.length) map.fitBounds(L.latLngBounds(allBounds), { padding: [40, 40] });
+    if (previousSelection && trails[previousSelection]) selectTrail(previousSelection, false);
+  };
+
+  renderTrails(trails, true);
+  void refreshTrailsFromCms().then(cmsTrails => {
+    if (!cmsTrails) {
+      app.dataset.trailSource = 'fallback';
+      return;
+    }
+    renderTrails(cmsTrails, false);
+    app.dataset.trailSource = 'cms';
   });
-  document.getElementById('trail-count')!.textContent = String(codes.length);
-  document.getElementById('total-length')!.textContent = totalLength.toFixed(1);
-  if (allBounds.length) map.fitBounds(L.latLngBounds(allBounds), { padding: [40, 40] });
 
   trailMenuToggle?.addEventListener('click', () => { const open = trailPanel.classList.toggle('open'); trailMenuToggle.classList.toggle('open', open); trailMenuToggle.setAttribute('aria-expanded', String(open)); routeBuilderPanel?.classList.remove('open'); routeBuilderToggle?.classList.remove('open'); });
   routeBuilderToggle?.addEventListener('click', () => { const open = routeBuilderPanel?.classList.toggle('open') ?? false; routeBuilderToggle.classList.toggle('open', open); routeBuilderToggle.setAttribute('aria-expanded', String(open)); trailPanel.classList.remove('open'); trailMenuToggle?.classList.remove('open'); });
@@ -223,7 +257,7 @@ if (app) {
     shelterPanel.querySelector('button')?.addEventListener('click', () => { shelterPanel.classList.remove('show'); if (shelterLine) { map.removeLayer(shelterLine); shelterLine = null; } });
   });
 
-  view3dBtn?.addEventListener('click', () => { if (!selectedCode) { selectTrail(codes[0]); } view3dOverlay?.classList.add('open'); });
+  view3dBtn?.addEventListener('click', () => { if (!selectedCode && codes.length) { selectTrail(codes[0]); } view3dOverlay?.classList.add('open'); });
   view3dClose?.addEventListener('click', () => view3dOverlay?.classList.remove('open'));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { view3dOverlay?.classList.remove('open'); routeBuilderPanel?.classList.remove('open'); } });
 }

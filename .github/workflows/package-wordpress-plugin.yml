@@ -1,0 +1,26 @@
+name: Package WordPress plugin
+
+on:
+  push:
+    branches:
+      - feat/wordpress-cms
+    paths:
+      - 'wordpress/panachaiko-trails-cms/**'
+      - '.github/workflows/package-wordpress-plugin.yml'
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build plugin ZIP
+        run: |
+          cd wordpress
+          zip -r ../panachaiko-trails-cms.zip panachaiko-trails-cms
+      - name: Upload plugin ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: panachaiko-trails-cms
+          path: panachaiko-trails-cms.zip
+          if-no-files-found: error

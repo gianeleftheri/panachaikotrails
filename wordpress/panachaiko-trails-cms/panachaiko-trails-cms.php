@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails CMS
  * Description: Headless WordPress data layer and REST API for Panachaiko Trails.
- * Version: 0.2.0
+ * Version: 0.2.1
  * Author: Panachaiko Trails
  * Requires at least: 6.5
  * Requires PHP: 7.4
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'PANACHAIKO_TRAILS_VERSION', '0.2.0' );
+define( 'PANACHAIKO_TRAILS_VERSION', '0.2.1' );
 define( 'PANACHAIKO_TRAILS_FILE', __FILE__ );
 define( 'PANACHAIKO_TRAILS_DIR', plugin_dir_path( __FILE__ ) );
 

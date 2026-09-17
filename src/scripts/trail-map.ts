@@ -206,6 +206,7 @@ if (app) {
     if (row) row.style.borderLeftColor = trail.color;
     if (fly && group?.getBounds().isValid()) map.flyToBounds(group.getBounds(), { padding: [80, 80], duration: .9, maxZoom: 15 });
     fillDrawer(code, trail); openDrawer(); updateDistanceBadge();
+    document.dispatchEvent(new CustomEvent('panachaiko:trail-selected', { detail: { code } }));
     if (view3dTitle) view3dTitle.textContent = `3D · ${code} — ${trail.name}`;
   };
 

@@ -443,6 +443,7 @@
     const startButton = document.getElementById('rbStartNavBtn') as HTMLButtonElement | null;
     if (startButton) startButton.hidden = true;
     pendingPlan = null;
+    document.dispatchEvent(new CustomEvent('panachaiko:endpoints-clear'));
 
     calcButton.disabled = true;
     calcButton.textContent = 'Υπολογισμός ολόκληρης διαδρομής…';
@@ -478,6 +479,7 @@
       };
       runtime.__panachaikoNavigationPlan = pendingPlan;
       drawPlan(approach.points, mainRoute.segments);
+      document.dispatchEvent(new CustomEvent<NavigationPlan>('panachaiko:route-preview', { detail: pendingPlan }));
       ensureStartButton();
 
       if (result) {

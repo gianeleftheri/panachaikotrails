@@ -1,0 +1,104 @@
+---
+type TrailShape = {
+  name?: string;
+  color?: string;
+  segments?: Array<Array<[number, number, number?]>>;
+};
+type TrailModule = { key: string; trail: TrailShape };
+const modules = import.meta.glob<TrailModule>('../data/trails/*.json', { eager: true, import: 'default' });
+const selected = Object.values(modules).find(item => item?.key === 'Π-8') ?? Object.values(modules)[0];
+const payload = {
+  key: selected?.key ?? 'unknown',
+  name: selected?.trail?.name ?? 'Unknown trail',
+  color: selected?.trail?.color ?? '#06b6d4',
+  segments: selected?.trail?.segments ?? [],
+};
+---
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Panachaiko Trails · Terrain layer diagnostic</title>
+  <style>
+    html,body{margin:0;background:#07100b;color:#eee8d8;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+    body{padding:14px;box-sizing:border-box}h1{font-size:20px;margin:0 0 5px}.sub{font-size:12px;color:#b9b09c;margin:0 0 12px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{border:1px solid #665b43;border-radius:9px;overflow:hidden;background:#0d1913}
+    .head{padding:8px 10px;border-bottom:1px solid #493f2e;display:flex;justify-content:space-between}.badge{font:11px monospace;color:#a9d28e}
+    .map{height:62vh;min-height:430px;background:#050b08}.diag{min-height:88px;padding:9px 10px;border-top:1px solid #493f2e;font:11px/1.4 monospace;white-space:pre-wrap}.ok{color:#9bd078}.bad{color:#ff8e7a}.warn{color:#efc36c}
+    .legend{font-size:11px;margin:0 0 10px;color:#d8cfbb}.cyan{color:#27e1e1}.magenta{color:#ff39d4}.yellow{color:#ffe35a}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}.map{height:54vh;min-height:360px}}
+  </style>
+</head>
+<body>
+  <h1>MapLibre GeoJSON / terrain diagnostic</h1>
+  <p class="sub">Ίδια έκδοση MapLibre 6.10.0, ίδια Π-8, ίδιο Esri imagery. Αριστερά με terrain ON, δεξιά χωρίς terrain. Έτσι απομονώνουμε αν το DEM/terrain κρύβει τις γραμμές.</p>
+  <p class="legend"><span class="cyan">κυανό</span>=MultiLineString Π-8 · <span class="magenta">ματζέντα</span>=πρώτο segment ως απλό LineString · <span class="yellow">κίτρινο</span>=πρώτο σημείο ως Circle</p>
+  <div class="grid">
+    <section class="card"><div class="head"><strong>Test A · terrain ON</strong><span class="badge" id="labelOn">initializing…</span></div><div id="mapOn" class="map"></div><div id="diagOn" class="diag">Αναμονή…</div></section>
+    <section class="card"><div class="head"><strong>Test B · terrain OFF</strong><span class="badge" id="labelOff">initializing…</span></div><div id="mapOff" class="map"></div><div id="diagOff" class="diag">Αναμονή…</div></section>
+  </div>
+  <script id="trailPayload" type="application/json" set:html={JSON.stringify(payload)}></script>
+  <script>
+    import * as maplibregl from 'maplibre-gl';
+    import 'maplibre-gl/dist/maplibre-gl.css';
+
+    type Coord=[number,number];
+    type TrailPayload={key:string;name:string;color:string;segments:Array<Array<[number,number,number?]>>};
+    const data=JSON.parse(document.getElementById('trailPayload')?.textContent||'{}') as TrailPayload;
+    const segments:Coord[][]=(data.segments||[]).map(seg=>seg.map(p=>[Number(p[0]),Number(p[1])] as Coord).filter(p=>Number.isFinite(p[0])&&Number.isFinite(p[1]))).filter(seg=>seg.length>1);
+    const allPoints=segments.flat();
+    const firstSegment=segments[0]||[];
+    const firstPoint=firstSegment[0]||allPoints[0]||[21.84,38.25];
+    const pointCount=allPoints.length;
+    const multi={type:'Feature' as const,properties:{},geometry:{type:'MultiLineString' as const,coordinates:segments}};
+    const simple={type:'Feature' as const,properties:{},geometry:{type:'LineString' as const,coordinates:firstSegment}};
+    const point={type:'Feature' as const,properties:{},geometry:{type:'Point' as const,coordinates:firstPoint}};
+
+    const style=(terrain:boolean):maplibregl.StyleSpecification=>({
+      version:8,
+      sources:{
+        satellite:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,attribution:'Tiles © Esri'},
+        ...(terrain?{terrainSource:{type:'raster-dem' as const,tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],tileSize:256,encoding:'terrarium' as const,maxzoom:15}}:{})
+      },
+      layers:[{id:'satellite',type:'raster',source:'satellite'}],
+      ...(terrain?{terrain:{source:'terrainSource',exaggeration:1.4}}:{})
+    });
+
+    const fit=(map:maplibregl.Map)=>{const b=new maplibregl.LngLatBounds();allPoints.forEach(p=>b.extend(p));if(!b.isEmpty())map.fitBounds(b,{padding:55,pitch:terrainPitch(map),duration:0,maxZoom:14.5});};
+    const terrainPitch=(map:maplibregl.Map)=>map.getTerrain()?62:0;
+
+    const build=(container:string,diagId:string,labelId:string,terrain:boolean)=>{
+      const diag=document.getElementById(diagId);const label=document.getElementById(labelId);
+      const map=new maplibregl.Map({container,style:style(terrain),center:[21.85,38.24],zoom:12.5,pitch:terrain?62:0,bearing:0,maxPitch:85,renderWorldCopies:false,canvasContextAttributes:{antialias:true}});
+      map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
+      let installed=false;
+      const report=(stage:string)=>{
+        let sourceLoaded=false,sourceFeatures=-1,multiRendered=-1,simpleRendered=-1,pointRendered=-1;
+        try{sourceLoaded=map.isSourceLoaded('trailMulti');}catch{}
+        try{sourceFeatures=map.querySourceFeatures('trailMulti').length;}catch{}
+        try{multiRendered=map.queryRenderedFeatures(undefined,{layers:['trailMultiLine']}).length;}catch{}
+        try{simpleRendered=map.queryRenderedFeatures(undefined,{layers:['controlLine']}).length;}catch{}
+        try{pointRendered=map.queryRenderedFeatures(undefined,{layers:['controlPoint']}).length;}catch{}
+        if(diag){const good=multiRendered>0||simpleRendered>0||pointRendered>0;diag.className=`diag ${good?'ok':'bad'}`;diag.textContent=`${data.key} · ${data.name}\nsegments=${segments.length} points=${pointCount}\nterrain=${terrain} stage=${stage}\nsourceLoaded=${sourceLoaded} sourceFeatures=${sourceFeatures}\nrendered multi=${multiRendered} simpleLine=${simpleRendered} point=${pointRendered}\nfirst=${firstPoint[0].toFixed(5)},${firstPoint[1].toFixed(5)}`;}
+      };
+      map.on('style.load',()=>{
+        if(installed)return;installed=true;if(label)label.textContent=`MapLibre ${(maplibregl as any).version||'6.x'} · style ready`;
+        map.addSource('trailMulti',{type:'geojson',data:multi});
+        map.addLayer({id:'trailMultiLine',type:'line',source:'trailMulti',paint:{'line-color':'#27e1e1','line-width':8,'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
+        map.addSource('controlSimple',{type:'geojson',data:simple});
+        map.addLayer({id:'controlLine',type:'line',source:'controlSimple',paint:{'line-color':'#ff39d4','line-width':3,'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
+        map.addSource('controlPointSource',{type:'geojson',data:point});
+        map.addLayer({id:'controlPoint',type:'circle',source:'controlPointSource',paint:{'circle-radius':8,'circle-color':'#ffe35a','circle-stroke-width':2,'circle-stroke-color':'#000'}});
+        fit(map);report('style.load');
+        setTimeout(()=>report('0.5s'),500);setTimeout(()=>report('1.5s'),1500);setTimeout(()=>report('4s'),4000);
+      });
+      map.on('sourcedata',e=>{if(e.sourceId==='trailMulti'&&e.isSourceLoaded)report('source-loaded');});
+      map.on('error',e=>console.error(container,e.error));
+    };
+
+    build('mapOn','diagOn','labelOn',true);
+    build('mapOff','diagOff','labelOff',false);
+  </script>
+</body>
+</html>

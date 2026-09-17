@@ -9,6 +9,8 @@
   :global(.terrain-gps-dot){width:18px;height:18px;border-radius:50%;background:#3b82f6;border:3px solid #fff;box-shadow:0 0 0 8px rgba(59,130,246,.22),0 3px 12px rgba(0,0,0,.6)}
   :global(.terrain-endpoint){display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:3px solid #fff;color:#fff;font:700 11px/1 Arial,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.55)}
   :global(.terrain-start){background:#22c55e}:global(.terrain-end){background:#ef4444}
+  :global(.terrain-breadcrumb){width:7px;height:7px;border-radius:50%;border:1px solid rgba(255,255,255,.9);box-shadow:0 1px 5px rgba(0,0,0,.85);pointer-events:none}
+  :global(.terrain-route-breadcrumb){width:8px;height:8px;border-radius:50%;background:#38bdf8;border:1.5px solid #fff;box-shadow:0 0 0 2px rgba(7,16,11,.7),0 1px 5px rgba(0,0,0,.9);pointer-events:none}
   @media(max-width:760px){:global(.view3d-hint){bottom:max(10px,env(safe-area-inset-bottom));max-width:calc(100vw - 28px);overflow:hidden;text-overflow:ellipsis}}
 </style>
 
@@ -53,22 +55,53 @@
   let gpsMarker: maplibregl.Marker | null = null;
   let startMarker: maplibregl.Marker | null = null;
   let endMarker: maplibregl.Marker | null = null;
+  let trailBreadcrumbs: maplibregl.Marker[] = [];
+  let routeBreadcrumbs: maplibregl.Marker[] = [];
   let gpsWatch: number | null = null;
   let lastGps: GeolocationPosition | null = null;
   let selectedCode = '';
   let navigationActive = false;
-  // Set once MapLibre's 'style.load' fires (style spec + our own GeoJSON sources/layers
-  // can be added). Deliberately NOT the same as map.isStyleLoaded()/the 'load' event,
-  // which additionally wait for every raster/raster-dem tile across the whole style to
-  // finish downloading. That includes third-party tile hosts (Esri, the AWS terrarium
-  // bucket) we don't control — if any of them is slow, rate-limited or a single tile
-  // request never resolves, isStyleLoaded() can stay false forever and every trail/route
-  // draw below was silently skipped, which is why the 3D view could show nothing at all.
   let styleReady = false;
 
   const emptyLine = () => ({ type: 'Feature' as const, properties: {}, geometry: { type: 'MultiLineString' as const, coordinates: [] as number[][][] } });
   const emptyRoute = () => ({ type: 'Feature' as const, properties: {}, geometry: { type: 'LineString' as const, coordinates: [] as number[][] } });
   const source = (id: string) => terrainMap?.getSource(id) as maplibregl.GeoJSONSource | undefined;
+
+  const clearMarkers = (markers: maplibregl.Marker[]) => {
+    markers.forEach(marker => marker.remove());
+    markers.length = 0;
+  };
+
+  const sampleCoordinates = (points: Array<[number, number]>, maxMarkers: number) => {
+    if (points.length <= maxMarkers) return points;
+    const step = Math.max(1, Math.ceil(points.length / maxMarkers));
+    const sampled = points.filter((_, index) => index % step === 0);
+    const last = points.at(-1);
+    if (last && sampled.at(-1) !== last) sampled.push(last);
+    return sampled;
+  };
+
+  const renderBreadcrumbs = (segments: Array<Array<[number, number]>>, color: string) => {
+    if (!terrainMap) return;
+    clearMarkers(trailBreadcrumbs);
+    const points = segments.flat();
+    sampleCoordinates(points, 180).forEach(point => {
+      const el = document.createElement('div');
+      el.className = 'terrain-breadcrumb';
+      el.style.background = color;
+      trailBreadcrumbs.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(point).addTo(terrainMap!));
+    });
+  };
+
+  const renderRouteBreadcrumbs = (points: Array<[number, number]>) => {
+    if (!terrainMap) return;
+    clearMarkers(routeBreadcrumbs);
+    sampleCoordinates(points, 220).forEach(point => {
+      const el = document.createElement('div');
+      el.className = 'terrain-route-breadcrumb';
+      routeBreadcrumbs.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(point).addTo(terrainMap!));
+    });
+  };
 
   const ensureLayers = () => {
     if (!terrainMap || !styleReady) return;
@@ -118,10 +151,6 @@
     });
     terrainMap.addControl(new maplibregl.NavigationControl({ visualizePitch:true }), 'bottom-right');
     terrainMap.addControl(new maplibregl.ScaleControl({ unit:'metric', maxWidth:110 }), 'bottom-left');
-    // 'style.load' fires once the style document itself (sources/layers spec, no tiles
-    // required) is ready — this is when it's safe to call setTerrain() and add our own
-    // GeoJSON sources/layers. See the styleReady comment above for why we don't gate on
-    // map.isStyleLoaded()/'load' here.
     terrainMap.on('style.load', () => {
       styleReady = true;
       terrainMap?.setTerrain({ source:'dem', exaggeration:1.28 });
@@ -175,11 +204,13 @@
     if (!terrainMap || !styleReady || !code) return;
     const trail = bundledTrails[code];
     const segments = coordinatesFor(trail);
+    const trailColor = trail?.color || '#ff6b35';
     ensureLayers();
     source('selected-trail')?.setData({ type:'Feature', properties:{}, geometry:{ type:'MultiLineString', coordinates:segments } });
     selectedCode = code;
     if (title) title.textContent = `3D · ${code}${trail?.name ? ` — ${trail.name}` : ''}`;
-    if (terrainMap.getLayer('trail-highlight')) terrainMap.setPaintProperty('trail-highlight','line-color', trail?.color || '#ff6b35');
+    if (terrainMap.getLayer('trail-highlight')) terrainMap.setPaintProperty('trail-highlight','line-color', trailColor);
+    renderBreadcrumbs(segments, trailColor);
     startMarker?.remove(); endMarker?.remove(); startMarker = null; endMarker = null;
     const first = segments[0]?.[0];
     const lastSegment = segments.at(-1);
@@ -187,7 +218,7 @@
     if (first) startMarker = endpointMarker(first,true);
     if (last) endMarker = endpointMarker(last,false);
     if (fit) fitSegments(segments);
-    if (hint && !runtime.__panachaikoNavigationPlan) hint.textContent = segments.length ? `${code} · μονοπάτι · Α=αρχή · Τ=τέλος · πραγματικό 3D terrain` : `Δεν βρέθηκε γεωμετρία για ${code}`;
+    if (hint && !runtime.__panachaikoNavigationPlan) hint.textContent = segments.length ? `${code} · μονοπάτι · Α=αρχή · Τ=τέλος · 3D terrain` : `Δεν βρέθηκε γεωμετρία για ${code}`;
   };
 
   const renderNavigation = (fit=false) => {
@@ -198,6 +229,7 @@
     source('navigation-route')?.setData({ type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates:coords } });
     terrainMap.setLayoutProperty('route-line','visibility',coords.length > 1 ? 'visible':'none');
     terrainMap.setLayoutProperty('route-shadow','visibility',coords.length > 1 ? 'visible':'none');
+    if (coords.length > 1) renderRouteBreadcrumbs(coords); else clearMarkers(routeBreadcrumbs);
     if (fit && coords.length > 1) fitSegments([coords]);
     if (hint && plan) {
       const state = navigationActive ? 'LIVE πλοήγηση' : 'Προεπισκόπηση';
@@ -213,9 +245,6 @@
       const el = document.createElement('div'); el.className='terrain-gps-dot';
       gpsMarker = new maplibregl.Marker({ element:el, anchor:'center' }).setLngLat(lngLat).addTo(terrainMap);
     } else gpsMarker.setLngLat(lngLat);
-
-    // Before the user presses "Κλείδωμα & έναρξη", 3D is an overview: keep the
-    // whole GPS→trail→finish route in frame. Camera follow starts only in live navigation.
     if (follow && navigationActive && runtime.__panachaikoNavigationPlan && overlay?.classList.contains('open')) {
       const heading = Number.isFinite(position.coords.heading ?? NaN) ? Number(position.coords.heading) : terrainMap.getBearing();
       terrainMap.easeTo({ center:lngLat, zoom:Math.max(terrainMap.getZoom(),16), pitch:72, bearing:heading, duration:650 });

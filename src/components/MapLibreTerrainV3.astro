@@ -8,8 +8,6 @@
   :global(.terrain-v3-gps){width:18px;height:18px;border-radius:50%;background:#3b82f6;border:3px solid #fff;box-shadow:0 0 0 8px rgba(59,130,246,.22),0 3px 12px rgba(0,0,0,.65)}
   :global(.terrain-v3-endpoint){display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:3px solid #fff;color:#fff;font:700 11px/1 Arial,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.6)}
   :global(.terrain-v3-start){background:#22c55e}:global(.terrain-v3-end){background:#ef4444}
-  :global(.terrain-v3-dot){width:8px;height:8px;border-radius:50%;border:1px solid rgba(255,255,255,.92);box-shadow:0 1px 5px rgba(0,0,0,.9);pointer-events:none}
-  :global(.terrain-v3-route-dot){width:9px;height:9px;border-radius:50%;background:#38bdf8;border:1.5px solid #fff;box-shadow:0 0 0 2px rgba(7,16,11,.75),0 1px 5px rgba(0,0,0,.9);pointer-events:none}
 </style>
 
 <script>
@@ -60,8 +58,6 @@
   let gpsMarker: maplibregl.Marker | null = null;
   let startMarker: maplibregl.Marker | null = null;
   let endMarker: maplibregl.Marker | null = null;
-  let trailDots: maplibregl.Marker[] = [];
-  let routeDots: maplibregl.Marker[] = [];
   let lastGps: GeolocationPosition | null = null;
   let lastPlanSignature = '';
 
@@ -100,20 +96,6 @@
       {id:'labels',type:'raster',source:'labels',paint:{'raster-opacity':.78}}
     ],
     terrain:{source:'terrainSource',exaggeration:1.35}
-  };
-
-  const clearMarkers = (items: maplibregl.Marker[]) => {
-    items.forEach(item => item.remove());
-    items.length = 0;
-  };
-
-  const sample = (points: Coord[], max: number) => {
-    if (points.length <= max) return points;
-    const step = Math.max(1, Math.ceil(points.length / max));
-    const result = points.filter((_, index) => index % step === 0);
-    const last = points.at(-1);
-    if (last && result.at(-1) !== last) result.push(last);
-    return result;
   };
 
   const coordinatesFor = (trail?: TrailShape): Coord[][] => (trail?.segments ?? [])
@@ -162,28 +144,6 @@
     return new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(point).addTo(map!);
   };
 
-  const renderTrailDots = (segments: Coord[][], color: string) => {
-    if (!map) return;
-    clearMarkers(trailDots);
-    const points = segments.flat();
-    sample(points,280).forEach(point => {
-      const el = document.createElement('div');
-      el.className = 'terrain-v3-dot';
-      el.style.background = color;
-      trailDots.push(new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(point).addTo(map!));
-    });
-  };
-
-  const renderRouteDots = (points: Coord[]) => {
-    if (!map) return;
-    clearMarkers(routeDots);
-    sample(points,320).forEach(point => {
-      const el = document.createElement('div');
-      el.className = 'terrain-v3-route-dot';
-      routeDots.push(new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(point).addTo(map!));
-    });
-  };
-
   const reportLineHealth = (code: string) => {
     if (!map || !styleReady || !hint) return;
     window.setTimeout(() => {
@@ -192,7 +152,7 @@
       let rendered = 0;
       try { loaded = map.isSourceLoaded('trail3d'); } catch {}
       try { rendered = map.queryRenderedFeatures(undefined,{layers:['trail3d-line']}).length; } catch {}
-      const suffix = loaded && rendered > 0 ? 'γραμμή OK' : 'ασφαλής dotted προβολή';
+      const suffix = loaded && rendered > 0 ? 'γραμμή OK' : 'η γραμμή δεν αποδόθηκε';
       if (!runtime.__panachaikoNavigationPlan) hint.textContent = `${code} · Α=αρχή · Τ=τέλος · ${suffix}`;
     },1800);
   };
@@ -205,7 +165,6 @@
     ensureLayers();
     (map.getSource('trail3d') as maplibregl.GeoJSONSource | undefined)?.setData({type:'Feature',properties:{},geometry:{type:'MultiLineString',coordinates:segments}});
     if (map.getLayer('trail3d-line')) map.setPaintProperty('trail3d-line','line-color',color);
-    renderTrailDots(segments,color);
     startMarker?.remove(); endMarker?.remove(); startMarker=null; endMarker=null;
     const config = getTrailNavigationConfig(code);
     const first: Coord | undefined = config ? [config.start[1],config.start[0]] : segments[0]?.[0];
@@ -232,7 +191,6 @@
     const visible = coords.length > 1 ? 'visible' : 'none';
     if (map.getLayer('route3d-line')) map.setLayoutProperty('route3d-line','visibility',visible);
     if (map.getLayer('route3d-shadow')) map.setLayoutProperty('route3d-shadow','visibility',visible);
-    if (coords.length > 1) renderRouteDots(coords); else clearMarkers(routeDots);
 
     // During route preview/live navigation, A and T belong to the computed plan,
     // not to the arbitrary storage direction of the raw trail MultiLineString.

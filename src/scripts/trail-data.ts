@@ -1,15 +1,15 @@
 import type { Trail, TrailCollection, TrailPoi, TrailPoint, TrailStatus } from '../types/trail';
 
-type TrailDataModule = { key: string; trail: Trail };
+type TrailDataModule = { key: string; trail: unknown };
 type ApiTrailItem = { key?: unknown; trail?: unknown };
 type TrailCache = { savedAt: number; trails: TrailCollection };
 
-const CACHE_KEY = 'panachaiko-trails-cache-v3';
+const CACHE_KEY = 'panachaiko-trails-cache-v4';
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const CMS_TRAILS_URL = import.meta.env.PUBLIC_TRAILS_API_URL || 'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/trails';
 
 const trailModules = import.meta.glob<TrailDataModule>('../data/trails/*.json', { eager: true, import: 'default' });
-const bundledTrails: TrailCollection = Object.values(trailModules).reduce<TrailCollection>(
+const rawBundledTrails = Object.values(trailModules).reduce<Record<string, unknown>>(
   (all, item) => ({ ...all, [item.key]: item.trail }),
   {}
 );
@@ -96,6 +96,14 @@ const normalizeTrail = (value: unknown, fallback?: Trail): Trail | null => {
   };
 };
 
+const normalizeCollection = (collection: Record<string, unknown>): TrailCollection => Object.entries(collection).reduce<TrailCollection>((all, [key, value]) => {
+  const trail = normalizeTrail(value);
+  if (trail) all[key] = trail;
+  return all;
+}, {});
+
+const bundledTrails: TrailCollection = normalizeCollection(rawBundledTrails);
+
 const normalizeApiResponse = (payload: unknown): TrailCollection | null => {
   if (!Array.isArray(payload) || !payload.length) return null;
 
@@ -124,7 +132,7 @@ const readCache = (): TrailCollection | null => {
     const cache = JSON.parse(raw) as TrailCache;
     if (!cache || typeof cache.savedAt !== 'number' || !cache.trails || typeof cache.trails !== 'object') return null;
     if (Date.now() - cache.savedAt > CACHE_MAX_AGE_MS) return null;
-    return cache.trails;
+    return normalizeCollection(cache.trails as unknown as Record<string, unknown>);
   } catch {
     return null;
   }

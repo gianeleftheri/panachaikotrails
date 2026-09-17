@@ -16,6 +16,7 @@
   import '../scripts/maplibre-worker';
   import * as maplibregl from 'maplibre-gl';
   import 'maplibre-gl/dist/maplibre-gl.css';
+  import { getTrailNavigationConfig } from '../data/trail-navigation';
 
   type Coord = [number, number];
   type RoutePoint = [number, number];
@@ -206,8 +207,9 @@
     if (map.getLayer('trail3d-line')) map.setPaintProperty('trail3d-line','line-color',color);
     renderTrailDots(segments,color);
     startMarker?.remove(); endMarker?.remove(); startMarker=null; endMarker=null;
-    const first = segments[0]?.[0];
-    const last = segments.at(-1)?.at(-1);
+    const config = getTrailNavigationConfig(code);
+    const first: Coord | undefined = config ? [config.start[1],config.start[0]] : segments[0]?.[0];
+    const last: Coord | undefined = config ? [config.end[1],config.end[0]] : segments.at(-1)?.at(-1);
     if (first) startMarker = endpoint(first,true);
     if (last) endMarker = endpoint(last,false);
     selectedCode = code;

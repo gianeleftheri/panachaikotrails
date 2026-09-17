@@ -32,7 +32,7 @@ const payload = {
 </head>
 <body>
   <h1>MapLibre GeoJSON / terrain diagnostic</h1>
-  <p class="sub">Ίδια έκδοση MapLibre 6.10.0, ίδια Π-8, ίδιο Esri imagery. Αριστερά με terrain ON, δεξιά χωρίς terrain. Έτσι απομονώνουμε αν το DEM/terrain κρύβει τις γραμμές.</p>
+  <p class="sub">Ίδια έκδοση MapLibre 6.10.0, ίδια Π-8, ίδιο Esri imagery. Αριστερά με terrain ON, δεξιά χωρίς terrain. Το test χρησιμοποιεί πλέον το επίσημο Vite worker bundle του MapLibre.</p>
   <p class="legend"><span class="cyan">κυανό</span>=MultiLineString Π-8 · <span class="magenta">ματζέντα</span>=πρώτο segment ως απλό LineString · <span class="yellow">κίτρινο</span>=πρώτο σημείο ως Circle</p>
   <div class="grid">
     <section class="card"><div class="head"><strong>Test A · terrain ON</strong><span class="badge" id="labelOn">initializing…</span></div><div id="mapOn" class="map"></div><div id="diagOn" class="diag">Αναμονή…</div></section>
@@ -42,6 +42,9 @@ const payload = {
   <script>
     import * as maplibregl from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
+    import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+
+    maplibregl.setWorkerUrl(workerUrl);
 
     type Coord=[number,number];
     type TrailPayload={key:string;name:string;color:string;segments:Array<Array<[number,number,number?]>>};
@@ -80,10 +83,10 @@ const payload = {
         try{multiRendered=map.queryRenderedFeatures(undefined,{layers:['trailMultiLine']}).length;}catch{}
         try{simpleRendered=map.queryRenderedFeatures(undefined,{layers:['controlLine']}).length;}catch{}
         try{pointRendered=map.queryRenderedFeatures(undefined,{layers:['controlPoint']}).length;}catch{}
-        if(diag){const good=multiRendered>0||simpleRendered>0||pointRendered>0;diag.className=`diag ${good?'ok':'bad'}`;diag.textContent=`${data.key} · ${data.name}\nsegments=${segments.length} points=${pointCount}\nterrain=${terrain} stage=${stage}\nsourceLoaded=${sourceLoaded} sourceFeatures=${sourceFeatures}\nrendered multi=${multiRendered} simpleLine=${simpleRendered} point=${pointRendered}\nfirst=${firstPoint[0].toFixed(5)},${firstPoint[1].toFixed(5)}`;}
+        if(diag){const good=multiRendered>0||simpleRendered>0||pointRendered>0;diag.className=`diag ${good?'ok':'bad'}`;diag.textContent=`${data.key} · ${data.name}\nsegments=${segments.length} points=${pointCount}\nterrain=${terrain} stage=${stage}\nworker=${workerUrl.split('/').at(-1) || 'bundled'}\nsourceLoaded=${sourceLoaded} sourceFeatures=${sourceFeatures}\nrendered multi=${multiRendered} simpleLine=${simpleRendered} point=${pointRendered}\nfirst=${firstPoint[0].toFixed(5)},${firstPoint[1].toFixed(5)}`;}
       };
       map.on('style.load',()=>{
-        if(installed)return;installed=true;if(label)label.textContent=`MapLibre ${(maplibregl as any).version||'6.x'} · style ready`;
+        if(installed)return;installed=true;if(label)label.textContent=`MapLibre ${(maplibregl as any).version||'6.x'} · worker configured`;
         map.addSource('trailMulti',{type:'geojson',data:multi});
         map.addLayer({id:'trailMultiLine',type:'line',source:'trailMulti',paint:{'line-color':'#27e1e1','line-width':8,'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
         map.addSource('controlSimple',{type:'geojson',data:simple});
@@ -94,7 +97,7 @@ const payload = {
         setTimeout(()=>report('0.5s'),500);setTimeout(()=>report('1.5s'),1500);setTimeout(()=>report('4s'),4000);
       });
       map.on('sourcedata',e=>{if(e.sourceId==='trailMulti'&&e.isSourceLoaded)report('source-loaded');});
-      map.on('error',e=>console.error(container,e.error));
+      map.on('error',e=>{console.error(container,e.error);if(diag){diag.className='diag bad';diag.textContent=`MapLibre error: ${String(e.error?.message||e.error)}`;}});
     };
 
     build('mapOn','diagOn','labelOn',true);

@@ -1,0 +1,243 @@
+<style>
+  :global(#map3d){position:relative!important;display:block!important;min-height:0;background:#07100b!important;overflow:hidden}
+  :global(#map3d .maplibregl-canvas){outline:none}
+  :global(#map3d .maplibregl-ctrl-group){background:rgba(18,32,26,.92);border:1px solid rgba(184,157,112,.35);box-shadow:0 5px 20px rgba(0,0,0,.35)}
+  :global(#map3d .maplibregl-ctrl-group button){filter:invert(1) sepia(.15)}
+  :global(#map3d .maplibregl-ctrl-attrib){background:rgba(18,32,26,.78);color:#c9bea3}
+  :global(#map3d .maplibregl-ctrl-attrib a){color:#f3ede0}
+  :global(.view3d-hint){z-index:5;pointer-events:none;background:rgba(18,32,26,.9);border:1px solid rgba(184,157,112,.45);border-radius:18px;padding:7px 12px;color:#f3ede0;font:11px/1.3 ui-monospace,Menlo,Consolas,monospace;white-space:nowrap}
+  :global(.terrain-gps-dot){width:18px;height:18px;border-radius:50%;background:#3b82f6;border:3px solid #fff;box-shadow:0 0 0 8px rgba(59,130,246,.22),0 3px 12px rgba(0,0,0,.6)}
+  :global(.terrain-endpoint){display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:3px solid #fff;color:#fff;font:700 11px/1 Arial,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.55)}
+  :global(.terrain-start){background:#22c55e}.terrain-end{background:#ef4444}
+  @media(max-width:760px){:global(.view3d-hint){bottom:max(10px,env(safe-area-inset-bottom));max-width:calc(100vw - 28px);overflow:hidden;text-overflow:ellipsis}}
+</style>
+
+<script>
+  import * as maplibregl from 'maplibre-gl';
+  import 'maplibre-gl/dist/maplibre-gl.css';
+
+  type RoutePoint = [number, number];
+  type NavigationPlan = {
+    code: string;
+    name: string;
+    mode: string;
+    points: RoutePoint[];
+    totalDistanceM: number;
+    approachDistanceM: number;
+    trailDistanceM: number;
+    estimatedSeconds: number;
+  };
+  type TrailShape = {
+    name?: string;
+    color?: string;
+    segments?: Array<Array<[number, number, number?]>>;
+  };
+  type TrailDataModule = { key: string; trail: TrailShape };
+  type Runtime = typeof window & { __panachaikoNavigationPlan?: NavigationPlan };
+
+  const trailModules = import.meta.glob<TrailDataModule>('../data/trails/*.json', { eager: true, import: 'default' });
+  const bundledTrails = Object.values(trailModules).reduce<Record<string, TrailShape>>((all, item) => {
+    if (item?.key && item?.trail) all[item.key] = item.trail;
+    return all;
+  }, {});
+
+  const runtime = window as Runtime;
+  const overlay = document.getElementById('view3dOverlay');
+  const container = document.getElementById('map3d');
+  const hint = document.getElementById('view3dHint');
+  const title = document.getElementById('view3dTitle');
+  const closeButton = document.getElementById('view3dClose');
+
+  let terrainMap: maplibregl.Map | null = null;
+  let gpsMarker: maplibregl.Marker | null = null;
+  let startMarker: maplibregl.Marker | null = null;
+  let endMarker: maplibregl.Marker | null = null;
+  let gpsWatch: number | null = null;
+  let lastGps: GeolocationPosition | null = null;
+  let selectedCode = '';
+
+  const emptyLine = () => ({ type: 'Feature' as const, properties: {}, geometry: { type: 'MultiLineString' as const, coordinates: [] as number[][][] } });
+  const emptyRoute = () => ({ type: 'Feature' as const, properties: {}, geometry: { type: 'LineString' as const, coordinates: [] as number[][] } });
+  const source = (id: string) => terrainMap?.getSource(id) as maplibregl.GeoJSONSource | undefined;
+
+  const ensureLayers = () => {
+    if (!terrainMap || !terrainMap.isStyleLoaded()) return;
+    if (!terrainMap.getSource('selected-trail')) {
+      terrainMap.addSource('selected-trail', { type: 'geojson', data: emptyLine() });
+      terrainMap.addLayer({ id:'trail-shadow', type:'line', source:'selected-trail', paint:{ 'line-color':'#07100b', 'line-width':14, 'line-opacity':.9 } });
+      terrainMap.addLayer({ id:'trail-highlight', type:'line', source:'selected-trail', paint:{ 'line-color':'#ff6b35', 'line-width':8, 'line-opacity':1 } });
+    }
+    if (!terrainMap.getSource('navigation-route')) {
+      terrainMap.addSource('navigation-route', { type: 'geojson', data: emptyRoute() });
+      terrainMap.addLayer({ id:'route-shadow', type:'line', source:'navigation-route', paint:{ 'line-color':'#07100b', 'line-width':13, 'line-opacity':.86 } });
+      terrainMap.addLayer({ id:'route-line', type:'line', source:'navigation-route', paint:{ 'line-color':'#38bdf8', 'line-width':7, 'line-opacity':1 } });
+    }
+  };
+
+  const mapStyle: maplibregl.StyleSpecification = {
+    version: 8,
+    sources: {
+      satellite: { type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:19, attribution:'Imagery © Esri, Maxar, Earthstar Geographics' },
+      labels: { type:'raster', tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'], tileSize:256, maxzoom:19, attribution:'Labels © Esri' },
+      dem: { type:'raster-dem', tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], tileSize:256, maxzoom:15, encoding:'terrarium', attribution:'Elevation © Mapzen / AWS Terrain Tiles' },
+      shadeDem: { type:'raster-dem', tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], tileSize:256, maxzoom:15, encoding:'terrarium' }
+    },
+    layers: [
+      { id:'bg', type:'background', paint:{ 'background-color':'#07100b' } },
+      { id:'sat', type:'raster', source:'satellite', paint:{ 'raster-saturation':-.12, 'raster-contrast':.12 } },
+      { id:'shade', type:'hillshade', source:'shadeDem', paint:{ 'hillshade-exaggeration':.38, 'hillshade-shadow-color':'#07100b', 'hillshade-highlight-color':'#fff2d0', 'hillshade-accent-color':'#38533c' } },
+      { id:'labels', type:'raster', source:'labels', paint:{ 'raster-opacity':.78 } }
+    ]
+  };
+
+  const initialize = () => {
+    if (!container) return null;
+    if (terrainMap) { window.setTimeout(() => terrainMap?.resize(), 0); return terrainMap; }
+    terrainMap = new maplibregl.Map({
+      container,
+      style: mapStyle,
+      center:[21.835,38.2],
+      zoom:12,
+      pitch:64,
+      bearing:-24,
+      maxPitch:85,
+      minZoom:8,
+      maxZoom:18,
+      renderWorldCopies:false,
+      canvasContextAttributes:{ antialias:true }
+    });
+    terrainMap.addControl(new maplibregl.NavigationControl({ visualizePitch:true }), 'bottom-right');
+    terrainMap.addControl(new maplibregl.ScaleControl({ unit:'metric', maxWidth:110 }), 'bottom-left');
+    terrainMap.on('load', () => {
+      terrainMap?.setTerrain({ source:'dem', exaggeration:1.28 });
+      ensureLayers();
+      sync(true);
+    });
+    terrainMap.on('error', event => {
+      console.warn('MapLibre 3D error', event.error);
+      if (hint) hint.textContent = '3D: πρόβλημα φόρτωσης tile — γίνεται νέα προσπάθεια.';
+    });
+    return terrainMap;
+  };
+
+  const activeCodeFromUi = () => {
+    const plan = runtime.__panachaikoNavigationPlan;
+    if (plan?.code) return plan.code;
+    const activeRow = document.querySelector<HTMLElement>('.trail-row.active .trail-row-code');
+    if (activeRow?.textContent?.trim()) return activeRow.textContent.trim();
+    const text = title?.textContent ?? '';
+    const match = text.match(/3D\s*·\s*([^—]+?)(?:\s*—|$)/);
+    return match?.[1]?.trim() ?? selectedCode;
+  };
+
+  const coordinatesFor = (trail?: TrailShape) => (trail?.segments ?? [])
+    .map(segment => segment.map(([lng,lat]) => [Number(lng),Number(lat)] as [number,number]).filter(([lng,lat]) => Number.isFinite(lng) && Number.isFinite(lat)))
+    .filter(segment => segment.length > 1);
+
+  const fitSegments = (segments: Array<Array<[number,number]>>) => {
+    if (!terrainMap || !segments.length) return;
+    const bounds = new maplibregl.LngLatBounds();
+    segments.flat().forEach(point => bounds.extend(point));
+    if (!bounds.isEmpty()) {
+      terrainMap.fitBounds(bounds, { padding:70, maxZoom:14.8, duration:800 });
+      window.setTimeout(() => terrainMap?.easeTo({ pitch:68, bearing:-20, duration:650 }), 140);
+    }
+  };
+
+  const endpointMarker = (point:[number,number], start:boolean) => {
+    const el = document.createElement('div');
+    el.className = `terrain-endpoint ${start ? 'terrain-start' : 'terrain-end'}`;
+    el.textContent = start ? 'Α' : 'Τ';
+    return new maplibregl.Marker({ element:el, anchor:'center' }).setLngLat(point).addTo(terrainMap!);
+  };
+
+  const renderTrail = (code:string, fit=false) => {
+    if (!terrainMap?.isStyleLoaded() || !code) return;
+    const trail = bundledTrails[code];
+    const segments = coordinatesFor(trail);
+    ensureLayers();
+    source('selected-trail')?.setData({ type:'Feature', properties:{}, geometry:{ type:'MultiLineString', coordinates:segments } });
+    selectedCode = code;
+    if (title) title.textContent = `3D · ${code}${trail?.name ? ` — ${trail.name}` : ''}`;
+    if (terrainMap.getLayer('trail-highlight')) terrainMap.setPaintProperty('trail-highlight','line-color', trail?.color || '#ff6b35');
+    startMarker?.remove(); endMarker?.remove(); startMarker = null; endMarker = null;
+    const first = segments[0]?.[0];
+    const lastSegment = segments.at(-1);
+    const last = lastSegment?.at(-1);
+    if (first) startMarker = endpointMarker(first,true);
+    if (last) endMarker = endpointMarker(last,false);
+    if (fit) fitSegments(segments);
+    if (hint) hint.textContent = segments.length ? `${code} · πορτοκαλί/έγχρωμη γραμμή · Α=αρχή · Τ=τέλος · πραγματικό 3D terrain` : `Δεν βρέθηκε γεωμετρία για ${code}`;
+  };
+
+  const renderNavigation = (fit=false) => {
+    if (!terrainMap?.isStyleLoaded()) return;
+    const plan = runtime.__panachaikoNavigationPlan;
+    ensureLayers();
+    const coords = (plan?.points ?? []).map(([lat,lng]) => [lng,lat] as [number,number]);
+    source('navigation-route')?.setData({ type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates:coords } });
+    terrainMap.setLayoutProperty('route-line','visibility',coords.length ? 'visible':'none');
+    terrainMap.setLayoutProperty('route-shadow','visibility',coords.length ? 'visible':'none');
+    if (fit && coords.length) fitSegments([coords]);
+  };
+
+  const updateGps = (position:GeolocationPosition, follow=true) => {
+    lastGps = position;
+    if (!terrainMap) return;
+    const lngLat:[number,number] = [position.coords.longitude,position.coords.latitude];
+    if (!gpsMarker) {
+      const el = document.createElement('div'); el.className='terrain-gps-dot';
+      gpsMarker = new maplibregl.Marker({ element:el, anchor:'center' }).setLngLat(lngLat).addTo(terrainMap);
+    } else gpsMarker.setLngLat(lngLat);
+    if (follow && runtime.__panachaikoNavigationPlan && overlay?.classList.contains('open')) {
+      const heading = Number.isFinite(position.coords.heading ?? NaN) ? Number(position.coords.heading) : terrainMap.getBearing();
+      terrainMap.easeTo({ center:lngLat, zoom:Math.max(terrainMap.getZoom(),16), pitch:72, bearing:heading, duration:650 });
+    }
+  };
+
+  const startGps = () => {
+    if (gpsWatch !== null || !navigator.geolocation) return;
+    gpsWatch = navigator.geolocation.watchPosition(position => updateGps(position,true), () => {}, { enableHighAccuracy:true, maximumAge:3000, timeout:20000 });
+  };
+  const stopGps = () => { if (gpsWatch !== null) navigator.geolocation.clearWatch(gpsWatch); gpsWatch=null; };
+
+  const sync = (fit=false) => {
+    if (!terrainMap?.isStyleLoaded()) return;
+    const code = activeCodeFromUi();
+    if (code) renderTrail(code, fit && !runtime.__panachaikoNavigationPlan);
+    renderNavigation(Boolean(fit && runtime.__panachaikoNavigationPlan));
+    if (lastGps) updateGps(lastGps,false);
+  };
+
+  const open3d = () => {
+    overlay?.classList.add('open');
+    initialize();
+    window.setTimeout(() => { terrainMap?.resize(); sync(true); startGps(); }, 100);
+  };
+
+  document.getElementById('view3dBtn')?.addEventListener('click', () => window.setTimeout(open3d,0));
+  document.getElementById('nav3dBtn')?.addEventListener('click', () => window.setTimeout(open3d,0));
+  closeButton?.addEventListener('click', stopGps);
+  document.getElementById('nav2dBtn')?.addEventListener('click', stopGps);
+
+  document.addEventListener('panachaiko:navigation-start', event => {
+    runtime.__panachaikoNavigationPlan = (event as CustomEvent<NavigationPlan>).detail;
+    if (terrainMap?.isStyleLoaded()) sync(overlay?.classList.contains('open') ?? false);
+  });
+  document.addEventListener('panachaiko:navigation-exit', () => {
+    if (terrainMap?.isStyleLoaded()) renderNavigation(false);
+  });
+
+  if (title) {
+    new MutationObserver(() => {
+      if (terrainMap?.isStyleLoaded() && overlay?.classList.contains('open')) {
+        const code = activeCodeFromUi();
+        if (code && code !== selectedCode) renderTrail(code,true);
+      }
+    }).observe(title,{ childList:true, subtree:true, characterData:true });
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopGps(); else if (overlay?.classList.contains('open')) startGps();
+  });
+</script>

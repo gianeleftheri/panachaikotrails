@@ -3,7 +3,7 @@ name: Package WordPress plugin
 on:
   push:
     branches:
-      - feat/wordpress-cms
+      - main
     paths:
       - 'wordpress/panachaiko-trails-cms/**'
       - '.github/workflows/package-wordpress-plugin.yml'

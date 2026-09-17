@@ -46,6 +46,7 @@ if (app) {
   L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
 
   const layers = new Map<string, L.FeatureGroup>();
+  const visibleLines = new Map<string, L.Polyline[]>();
   const poiLayer = L.layerGroup().addTo(map);
   const allBounds: L.LatLngExpression[] = [];
   let codes: string[] = [];
@@ -64,12 +65,27 @@ if (app) {
     .replaceAll("'", '&#039;');
 
   const styleFor = (trail: Trail, active = false): L.PathOptions => ({
-    color: active ? '#f3ede0' : trail.color || (trail.existing ? '#84a06e' : '#9c917c'),
-    weight: active ? 6 : 3,
-    opacity: active ? 1 : .92,
-    dashArray: trail.existing ? undefined : '3 7',
-    lineCap: 'round'
+    color: trail.color || (trail.existing ? '#84a06e' : '#9c917c'),
+    weight: active ? 6 : 3.5,
+    opacity: active ? .98 : trail.existing ? .82 : .62,
+    dashArray: trail.existing ? undefined : '2 8',
+    lineCap: 'round',
+    lineJoin: 'round'
   });
+
+  const setTrailStyle = (code: string, active = false, hover = false) => {
+    const trail = trails[code];
+    if (!trail) return;
+    const style = styleFor(trail, active);
+    if (hover && !active) {
+      style.weight = 5.5;
+      style.opacity = .98;
+    }
+    visibleLines.get(code)?.forEach(line => {
+      line.setStyle(style);
+      if (active) line.bringToFront();
+    });
+  };
 
   const poiEmoji = (category?: string) => ({
     shelter: '⛺',
@@ -190,13 +206,17 @@ if (app) {
   const selectTrail = (code: string, fly = true) => {
     const trail = trails[code]; if (!trail) return;
     if (selectedCode) {
-      layers.get(selectedCode)?.eachLayer(layer => { if (layer instanceof L.Polyline) layer.setStyle(styleFor(trails[selectedCode!])); });
-      document.getElementById(`row-${selectedCode}`)?.classList.remove('active');
+      setTrailStyle(selectedCode, false);
+      const previousRow = document.getElementById(`row-${selectedCode}`);
+      previousRow?.classList.remove('active');
+      if (previousRow) previousRow.style.borderLeftColor = 'transparent';
     }
     selectedCode = code;
     const group = layers.get(code);
-    group?.eachLayer(layer => { if (layer instanceof L.Polyline) { layer.setStyle(styleFor(trail, true)); layer.bringToFront(); } });
-    document.getElementById(`row-${code}`)?.classList.add('active');
+    setTrailStyle(code, true);
+    const row = document.getElementById(`row-${code}`);
+    row?.classList.add('active');
+    if (row) row.style.borderLeftColor = trail.color;
     if (fly && group?.getBounds().isValid()) map.flyToBounds(group.getBounds(), { padding: [80, 80], duration: .9, maxZoom: 15 });
     fillDrawer(code, trail); openDrawer(); updateDistanceBadge();
     if (view3dTitle) view3dTitle.textContent = `3D · ${code} — ${trail.name}`;
@@ -230,6 +250,7 @@ if (app) {
 
     layers.forEach(group => map.removeLayer(group));
     layers.clear();
+    visibleLines.clear();
     allBounds.length = 0;
     trailList.replaceChildren();
 
@@ -244,11 +265,39 @@ if (app) {
     codes.forEach(code => {
       const trail = trails[code]; totalLength += trail.length_km;
       const group = L.featureGroup().addTo(map); layers.set(code, group);
+      const codeLines: L.Polyline[] = [];
+
       trail.segments.forEach(segment => {
-        const points: L.LatLngExpression[] = segment.map(([lng, lat]) => [lat, lng]); points.forEach(p => allBounds.push(p));
-        L.polyline(points, styleFor(trail)).addTo(group).on('click', e => { L.DomEvent.stopPropagation(e); selectTrail(code); });
+        const points: L.LatLngExpression[] = segment.map(([lng, lat]) => [lat, lng]);
+        points.forEach(p => allBounds.push(p));
+
+        // Visible trail line: appearance only. The separate transparent hit line
+        // below gives a much larger click/touch target without making the route fat.
+        const visibleLine = L.polyline(points, { ...styleFor(trail), interactive: false }).addTo(group);
+        codeLines.push(visibleLine);
+
+        const hitLine = L.polyline(points, {
+          color: '#000000',
+          weight: 22,
+          opacity: 0.001,
+          lineCap: 'round',
+          lineJoin: 'round',
+          interactive: true,
+          bubblingMouseEvents: false
+        }).addTo(group);
+
+        hitLine.on('mouseover', () => { if (selectedCode !== code) setTrailStyle(code, false, true); });
+        hitLine.on('mouseout', () => { if (selectedCode !== code) setTrailStyle(code, false); });
+        hitLine.on('click', e => {
+          L.DomEvent.stopPropagation(e);
+          selectTrail(code);
+        });
       });
+
+      visibleLines.set(code, codeLines);
+
       const row = document.createElement('button'); row.type = 'button'; row.className = 'trail-row'; row.id = `row-${code}`;
+      row.style.borderLeftColor = 'transparent';
       row.innerHTML = `<span class="trail-row-text"><span class="trail-row-code">${escapeHtml(code)}</span><span class="trail-row-name">${escapeHtml(trail.name)}</span></span><span class="trail-row-dist">${trail.length_km.toFixed(1)}χλμ</span>`;
       row.addEventListener('click', () => { selectTrail(code); trailPanel.classList.remove('open'); trailMenuToggle?.classList.remove('open'); }); trailList.append(row);
       if (rbTrailSelect) { const option = document.createElement('option'); option.value = code; option.textContent = `${code} — ${trail.name}`; rbTrailSelect.append(option); }
@@ -260,6 +309,7 @@ if (app) {
     const lengthElement = document.getElementById('total-length');
     if (countElement) countElement.textContent = String(codes.length);
     if (lengthElement) lengthElement.textContent = totalLength.toFixed(1);
+    app.dataset.trailCount = String(codes.length);
     if (fitMap && allBounds.length) map.fitBounds(L.latLngBounds(allBounds), { padding: [40, 40] });
     if (previousSelection && trails[previousSelection]) selectTrail(previousSelection, false);
   };

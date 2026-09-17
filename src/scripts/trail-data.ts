@@ -1,10 +1,10 @@
-import type { Trail, TrailCollection, TrailPoi, TrailStatus } from '../types/trail';
+import type { Trail, TrailCollection, TrailPoi, TrailPoint, TrailStatus } from '../types/trail';
 
 type TrailDataModule = { key: string; trail: Trail };
 type ApiTrailItem = { key?: unknown; trail?: unknown };
 type TrailCache = { savedAt: number; trails: TrailCollection };
 
-const CACHE_KEY = 'panachaiko-trails-cache-v2';
+const CACHE_KEY = 'panachaiko-trails-cache-v3';
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const CMS_TRAILS_URL = import.meta.env.PUBLIC_TRAILS_API_URL || 'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/trails';
 
@@ -55,43 +55,66 @@ const normalizePoiArray = (value: unknown): TrailPoi[] => Array.isArray(value)
   ? value.map(normalizePoi).filter((poi): poi is TrailPoi => Boolean(poi))
   : [];
 
-const normalizeTrail = (value: unknown): Trail | null => {
-  if (!value || typeof value !== 'object') return null;
+const normalizeSegments = (value: unknown): TrailPoint[][] => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(Array.isArray)
+    .map(segment => (segment as unknown[])
+      .filter(point => Array.isArray(point) && point.length >= 2 && Number.isFinite(Number(point[0])) && Number.isFinite(Number(point[1])))
+      .map(point => {
+        const raw = point as unknown[];
+        const elevation = raw.length > 2 && raw[2] !== null && Number.isFinite(Number(raw[2])) ? Number(raw[2]) : null;
+        return [Number(raw[0]), Number(raw[1]), elevation] as TrailPoint;
+      }))
+    .filter(segment => segment.length >= 2);
+};
+
+const normalizeTrail = (value: unknown, fallback?: Trail): Trail | null => {
+  if (!value || typeof value !== 'object') return fallback ?? null;
   const raw = value as Record<string, unknown>;
-  const existing = Boolean(raw.existing);
-  const segments = Array.isArray(raw.segments) ? raw.segments : [];
+  const existing = raw.existing === undefined ? Boolean(fallback?.existing) : Boolean(raw.existing);
+  const apiSegments = normalizeSegments(raw.segments);
+  const segments = apiSegments.length ? apiSegments : (fallback?.segments ?? []);
 
   return {
-    name: typeof raw.name === 'string' ? raw.name : '',
-    description: typeof raw.description === 'string' ? raw.description : '',
+    name: typeof raw.name === 'string' && raw.name.trim() ? raw.name : (fallback?.name ?? ''),
+    description: typeof raw.description === 'string' ? raw.description : (fallback?.description ?? ''),
     existing,
     status: asStatus(raw.status, existing),
-    color: typeof raw.color === 'string' && raw.color ? raw.color : '#84a06e',
-    length_km: asNumber(raw.length_km),
-    elev_min: asNullableNumber(raw.elev_min),
-    elev_max: asNullableNumber(raw.elev_max),
-    gain_m: asNumber(raw.gain_m),
-    loss_m: asNumber(raw.loss_m),
-    segments: segments as Trail['segments'],
-    photos: normalizePoiArray(raw.photos),
-    videos: normalizePoiArray(raw.videos),
-    notes: normalizePoiArray(raw.notes),
-    source: typeof raw.source === 'string' ? raw.source : '',
-    verified_at: typeof raw.verified_at === 'string' ? raw.verified_at : ''
+    color: typeof raw.color === 'string' && raw.color ? raw.color : (fallback?.color ?? '#84a06e'),
+    length_km: raw.length_km === undefined ? (fallback?.length_km ?? 0) : asNumber(raw.length_km, fallback?.length_km ?? 0),
+    elev_min: raw.elev_min === undefined ? (fallback?.elev_min ?? null) : asNullableNumber(raw.elev_min),
+    elev_max: raw.elev_max === undefined ? (fallback?.elev_max ?? null) : asNullableNumber(raw.elev_max),
+    gain_m: raw.gain_m === undefined ? (fallback?.gain_m ?? 0) : asNumber(raw.gain_m, fallback?.gain_m ?? 0),
+    loss_m: raw.loss_m === undefined ? (fallback?.loss_m ?? 0) : asNumber(raw.loss_m, fallback?.loss_m ?? 0),
+    segments,
+    photos: raw.photos === undefined ? (fallback?.photos ?? []) : normalizePoiArray(raw.photos),
+    videos: raw.videos === undefined ? (fallback?.videos ?? []) : normalizePoiArray(raw.videos),
+    notes: raw.notes === undefined ? (fallback?.notes ?? []) : normalizePoiArray(raw.notes),
+    source: typeof raw.source === 'string' ? raw.source : (fallback?.source ?? ''),
+    verified_at: typeof raw.verified_at === 'string' ? raw.verified_at : (fallback?.verified_at ?? '')
   };
 };
 
 const normalizeApiResponse = (payload: unknown): TrailCollection | null => {
-  if (!Array.isArray(payload)) return null;
-  const collection: TrailCollection = {};
+  if (!Array.isArray(payload) || !payload.length) return null;
+
+  // CMS fields override the bundled source, but the original 13 trails remain
+  // the geometry safety net. A partial/broken CMS response must never make a
+  // trail disappear from the public map.
+  const collection: TrailCollection = { ...bundledTrails };
+  let validCmsItems = 0;
 
   payload.forEach((item: ApiTrailItem) => {
-    if (!item || typeof item !== 'object' || typeof item.key !== 'string') return;
-    const trail = normalizeTrail(item.trail);
-    if (trail) collection[item.key] = trail;
+    if (!item || typeof item !== 'object' || typeof item.key !== 'string' || !item.key.trim()) return;
+    const fallback = bundledTrails[item.key];
+    const trail = normalizeTrail(item.trail, fallback);
+    if (!trail) return;
+    collection[item.key] = trail;
+    validCmsItems += 1;
   });
 
-  return Object.keys(collection).length ? collection : null;
+  return validCmsItems ? collection : null;
 };
 
 const readCache = (): TrailCollection | null => {

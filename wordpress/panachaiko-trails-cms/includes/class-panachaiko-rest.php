@@ -72,10 +72,10 @@ final class Panachaiko_Trails_REST {
     }
 
     private static function format_trail( WP_Post $post ): array {
-        $code  = (string) get_post_meta( $post->ID, 'trail_code', true );
-        $stage = (string) get_post_meta( $post->ID, 'trail_stage', true );
+        $code     = (string) get_post_meta( $post->ID, 'trail_code', true );
+        $stage    = (string) get_post_meta( $post->ID, 'trail_stage', true );
         $geometry = self::decode_geometry( (string) get_post_meta( $post->ID, 'geometry_json', true ) );
-        $pois = self::get_pois_for_trail( $post->ID );
+        $pois     = self::get_pois_for_trail( $post->ID );
 
         $notes  = array_values( array_filter( $pois, static fn( array $poi ): bool => ! in_array( $poi['category'], array( 'photo', 'video' ), true ) ) );
         $photos = array_values( array_filter( $pois, static fn( array $poi ): bool => 'photo' === $poi['category'] ) );
@@ -120,15 +120,33 @@ final class Panachaiko_Trails_REST {
 
         return array_map(
             static function ( WP_Post $poi ): array {
+                $media_ids = array_values( array_filter( array_map( 'absint', (array) get_post_meta( $poi->ID, 'media_ids', true ) ) ) );
+                $media_urls = array_values(
+                    array_filter(
+                        array_map(
+                            static function ( int $attachment_id ): string {
+                                $url = wp_get_attachment_url( $attachment_id );
+                                return is_string( $url ) ? $url : '';
+                            },
+                            $media_ids
+                        )
+                    )
+                );
+
+                $featured_image_url = get_the_post_thumbnail_url( $poi, 'large' );
+
                 return array(
-                    'id'       => $poi->ID,
-                    'title'    => get_the_title( $poi ),
-                    'text'     => wp_strip_all_tags( $poi->post_content ),
-                    'category' => (string) get_post_meta( $poi->ID, 'poi_type', true ),
-                    'lat'      => (float) get_post_meta( $poi->ID, 'latitude', true ),
-                    'lng'      => (float) get_post_meta( $poi->ID, 'longitude', true ),
-                    'media_ids'=> array_map( 'absint', (array) get_post_meta( $poi->ID, 'media_ids', true ) ),
-                    'video_url'=> (string) get_post_meta( $poi->ID, 'external_video_url', true ),
+                    'id'                 => $poi->ID,
+                    'title'              => get_the_title( $poi ),
+                    'text'               => wp_strip_all_tags( $poi->post_content ),
+                    'category'           => (string) get_post_meta( $poi->ID, 'poi_type', true ),
+                    'lat'                => self::nullable_float_meta( $poi->ID, 'latitude' ),
+                    'lng'                => self::nullable_float_meta( $poi->ID, 'longitude' ),
+                    'media_ids'          => $media_ids,
+                    'media_urls'         => $media_urls,
+                    'featured_image_url' => is_string( $featured_image_url ) ? $featured_image_url : null,
+                    'video_url'          => (string) get_post_meta( $poi->ID, 'external_video_url', true ),
+                    'verified_at'        => (string) get_post_meta( $poi->ID, 'verified_at', true ),
                 );
             },
             $posts
@@ -146,6 +164,11 @@ final class Panachaiko_Trails_REST {
         }
 
         return $decoded;
+    }
+
+    private static function nullable_float_meta( int $post_id, string $key ) {
+        $value = get_post_meta( $post_id, $key, true );
+        return is_numeric( $value ) ? (float) $value : null;
     }
 
     private static function meta_number( int $post_id, string $key, float $default ): float {

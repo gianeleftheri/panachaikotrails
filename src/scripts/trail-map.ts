@@ -30,7 +30,6 @@ if (app) {
   const rbCalcBtn = document.getElementById('rbCalcBtn') as HTMLButtonElement | null;
   const rbResultStatus = document.getElementById('rbResultStatus');
   const distanceBadge = document.getElementById('distanceBadge');
-  const routeModeToggle = document.getElementById('routeModeToggle');
   const shelterBtn = document.getElementById('shelterBtn');
   const shelterPanel = document.getElementById('shelterPanel');
   const view3dBtn = document.getElementById('view3dBtn');
@@ -183,13 +182,12 @@ if (app) {
   };
 
   const updateDistanceBadge = () => {
-    if (!distanceBadge || !selectedCode || !userPosition) { distanceBadge?.classList.remove('show'); routeModeToggle?.classList.remove('show'); return; }
+    if (!distanceBadge || !selectedCode || !userPosition) { distanceBadge?.classList.remove('show'); return; }
     const nearest = nearestPoint(trails[selectedCode], userPosition);
     if (!nearest) return;
     const text = nearest.distance < 1000 ? `${Math.round(nearest.distance)} μ` : `${(nearest.distance / 1000).toFixed(2)} χλμ`;
     distanceBadge.textContent = `Απόσταση από ${selectedCode}: ${text}`;
     distanceBadge.classList.add('show');
-    routeModeToggle?.classList.add('show');
   };
 
   const selectTrail = (code: string, fly = true) => {
@@ -282,8 +280,23 @@ if (app) {
     renderTrails(cmsTrails, false); app.dataset.trailSource = 'cms';
   });
 
-  trailMenuToggle?.addEventListener('click', () => { const open = trailPanel.classList.toggle('open'); trailMenuToggle.classList.toggle('open', open); trailMenuToggle.setAttribute('aria-expanded', String(open)); routeBuilderPanel?.classList.remove('open'); routeBuilderToggle?.classList.remove('open'); });
-  routeBuilderToggle?.addEventListener('click', () => { const open = routeBuilderPanel?.classList.toggle('open') ?? false; routeBuilderToggle.classList.toggle('open', open); routeBuilderToggle.setAttribute('aria-expanded', String(open)); trailPanel.classList.remove('open'); trailMenuToggle?.classList.remove('open'); });
+  trailMenuToggle?.addEventListener('click', () => {
+    const open = trailPanel.classList.toggle('open');
+    trailMenuToggle.classList.toggle('open', open);
+    trailMenuToggle.setAttribute('aria-expanded', String(open));
+    routeBuilderPanel?.classList.remove('open');
+    routeBuilderToggle?.classList.remove('open');
+    closeDrawer();
+  });
+
+  routeBuilderToggle?.addEventListener('click', () => {
+    const open = routeBuilderPanel?.classList.toggle('open') ?? false;
+    routeBuilderToggle.classList.toggle('open', open);
+    routeBuilderToggle.setAttribute('aria-expanded', String(open));
+    trailPanel.classList.remove('open');
+    trailMenuToggle?.classList.remove('open');
+    closeDrawer();
+  });
 
   const applyPosition = (pos: GeolocationPosition) => {
     userPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
@@ -321,6 +334,11 @@ if (app) {
   shelterBtn?.addEventListener('click', () => {
     if (!shelterPanel) return;
     shelterPanel.classList.add('show');
+    closeDrawer();
+    routeBuilderPanel?.classList.remove('open');
+    routeBuilderToggle?.classList.remove('open');
+    trailPanel.classList.remove('open');
+    trailMenuToggle?.classList.remove('open');
     if (!userPosition) { shelterPanel.innerHTML = '<div class="sh-title">🆘 Χρειάζεται GPS</div><div class="sh-sub">Ενεργοποίησε πρώτα τη θέση σου.</div><button class="sh-close" type="button">Κλείσιμο</button>'; shelterPanel.querySelector('button')?.addEventListener('click', () => shelterPanel.classList.remove('show')); return; }
     const shelters = codes.flatMap(code => trails[code].notes.filter(n => n.category === 'shelter' && typeof n.lat === 'number' && typeof n.lng === 'number').map(n => ({ ...n, code })));
     if (!shelters.length) { shelterPanel.innerHTML = '<div class="sh-title">🆘 Δεν υπάρχουν καταχωρημένα καταφύγια</div><div class="sh-sub">Πρόσθεσε καταφύγιο από το WordPress → Σημεία διαδρομών.</div><button class="sh-close" type="button">Κλείσιμο</button>'; shelterPanel.querySelector('button')?.addEventListener('click', () => shelterPanel.classList.remove('show')); return; }
@@ -330,7 +348,15 @@ if (app) {
     shelterPanel.querySelector('button')?.addEventListener('click', () => { shelterPanel.classList.remove('show'); if (shelterLine) { map.removeLayer(shelterLine); shelterLine = null; } });
   });
 
-  view3dBtn?.addEventListener('click', () => { if (!selectedCode && codes.length) { selectTrail(codes[0]); } view3dOverlay?.classList.add('open'); });
+  view3dBtn?.addEventListener('click', () => {
+    closeDrawer();
+    routeBuilderPanel?.classList.remove('open');
+    routeBuilderToggle?.classList.remove('open');
+    trailPanel.classList.remove('open');
+    trailMenuToggle?.classList.remove('open');
+    if (!selectedCode && codes.length) selectTrail(codes[0]);
+    view3dOverlay?.classList.add('open');
+  });
   view3dClose?.addEventListener('click', () => view3dOverlay?.classList.remove('open'));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { view3dOverlay?.classList.remove('open'); routeBuilderPanel?.classList.remove('open'); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { view3dOverlay?.classList.remove('open'); routeBuilderPanel?.classList.remove('open'); shelterPanel?.classList.remove('show'); } });
 }

@@ -239,10 +239,11 @@
     if (segments.length === 1) return orientOfficialRoute(code, [segments[0]], rawSegments, 1);
 
     const nodes: RoutePoint[] = [];
-    const nodeFor = (point: RoutePoint) => {
+    const nodeFor = (point: RoutePoint, excludedNode = -1) => {
       let bestIndex = -1;
       let bestDistance = Number.POSITIVE_INFINITY;
       nodes.forEach((node, index) => {
+        if (index === excludedNode) return;
         const distance = haversine(point, node);
         if (distance < bestDistance) { bestDistance = distance; bestIndex = index; }
       });
@@ -251,13 +252,12 @@
       return nodes.length - 1;
     };
 
-    const edges: GraphEdge[] = segments.map((points, index) => ({
-      index,
-      a: nodeFor(points[0]),
-      b: nodeFor(points.at(-1)!),
-      points,
-      length: pathDistance(points)
-    }));
+    const edges: GraphEdge[] = segments.map((points, index) => {
+      const a = nodeFor(points[0]);
+      // Never collapse both ends of the same real section into one graph node.
+      const b = nodeFor(points.at(-1)!, a);
+      return { index, a, b, points, length: pathDistance(points) };
+    });
 
     const adjacency: GraphLink[][] = Array.from({ length: nodes.length }, () => []);
     edges.forEach(edge => {

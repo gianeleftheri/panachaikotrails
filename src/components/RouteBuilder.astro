@@ -76,9 +76,12 @@
   const routePanel = document.getElementById('routeBuilderPanel');
   const drawer = document.getElementById('trailDrawer');
   const drawerHandle = document.getElementById('trailDrawerHandle');
+  const gpsButton = document.getElementById('rbGpsBtn') as HTMLButtonElement | null;
   const calcButton = document.getElementById('rbCalcBtn') as HTMLButtonElement | null;
   const trailSelect = document.getElementById('rbTrailSelect') as HTMLSelectElement | null;
   const resultStatus = document.getElementById('rbResultStatus');
+
+  let lastKnownPosition: GeolocationPosition | null = null;
 
   routeToggle?.addEventListener('click', () => {
     window.setTimeout(() => {
@@ -95,17 +98,37 @@
     });
   });
 
-  const getPosition = () => new Promise<GeolocationPosition>((resolve, reject) => {
+  const requestPosition = (maximumAge: number, timeout: number) => new Promise<GeolocationPosition>((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Το GPS δεν είναι διαθέσιμο.'));
       return;
     }
     navigator.geolocation.getCurrentPosition(resolve, reject, {
       enableHighAccuracy: true,
-      maximumAge: 3000,
-      timeout: 12000
+      maximumAge,
+      timeout
     });
   });
+
+  // The main map already starts a GPS watch when this button is pressed. Keep a
+  // second lightweight snapshot here as well, so route calculation can reuse the
+  // location the user has already approved instead of demanding a second fresh fix.
+  gpsButton?.addEventListener('click', () => {
+    void requestPosition(10 * 60 * 1000, 15000).then(position => {
+      lastKnownPosition = position;
+    }).catch(() => {
+      // trail-map.ts still owns the visible GPS state; calculation will retry below.
+    });
+  });
+
+  const getPosition = async (): Promise<GeolocationPosition> => {
+    if (lastKnownPosition && Date.now() - lastKnownPosition.timestamp <= 10 * 60 * 1000) {
+      return lastKnownPosition;
+    }
+    const position = await requestPosition(10 * 60 * 1000, 30000);
+    lastKnownPosition = position;
+    return position;
+  };
 
   const distanceMeters = (lng1: number, lat1: number, lng2: number, lat2: number) => {
     const R = 6371000;
@@ -198,8 +221,6 @@
   };
 
   calcButton?.addEventListener('click', async event => {
-    // Override the temporary handler in trail-map.ts until routing is fully moved
-    // into its own controller. Capture phase prevents the placeholder calculation.
     event.preventDefault();
     event.stopImmediatePropagation();
 
@@ -209,8 +230,12 @@
 
     calcButton.disabled = true;
     calcButton.textContent = 'Υπολογισμός…';
+    if (runtime.__panachaikoMap && runtime.__panachaikoRouteLayer) {
+      runtime.__panachaikoMap.removeLayer(runtime.__panachaikoRouteLayer);
+      runtime.__panachaikoRouteLayer = undefined;
+    }
     if (resultStatus) {
-      resultStatus.textContent = 'Λήψη GPS και υπολογισμός διαδρομής…';
+      resultStatus.textContent = 'Χρήση του διαθέσιμου GPS και υπολογισμός διαδρομής…';
       resultStatus.className = 'rb-status warn';
     }
 
@@ -256,8 +281,9 @@
       }
     } catch (error) {
       if (resultStatus) {
-        resultStatus.textContent = error instanceof GeolocationPositionError
-          ? 'Δεν μπόρεσα να πάρω νέο στίγμα GPS. Έλεγξε την άδεια τοποθεσίας και δοκίμασε ξανά.'
+        const geolocationError = typeof GeolocationPositionError !== 'undefined' && error instanceof GeolocationPositionError;
+        resultStatus.textContent = geolocationError
+          ? 'Το προηγούμενο στίγμα GPS έπαψε να είναι διαθέσιμο. Πάτησε ξανά «Χρήση της θέσης μου» και δοκίμασε.'
           : error instanceof Error ? error.message : 'Ο υπολογισμός απέτυχε.';
         resultStatus.className = 'rb-status warn';
       }

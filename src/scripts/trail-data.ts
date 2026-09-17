@@ -1,10 +1,10 @@
-import type { Trail, TrailCollection, TrailStatus } from '../types/trail';
+import type { Trail, TrailCollection, TrailPoi, TrailStatus } from '../types/trail';
 
 type TrailDataModule = { key: string; trail: Trail };
 type ApiTrailItem = { key?: unknown; trail?: unknown };
 type TrailCache = { savedAt: number; trails: TrailCollection };
 
-const CACHE_KEY = 'panachaiko-trails-cache-v1';
+const CACHE_KEY = 'panachaiko-trails-cache-v2';
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const CMS_TRAILS_URL = import.meta.env.PUBLIC_TRAILS_API_URL || 'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/trails';
 
@@ -30,6 +30,31 @@ const asStatus = (value: unknown, existing: boolean): TrailStatus => {
   return existing ? 'existing' : 'planned';
 };
 
+const asStringArray = (value: unknown): string[] => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+const asNumberArray = (value: unknown): number[] => Array.isArray(value) ? value.map(Number).filter(Number.isFinite) : [];
+
+const normalizePoi = (value: unknown): TrailPoi | null => {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Record<string, unknown>;
+  return {
+    id: Number.isFinite(Number(raw.id)) ? Number(raw.id) : undefined,
+    title: typeof raw.title === 'string' ? raw.title : undefined,
+    text: typeof raw.text === 'string' ? raw.text : '',
+    category: typeof raw.category === 'string' ? raw.category : 'general',
+    lat: asNullableNumber(raw.lat),
+    lng: asNullableNumber(raw.lng),
+    media_ids: asNumberArray(raw.media_ids),
+    media_urls: asStringArray(raw.media_urls),
+    featured_image_url: typeof raw.featured_image_url === 'string' && raw.featured_image_url ? raw.featured_image_url : null,
+    video_url: typeof raw.video_url === 'string' ? raw.video_url : '',
+    verified_at: typeof raw.verified_at === 'string' ? raw.verified_at : ''
+  };
+};
+
+const normalizePoiArray = (value: unknown): TrailPoi[] => Array.isArray(value)
+  ? value.map(normalizePoi).filter((poi): poi is TrailPoi => Boolean(poi))
+  : [];
+
 const normalizeTrail = (value: unknown): Trail | null => {
   if (!value || typeof value !== 'object') return null;
   const raw = value as Record<string, unknown>;
@@ -38,18 +63,21 @@ const normalizeTrail = (value: unknown): Trail | null => {
 
   return {
     name: typeof raw.name === 'string' ? raw.name : '',
+    description: typeof raw.description === 'string' ? raw.description : '',
     existing,
     status: asStatus(raw.status, existing),
-    color: typeof raw.color === 'string' ? raw.color : '#84a06e',
+    color: typeof raw.color === 'string' && raw.color ? raw.color : '#84a06e',
     length_km: asNumber(raw.length_km),
     elev_min: asNullableNumber(raw.elev_min),
     elev_max: asNullableNumber(raw.elev_max),
     gain_m: asNumber(raw.gain_m),
     loss_m: asNumber(raw.loss_m),
     segments: segments as Trail['segments'],
-    photos: Array.isArray(raw.photos) ? raw.photos : [],
-    videos: Array.isArray(raw.videos) ? raw.videos : [],
-    notes: Array.isArray(raw.notes) ? raw.notes as Trail['notes'] : []
+    photos: normalizePoiArray(raw.photos),
+    videos: normalizePoiArray(raw.videos),
+    notes: normalizePoiArray(raw.notes),
+    source: typeof raw.source === 'string' ? raw.source : '',
+    verified_at: typeof raw.verified_at === 'string' ? raw.verified_at : ''
   };
 };
 

@@ -57,13 +57,21 @@
   let lastGps: GeolocationPosition | null = null;
   let selectedCode = '';
   let navigationActive = false;
+  // Set once MapLibre's 'style.load' fires (style spec + our own GeoJSON sources/layers
+  // can be added). Deliberately NOT the same as map.isStyleLoaded()/the 'load' event,
+  // which additionally wait for every raster/raster-dem tile across the whole style to
+  // finish downloading. That includes third-party tile hosts (Esri, the AWS terrarium
+  // bucket) we don't control — if any of them is slow, rate-limited or a single tile
+  // request never resolves, isStyleLoaded() can stay false forever and every trail/route
+  // draw below was silently skipped, which is why the 3D view could show nothing at all.
+  let styleReady = false;
 
   const emptyLine = () => ({ type: 'Feature' as const, properties: {}, geometry: { type: 'MultiLineString' as const, coordinates: [] as number[][][] } });
   const emptyRoute = () => ({ type: 'Feature' as const, properties: {}, geometry: { type: 'LineString' as const, coordinates: [] as number[][] } });
   const source = (id: string) => terrainMap?.getSource(id) as maplibregl.GeoJSONSource | undefined;
 
   const ensureLayers = () => {
-    if (!terrainMap || !terrainMap.isStyleLoaded()) return;
+    if (!terrainMap || !styleReady) return;
     if (!terrainMap.getSource('selected-trail')) {
       terrainMap.addSource('selected-trail', { type: 'geojson', data: emptyLine() });
       terrainMap.addLayer({ id:'trail-shadow', type:'line', source:'selected-trail', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100b', 'line-width':14, 'line-opacity':.9 } });
@@ -110,7 +118,12 @@
     });
     terrainMap.addControl(new maplibregl.NavigationControl({ visualizePitch:true }), 'bottom-right');
     terrainMap.addControl(new maplibregl.ScaleControl({ unit:'metric', maxWidth:110 }), 'bottom-left');
-    terrainMap.on('load', () => {
+    // 'style.load' fires once the style document itself (sources/layers spec, no tiles
+    // required) is ready — this is when it's safe to call setTerrain() and add our own
+    // GeoJSON sources/layers. See the styleReady comment above for why we don't gate on
+    // map.isStyleLoaded()/'load' here.
+    terrainMap.on('style.load', () => {
+      styleReady = true;
       terrainMap?.setTerrain({ source:'dem', exaggeration:1.28 });
       ensureLayers();
       sync(true);
@@ -120,7 +133,7 @@
     });
     terrainMap.on('error', event => {
       console.warn('MapLibre 3D error', event.error);
-      if (hint) hint.textContent = '3D: πρόβλημα φόρτωσης tile — γίνεται νέα προσπάθεια.';
+      if (hint && !styleReady) hint.textContent = '3D: πρόβλημα φόρτωσης tile — γίνεται νέα προσπάθεια.';
     });
     return terrainMap;
   };
@@ -159,7 +172,7 @@
   };
 
   const renderTrail = (code:string, fit=false) => {
-    if (!terrainMap?.isStyleLoaded() || !code) return;
+    if (!terrainMap || !styleReady || !code) return;
     const trail = bundledTrails[code];
     const segments = coordinatesFor(trail);
     ensureLayers();
@@ -178,7 +191,7 @@
   };
 
   const renderNavigation = (fit=false) => {
-    if (!terrainMap?.isStyleLoaded()) return;
+    if (!terrainMap || !styleReady) return;
     const plan = runtime.__panachaikoNavigationPlan;
     ensureLayers();
     const coords = (plan?.points ?? []).map(([lat,lng]) => [Number(lng),Number(lat)] as [number,number]).filter(([lng,lat]) => Number.isFinite(lng) && Number.isFinite(lat));
@@ -216,7 +229,7 @@
   const stopGps = () => { if (gpsWatch !== null) navigator.geolocation.clearWatch(gpsWatch); gpsWatch=null; };
 
   const sync = (fit=false) => {
-    if (!terrainMap?.isStyleLoaded()) return;
+    if (!terrainMap || !styleReady) return;
     const code = activeCodeFromUi();
     if (code) renderTrail(code, fit && !runtime.__panachaikoNavigationPlan);
     renderNavigation(Boolean(fit && runtime.__panachaikoNavigationPlan));
@@ -238,16 +251,16 @@
   document.addEventListener('panachaiko:navigation-start', event => {
     navigationActive = true;
     runtime.__panachaikoNavigationPlan = (event as CustomEvent<NavigationPlan>).detail;
-    if (terrainMap?.isStyleLoaded()) sync(overlay?.classList.contains('open') ?? false);
+    if (styleReady) sync(overlay?.classList.contains('open') ?? false);
   });
   document.addEventListener('panachaiko:navigation-exit', () => {
     navigationActive = false;
-    if (terrainMap?.isStyleLoaded()) sync(false);
+    if (styleReady) sync(false);
   });
 
   if (title) {
     new MutationObserver(() => {
-      if (terrainMap?.isStyleLoaded() && overlay?.classList.contains('open')) {
+      if (styleReady && overlay?.classList.contains('open')) {
         const code = activeCodeFromUi();
         if (code && code !== selectedCode) renderTrail(code,true);
       }
@@ -256,7 +269,7 @@
 
   let lastPlanSignature = '';
   window.setInterval(() => {
-    if (!terrainMap?.isStyleLoaded() || !overlay?.classList.contains('open')) return;
+    if (!styleReady || !overlay?.classList.contains('open')) return;
     const plan = runtime.__panachaikoNavigationPlan;
     const first = plan?.points?.[0];
     const last = plan?.points?.at(-1);

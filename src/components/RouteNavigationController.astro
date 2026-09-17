@@ -41,6 +41,7 @@
     points: TrailSegment;
     length: number;
   };
+  type GraphLink = { edgeIndex: number; to: number };
   type MainTrailRoute = {
     segments: TrailSegment[];
     points: RoutePoint[];
@@ -48,8 +49,11 @@
     usedSegments: number;
     omittedSegments: number;
     reversed: boolean;
+    ascentM: number;
+    descentM: number;
     startLabel?: string;
     endLabel?: string;
+    directionVerified: boolean;
   };
 
   const runtime = window as typeof window & {
@@ -59,7 +63,9 @@
     __panachaikoNavigationPlan?: NavigationPlan;
   };
 
-  const SEGMENT_SNAP_METERS = 60;
+  // 35 m joins the only real small source gap (E31 ~31 m) while avoiding
+  // collapsing legitimate short route sections (Π-4 ~59 m, E31 ~49 m).
+  const SEGMENT_SNAP_METERS = 35;
   let cachedPosition: GeolocationPosition | null = null;
   let pendingPlan: NavigationPlan | null = null;
 
@@ -84,7 +90,8 @@
     return 2 * R * Math.asin(Math.sqrt(x));
   };
 
-  const pathDistance = (points: RoutePoint[]) => points.slice(1).reduce((sum, point, index) => sum + haversine(points[index], point), 0);
+  const pathDistance = (points: RoutePoint[]) => points.slice(1)
+    .reduce((sum, point, index) => sum + haversine(points[index], point), 0);
 
   const decodePolyline = (encoded: string, precision = 6): RoutePoint[] => {
     const coordinates: RoutePoint[] = [];
@@ -158,13 +165,58 @@
     return points;
   };
 
-  const applyOfficialDirection = (code: string, routeSegments: TrailSegment[], totalSegments: number): MainTrailRoute => {
+  const coordKey = (point: RoutePoint) => `${point[0].toFixed(6)}|${point[1].toFixed(6)}`;
+
+  const elevationLookup = (rawSegments: Array<Array<RawTrailPoint>>) => {
+    const lookup = new Map<string, number>();
+    rawSegments.forEach(segment => segment.forEach(raw => {
+      const elevation = Number(raw[2]);
+      if (!Number.isFinite(elevation)) return;
+      const point: RoutePoint = [Number(raw[1]), Number(raw[0])];
+      if (Number.isFinite(point[0]) && Number.isFinite(point[1])) lookup.set(coordKey(point), elevation);
+    }));
+    return lookup;
+  };
+
+  const gainLossFor = (points: RoutePoint[], elevations: Map<string, number>) => {
+    let gain = 0;
+    let loss = 0;
+    let previousElevation: number | null = null;
+    points.forEach(point => {
+      const elevation = elevations.get(coordKey(point));
+      if (elevation === undefined) { previousElevation = null; return; }
+      if (previousElevation !== null) {
+        const delta = elevation - previousElevation;
+        if (delta > 0) gain += delta;
+        else loss += Math.abs(delta);
+      }
+      previousElevation = elevation;
+    });
+    return { gain, loss };
+  };
+
+  const orientOfficialRoute = (
+    code: string,
+    routeSegments: TrailSegment[],
+    rawSegments: Array<Array<RawTrailPoint>>,
+    totalSegments: number
+  ): MainTrailRoute => {
     const config = getTrailNavigationConfig(code);
-    const reversed = config.direction === 'reverse';
-    const orientedSegments = reversed
-      ? [...routeSegments].reverse().map(segment => [...segment].reverse())
-      : routeSegments;
+    let orientedSegments = routeSegments;
+    let reversed = false;
+    const rawPoints = flattenConnectedSegments(routeSegments);
+
+    if (config && rawPoints.length > 1) {
+      const distanceAtFirst = haversine(config.start, rawPoints[0]);
+      const distanceAtLast = haversine(config.start, rawPoints.at(-1)!);
+      if (distanceAtLast < distanceAtFirst) {
+        orientedSegments = [...routeSegments].reverse().map(segment => [...segment].reverse());
+        reversed = true;
+      }
+    }
+
     const points = flattenConnectedSegments(orientedSegments);
+    const profile = gainLossFor(points, elevationLookup(rawSegments));
     const usedSegments = orientedSegments.length;
     return {
       segments: orientedSegments,
@@ -173,18 +225,18 @@
       usedSegments,
       omittedSegments: Math.max(0, totalSegments - usedSegments),
       reversed,
-      startLabel: config.startLabel,
-      endLabel: config.endLabel
+      ascentM: profile.gain,
+      descentM: profile.loss,
+      startLabel: config?.startLabel,
+      endLabel: config?.endLabel,
+      directionVerified: config?.verified !== false
     };
   };
 
-  // Trail JSON is a MultiLineString. Geometry storage order is not the same thing as
-  // the official hiking direction. We first find the connected main route and only
-  // then orient it according to the per-trail A -> T navigation configuration.
   const buildMainTrailRoute = (code: string, rawSegments: Array<Array<RawTrailPoint>>): MainTrailRoute => {
     const segments = normaliseTrailSegments(rawSegments);
-    if (!segments.length) return applyOfficialDirection(code, [], 0);
-    if (segments.length === 1) return applyOfficialDirection(code, [segments[0]], 1);
+    if (!segments.length) return orientOfficialRoute(code, [], rawSegments, 0);
+    if (segments.length === 1) return orientOfficialRoute(code, [segments[0]], rawSegments, 1);
 
     const nodes: RoutePoint[] = [];
     const nodeFor = (point: RoutePoint) => {
@@ -207,64 +259,111 @@
       length: pathDistance(points)
     }));
 
-    const adjacency: Array<Array<{ edgeIndex: number; to: number }>> = Array.from({ length: nodes.length }, () => []);
+    const adjacency: GraphLink[][] = Array.from({ length: nodes.length }, () => []);
     edges.forEach(edge => {
       adjacency[edge.a].push({ edgeIndex: edge.index, to: edge.b });
       adjacency[edge.b].push({ edgeIndex: edge.index, to: edge.a });
     });
 
-    const firstEdge = edges[0];
-    const seedNode = firstEdge.b;
-    const dist = new Array(nodes.length).fill(Number.POSITIVE_INFINITY) as number[];
-    const previousNode = new Array(nodes.length).fill(-1) as number[];
-    const previousEdge = new Array(nodes.length).fill(-1) as number[];
-    const visited = new Array(nodes.length).fill(false) as boolean[];
-    dist[seedNode] = 0;
-
-    for (let iteration = 0; iteration < nodes.length; iteration += 1) {
-      let current = -1;
-      let currentDistance = Number.POSITIVE_INFINITY;
-      for (let i = 0; i < nodes.length; i += 1) {
-        if (!visited[i] && dist[i] < currentDistance) { current = i; currentDistance = dist[i]; }
+    // Segment arrays are not guaranteed to be stored in hiking order (E31 and Π-14
+    // are clear examples). Work on the largest connected component instead of anchoring
+    // the route to segments[0].
+    const components: number[][] = [];
+    const seen = new Set<number>();
+    nodes.forEach((_, startNode) => {
+      if (seen.has(startNode)) return;
+      const stack = [startNode];
+      const component: number[] = [];
+      seen.add(startNode);
+      while (stack.length) {
+        const current = stack.pop()!;
+        component.push(current);
+        adjacency[current].forEach(link => {
+          if (!seen.has(link.to)) { seen.add(link.to); stack.push(link.to); }
+        });
       }
-      if (current < 0) break;
-      visited[current] = true;
-      adjacency[current].forEach(link => {
-        if (link.edgeIndex === firstEdge.index) return;
-        const edge = edges[link.edgeIndex];
-        const candidate = currentDistance + edge.length;
-        if (candidate < dist[link.to]) {
-          dist[link.to] = candidate;
-          previousNode[link.to] = current;
-          previousEdge[link.to] = link.edgeIndex;
+      components.push(component);
+    });
+
+    const componentLength = (component: number[]) => {
+      const allowed = new Set(component);
+      return edges.reduce((sum, edge) => allowed.has(edge.a) && allowed.has(edge.b) ? sum + edge.length : sum, 0);
+    };
+    const mainComponent = components.sort((a, b) => componentLength(b) - componentLength(a))[0] ?? [];
+    const allowed = new Set(mainComponent);
+    const terminals = mainComponent.filter(node => adjacency[node].filter(link => allowed.has(link.to)).length === 1);
+    const candidates = terminals.length >= 2 ? terminals : mainComponent;
+
+    const dijkstra = (startNode: number) => {
+      const dist = new Array(nodes.length).fill(Number.POSITIVE_INFINITY) as number[];
+      const previousNode = new Array(nodes.length).fill(-1) as number[];
+      const previousEdge = new Array(nodes.length).fill(-1) as number[];
+      const visited = new Array(nodes.length).fill(false) as boolean[];
+      dist[startNode] = 0;
+      for (let iteration = 0; iteration < mainComponent.length; iteration += 1) {
+        let current = -1;
+        let currentDistance = Number.POSITIVE_INFINITY;
+        mainComponent.forEach(node => {
+          if (!visited[node] && dist[node] < currentDistance) { current = node; currentDistance = dist[node]; }
+        });
+        if (current < 0) break;
+        visited[current] = true;
+        adjacency[current].forEach(link => {
+          if (!allowed.has(link.to)) return;
+          const edge = edges[link.edgeIndex];
+          const candidate = currentDistance + edge.length;
+          if (candidate < dist[link.to]) {
+            dist[link.to] = candidate;
+            previousNode[link.to] = current;
+            previousEdge[link.to] = link.edgeIndex;
+          }
+        });
+      }
+      return { dist, previousNode, previousEdge };
+    };
+
+    let bestDistance = -1;
+    let bestStart = candidates[0] ?? mainComponent[0] ?? 0;
+    let bestEnd = bestStart;
+    let bestPreviousNode: number[] = [];
+    let bestPreviousEdge: number[] = [];
+
+    candidates.forEach(startNode => {
+      const result = dijkstra(startNode);
+      candidates.forEach(endNode => {
+        const distance = result.dist[endNode];
+        if (Number.isFinite(distance) && distance > bestDistance) {
+          bestDistance = distance;
+          bestStart = startNode;
+          bestEnd = endNode;
+          bestPreviousNode = result.previousNode;
+          bestPreviousEdge = result.previousEdge;
         }
       });
+    });
+
+    if (bestDistance < 0 || bestStart === bestEnd) {
+      return orientOfficialRoute(code, [segments[0]], rawSegments, segments.length);
     }
 
-    const reachable = nodes.map((_, index) => index).filter(index => Number.isFinite(dist[index]));
-    const terminals = reachable.filter(index => index !== seedNode && adjacency[index].filter(link => link.edgeIndex !== firstEdge.index).length <= 1);
-    const candidates = terminals.length ? terminals : reachable.filter(index => index !== seedNode);
-    let targetNode = seedNode;
-    candidates.forEach(index => { if (dist[index] > dist[targetNode]) targetNode = index; });
-
-    const continuation: Array<{ edgeIndex: number; from: number; to: number }> = [];
-    let cursor = targetNode;
-    while (cursor !== seedNode && previousEdge[cursor] >= 0) {
-      continuation.push({ edgeIndex: previousEdge[cursor], from: previousNode[cursor], to: cursor });
-      cursor = previousNode[cursor];
+    const steps: Array<{ edgeIndex: number; from: number; to: number }> = [];
+    let cursor = bestEnd;
+    while (cursor !== bestStart && bestPreviousEdge[cursor] >= 0) {
+      steps.push({ edgeIndex: bestPreviousEdge[cursor], from: bestPreviousNode[cursor], to: cursor });
+      cursor = bestPreviousNode[cursor];
     }
-    continuation.reverse();
+    steps.reverse();
 
-    const routeSegments: TrailSegment[] = [firstEdge.points];
-    let currentNode = seedNode;
-    continuation.forEach(step => {
+    const routeSegments: TrailSegment[] = [];
+    let currentNode = bestStart;
+    steps.forEach(step => {
       const edge = edges[step.edgeIndex];
       const oriented = edge.a === currentNode ? edge.points : [...edge.points].reverse();
       routeSegments.push(oriented);
       currentNode = step.to;
     });
 
-    return applyOfficialDirection(code, routeSegments, segments.length);
+    return orientOfficialRoute(code, routeSegments, rawSegments, segments.length);
   };
 
   const routeApproach = async (start: RoutePoint, end: RoutePoint, mode: string) => {
@@ -359,7 +458,8 @@
 
       const approach = await routeApproach(start, trailPoints[0], mode);
       const trailDistanceM = pathDistance(trailPoints);
-      const ascent = Number(mainRoute.reversed ? (trail.loss_m ?? 0) : (trail.gain_m ?? 0));
+      const fallbackAscent = Number(trail.gain_m ?? 0);
+      const ascent = mainRoute.ascentM > 0 ? mainRoute.ascentM : fallbackAscent;
       const trailSeconds = (trailDistanceM / 5000) * 3600 + (Math.max(0, ascent) / 600) * 3600;
       const totalDistanceM = approach.distanceM + trailDistanceM;
       const estimatedSeconds = approach.seconds + trailSeconds;
@@ -384,10 +484,15 @@
         const topologyNote = mainRoute.omittedSegments
           ? `<br><span style="opacity:.72">Κύρια συνεχής πορεία: ${mainRoute.usedSegments}/${mainRoute.totalSegments} τμήματα. ${mainRoute.omittedSegments} κλαδιά/ασύνδετα τμήματα δεν ενώνονται τεχνητά με ευθείες.</span>`
           : '';
-        const directionNote = mainRoute.startLabel && mainRoute.endLabel
-          ? `<br><span style="opacity:.82">Αφετηρία Α: <b>${mainRoute.startLabel}</b> → Τέλος Τ: <b>${mainRoute.endLabel}</b></span>`
+        const declaredDistanceM = Number(trail.length_km ?? 0) * 1000;
+        const lengthDeltaPct = declaredDistanceM > 0 ? Math.abs(trailDistanceM - declaredDistanceM) / declaredDistanceM * 100 : 0;
+        const auditNote = lengthDeltaPct > 5
+          ? `<br><span style="color:#d9a441">⚠ Έλεγχος γεωμετρίας: υπολογισμένο μήκος ${formatDistance(trailDistanceM)} έναντι δηλωμένου ${formatDistance(declaredDistanceM)}.</span>`
           : '';
-        result.innerHTML = `Προσέγγιση στην αρχή: <b>${formatDistance(approach.distanceM)}</b><br>Μονοπάτι μέχρι το τέλος: <b>${formatDistance(trailDistanceM)}</b><br>Σύνολο: <b>${formatDistance(totalDistanceM)}</b> · περίπου <b>${formatTime(estimatedSeconds)}</b>${directionNote}${topologyNote}<br><span style="opacity:.72">Μετά πάτησε «Κλείδωμα & έναρξη πλοήγησης».</span>`;
+        const directionNote = mainRoute.startLabel && mainRoute.endLabel
+          ? `<br><span style="opacity:.86">Αφετηρία Α: <b>${mainRoute.startLabel}</b> → Τέλος Τ: <b>${mainRoute.endLabel}</b>${mainRoute.directionVerified ? '' : ' · φορά υπό επιβεβαίωση'}</span>`
+          : '';
+        result.innerHTML = `Προσέγγιση στην αρχή: <b>${formatDistance(approach.distanceM)}</b><br>Μονοπάτι μέχρι το τέλος: <b>${formatDistance(trailDistanceM)}</b><br>Σύνολο: <b>${formatDistance(totalDistanceM)}</b> · περίπου <b>${formatTime(estimatedSeconds)}</b>${directionNote}${topologyNote}${auditNote}<br><span style="opacity:.72">Μετά πάτησε «Κλείδωμα & έναρξη πλοήγησης».</span>`;
         result.className = 'rb-status ok';
       }
     } catch (error) {

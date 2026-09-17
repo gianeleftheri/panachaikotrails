@@ -1,5 +1,6 @@
 <script>
   import L from 'leaflet';
+  import { getTrailNavigationConfig } from '../data/trail-navigation';
 
   type RoutePoint = [number, number];
   type RawTrailPoint = [number, number, number?];
@@ -46,6 +47,9 @@
     totalSegments: number;
     usedSegments: number;
     omittedSegments: number;
+    reversed: boolean;
+    startLabel?: string;
+    endLabel?: string;
   };
 
   const runtime = window as typeof window & {
@@ -142,14 +146,45 @@
       .filter((point, index, points) => index === 0 || point[0] !== points[index - 1][0] || point[1] !== points[index - 1][1]))
     .filter(segment => segment.length >= 2);
 
-  // Trail JSON is a MultiLineString. The old code flattened every stored section into
-  // one polyline, so Leaflet invented straight lines between unrelated sections. We
-  // now build a graph from section endpoints, keep the stored first section as the
-  // official start, and follow the longest connected route to a terminal endpoint.
-  const buildMainTrailRoute = (rawSegments: Array<Array<RawTrailPoint>>): MainTrailRoute => {
+  const flattenConnectedSegments = (segments: TrailSegment[]) => {
+    const points: RoutePoint[] = [];
+    segments.forEach(segment => {
+      segment.forEach((point, index) => {
+        const previous = points.at(-1);
+        if (index === 0 && previous && haversine(previous, point) < 1) return;
+        points.push(point);
+      });
+    });
+    return points;
+  };
+
+  const applyOfficialDirection = (code: string, routeSegments: TrailSegment[], totalSegments: number): MainTrailRoute => {
+    const config = getTrailNavigationConfig(code);
+    const reversed = config.direction === 'reverse';
+    const orientedSegments = reversed
+      ? [...routeSegments].reverse().map(segment => [...segment].reverse())
+      : routeSegments;
+    const points = flattenConnectedSegments(orientedSegments);
+    const usedSegments = orientedSegments.length;
+    return {
+      segments: orientedSegments,
+      points,
+      totalSegments,
+      usedSegments,
+      omittedSegments: Math.max(0, totalSegments - usedSegments),
+      reversed,
+      startLabel: config.startLabel,
+      endLabel: config.endLabel
+    };
+  };
+
+  // Trail JSON is a MultiLineString. Geometry storage order is not the same thing as
+  // the official hiking direction. We first find the connected main route and only
+  // then orient it according to the per-trail A -> T navigation configuration.
+  const buildMainTrailRoute = (code: string, rawSegments: Array<Array<RawTrailPoint>>): MainTrailRoute => {
     const segments = normaliseTrailSegments(rawSegments);
-    if (!segments.length) return { segments: [], points: [], totalSegments: 0, usedSegments: 0, omittedSegments: 0 };
-    if (segments.length === 1) return { segments, points: [...segments[0]], totalSegments: 1, usedSegments: 1, omittedSegments: 0 };
+    if (!segments.length) return applyOfficialDirection(code, [], 0);
+    if (segments.length === 1) return applyOfficialDirection(code, [segments[0]], 1);
 
     const nodes: RoutePoint[] = [];
     const nodeFor = (point: RoutePoint) => {
@@ -179,7 +214,6 @@
     });
 
     const firstEdge = edges[0];
-    const startNode = firstEdge.a;
     const seedNode = firstEdge.b;
     const dist = new Array(nodes.length).fill(Number.POSITIVE_INFINITY) as number[];
     const previousNode = new Array(nodes.length).fill(-1) as number[];
@@ -230,23 +264,7 @@
       currentNode = step.to;
     });
 
-    const points: RoutePoint[] = [];
-    routeSegments.forEach(segment => {
-      segment.forEach((point, index) => {
-        const previous = points.at(-1);
-        if (index === 0 && previous && haversine(previous, point) < 1) return;
-        points.push(point);
-      });
-    });
-
-    const usedSegments = routeSegments.length;
-    return {
-      segments: routeSegments,
-      points,
-      totalSegments: segments.length,
-      usedSegments,
-      omittedSegments: Math.max(0, segments.length - usedSegments)
-    };
+    return applyOfficialDirection(code, routeSegments, segments.length);
   };
 
   const routeApproach = async (start: RoutePoint, end: RoutePoint, mode: string) => {
@@ -335,13 +353,13 @@
       const position = await getPosition();
       const start: RoutePoint = [position.coords.latitude, position.coords.longitude];
       const trail = await loadTrail(code);
-      const mainRoute = buildMainTrailRoute(trail.segments!);
+      const mainRoute = buildMainTrailRoute(code, trail.segments!);
       const trailPoints = mainRoute.points;
       if (trailPoints.length < 2 || !mainRoute.segments.length) throw new Error('Δεν βρέθηκε συνεχής κύρια πορεία μέσα στα τμήματα του μονοπατιού.');
 
       const approach = await routeApproach(start, trailPoints[0], mode);
       const trailDistanceM = pathDistance(trailPoints);
-      const ascent = Number(trail.gain_m ?? 0);
+      const ascent = Number(mainRoute.reversed ? (trail.loss_m ?? 0) : (trail.gain_m ?? 0));
       const trailSeconds = (trailDistanceM / 5000) * 3600 + (Math.max(0, ascent) / 600) * 3600;
       const totalDistanceM = approach.distanceM + trailDistanceM;
       const estimatedSeconds = approach.seconds + trailSeconds;
@@ -366,7 +384,10 @@
         const topologyNote = mainRoute.omittedSegments
           ? `<br><span style="opacity:.72">Κύρια συνεχής πορεία: ${mainRoute.usedSegments}/${mainRoute.totalSegments} τμήματα. ${mainRoute.omittedSegments} κλαδιά/ασύνδετα τμήματα δεν ενώνονται τεχνητά με ευθείες.</span>`
           : '';
-        result.innerHTML = `Προσέγγιση στην αρχή: <b>${formatDistance(approach.distanceM)}</b><br>Μονοπάτι μέχρι το τέλος: <b>${formatDistance(trailDistanceM)}</b><br>Σύνολο: <b>${formatDistance(totalDistanceM)}</b> · περίπου <b>${formatTime(estimatedSeconds)}</b>${topologyNote}<br><span style="opacity:.72">Μετά πάτησε «Κλείδωμα & έναρξη πλοήγησης».</span>`;
+        const directionNote = mainRoute.startLabel && mainRoute.endLabel
+          ? `<br><span style="opacity:.82">Αφετηρία Α: <b>${mainRoute.startLabel}</b> → Τέλος Τ: <b>${mainRoute.endLabel}</b></span>`
+          : '';
+        result.innerHTML = `Προσέγγιση στην αρχή: <b>${formatDistance(approach.distanceM)}</b><br>Μονοπάτι μέχρι το τέλος: <b>${formatDistance(trailDistanceM)}</b><br>Σύνολο: <b>${formatDistance(totalDistanceM)}</b> · περίπου <b>${formatTime(estimatedSeconds)}</b>${directionNote}${topologyNote}<br><span style="opacity:.72">Μετά πάτησε «Κλείδωμα & έναρξη πλοήγησης».</span>`;
         result.className = 'rb-status ok';
       }
     } catch (error) {

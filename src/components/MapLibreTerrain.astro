@@ -1,0 +1,301 @@
+<style>
+  :global(#map3d){position:relative!important;display:block!important;min-height:0;background:#07100b!important;overflow:hidden}
+  :global(#map3d .maplibregl-canvas){outline:none}
+  :global(#map3d .maplibregl-ctrl-group){background:rgba(18,32,26,.92);border:1px solid rgba(184,157,112,.35);box-shadow:0 5px 20px rgba(0,0,0,.35)}
+  :global(#map3d .maplibregl-ctrl-group button){filter:invert(1) sepia(.15)}
+  :global(#map3d .maplibregl-ctrl-attrib){background:rgba(18,32,26,.78);color:#c9bea3}
+  :global(#map3d .maplibregl-ctrl-attrib a){color:#f3ede0}
+  :global(.view3d-hint){z-index:5;pointer-events:none;background:rgba(18,32,26,.88);border:1px solid rgba(184,157,112,.35);border-radius:18px;padding:7px 12px;color:#c9bea3;font:11px/1.3 ui-monospace,Menlo,Consolas,monospace;white-space:nowrap}
+  :global(.terrain-gps-dot){width:18px;height:18px;border-radius:50%;background:#3b82f6;border:3px solid #fff;box-shadow:0 0 0 8px rgba(59,130,246,.22),0 3px 12px rgba(0,0,0,.6)}
+  @media(max-width:760px){:global(.view3d-hint){bottom:max(10px,env(safe-area-inset-bottom));max-width:calc(100vw - 28px);overflow:hidden;text-overflow:ellipsis}}
+</style>
+
+<script>
+  import * as maplibregl from 'maplibre-gl';
+  import 'maplibre-gl/dist/maplibre-gl.css';
+
+  type RoutePoint = [number, number];
+  type NavigationPlan = {
+    code: string;
+    name: string;
+    mode: string;
+    points: RoutePoint[];
+    totalDistanceM: number;
+    approachDistanceM: number;
+    trailDistanceM: number;
+    estimatedSeconds: number;
+  };
+  type ApiTrail = {
+    key?: string;
+    trail?: {
+      name?: string;
+      color?: string;
+      segments?: Array<Array<[number, number, number?]>>;
+    };
+  };
+  type Runtime = typeof window & {
+    __panachaikoNavigationPlan?: NavigationPlan;
+  };
+
+  const runtime = window as Runtime;
+  const overlay = document.getElementById('view3dOverlay');
+  const container = document.getElementById('map3d');
+  const hint = document.getElementById('view3dHint');
+  const title = document.getElementById('view3dTitle');
+  const closeButton = document.getElementById('view3dClose');
+
+  let terrainMap: maplibregl.Map | null = null;
+  let gpsMarker: maplibregl.Marker | null = null;
+  let gpsWatch: number | null = null;
+  let trailsCache: ApiTrail[] | null = null;
+  let activeTrailCode = '';
+  let lastGps: GeolocationPosition | null = null;
+
+  const emptyLine = () => ({
+    type: 'Feature' as const,
+    properties: {},
+    geometry: { type: 'LineString' as const, coordinates: [] as number[][] }
+  });
+
+  const getLineSource = (id: string) => terrainMap?.getSource(id) as maplibregl.GeoJSONSource | undefined;
+
+  const ensureDynamicLayers = () => {
+    if (!terrainMap || !terrainMap.isStyleLoaded()) return;
+    if (!terrainMap.getSource('selected-trail')) {
+      terrainMap.addSource('selected-trail', { type: 'geojson', data: emptyLine() });
+      terrainMap.addLayer({
+        id: 'selected-trail-glow', type: 'line', source: 'selected-trail',
+        paint: { 'line-color': '#07100b', 'line-width': 10, 'line-opacity': .72 }
+      });
+      terrainMap.addLayer({
+        id: 'selected-trail-line', type: 'line', source: 'selected-trail',
+        paint: { 'line-color': ['coalesce', ['get', 'color'], '#84a06e'], 'line-width': 6, 'line-opacity': 1 }
+      });
+    }
+    if (!terrainMap.getSource('navigation-route')) {
+      terrainMap.addSource('navigation-route', { type: 'geojson', data: emptyLine() });
+      terrainMap.addLayer({
+        id: 'navigation-route-glow', type: 'line', source: 'navigation-route',
+        paint: { 'line-color': '#07100b', 'line-width': 11, 'line-opacity': .72 }
+      });
+      terrainMap.addLayer({
+        id: 'navigation-route-line', type: 'line', source: 'navigation-route',
+        paint: { 'line-color': '#3b82f6', 'line-width': 6, 'line-opacity': .98 }
+      });
+    }
+  };
+
+  const style: maplibregl.StyleSpecification = {
+    version: 8,
+    sources: {
+      satellite: {
+        type: 'raster',
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+        tileSize: 256,
+        maxzoom: 19,
+        attribution: 'Imagery © Esri, Maxar, Earthstar Geographics'
+      },
+      labels: {
+        type: 'raster',
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],
+        tileSize: 256,
+        maxzoom: 19,
+        attribution: 'Labels © Esri'
+      },
+      terrain: {
+        type: 'raster-dem',
+        tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        maxzoom: 15,
+        encoding: 'terrarium',
+        attribution: 'Elevation © Mapzen / AWS Terrain Tiles'
+      },
+      'terrain-hillshade': {
+        type: 'raster-dem',
+        tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        maxzoom: 15,
+        encoding: 'terrarium'
+      }
+    },
+    layers: [
+      { id: 'background', type: 'background', paint: { 'background-color': '#07100b' } },
+      { id: 'satellite', type: 'raster', source: 'satellite', paint: { 'raster-saturation': -.08, 'raster-contrast': .08 } },
+      {
+        id: 'hillshade', type: 'hillshade', source: 'terrain-hillshade',
+        paint: {
+          'hillshade-exaggeration': .32,
+          'hillshade-shadow-color': '#08120c',
+          'hillshade-highlight-color': '#f5ead0',
+          'hillshade-accent-color': '#40533c'
+        }
+      },
+      { id: 'labels', type: 'raster', source: 'labels', paint: { 'raster-opacity': .82 } }
+    ]
+  };
+
+  const initializeMap = () => {
+    if (!container) return null;
+    if (terrainMap) {
+      window.setTimeout(() => terrainMap?.resize(), 0);
+      return terrainMap;
+    }
+
+    terrainMap = new maplibregl.Map({
+      container,
+      style,
+      center: [21.835, 38.2],
+      zoom: 12,
+      pitch: 62,
+      bearing: -22,
+      maxPitch: 85,
+      minZoom: 8,
+      maxZoom: 18,
+      renderWorldCopies: false,
+      canvasContextAttributes: { antialias: true }
+    });
+    terrainMap.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
+    terrainMap.addControl(new maplibregl.ScaleControl({ unit: 'metric', maxWidth: 110 }), 'bottom-left');
+
+    terrainMap.on('load', () => {
+      terrainMap?.setTerrain({ source: 'terrain', exaggeration: 1.18 });
+      ensureDynamicLayers();
+      syncCurrentContent(true);
+      if (hint) hint.textContent = 'MapLibre 3D · δορυφορικός χάρτης · πραγματικό DEM terrain 1.18×';
+    });
+    terrainMap.on('error', event => {
+      console.warn('MapLibre terrain error', event.error);
+      if (hint) hint.textContent = '3D terrain: κάποιο tile δεν φορτώθηκε — γίνεται επανάληψη αυτόματα.';
+    });
+    return terrainMap;
+  };
+
+  const fitCoordinates = (coordinates: Array<[number, number]>, navigation = false) => {
+    if (!terrainMap || !coordinates.length) return;
+    const bounds = new maplibregl.LngLatBounds();
+    coordinates.forEach(([lng, lat]) => bounds.extend([lng, lat]));
+    if (bounds.isEmpty()) return;
+    terrainMap.fitBounds(bounds, { padding: navigation ? 90 : 70, maxZoom: navigation ? 15.5 : 14.5, duration: 900 });
+    window.setTimeout(() => terrainMap?.easeTo({ pitch: navigation ? 68 : 62, bearing: navigation ? -12 : -25, duration: 700 }), 180);
+  };
+
+  const setNavigationRoute = (plan?: NavigationPlan, fit = false) => {
+    if (!terrainMap || !terrainMap.isStyleLoaded()) return;
+    ensureDynamicLayers();
+    const coordinates = (plan?.points ?? []).map(([lat, lng]) => [lng, lat] as [number, number]);
+    getLineSource('navigation-route')?.setData({
+      type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates }
+    });
+    if (terrainMap.getLayer('navigation-route-line')) terrainMap.setLayoutProperty('navigation-route-line', 'visibility', coordinates.length ? 'visible' : 'none');
+    if (terrainMap.getLayer('navigation-route-glow')) terrainMap.setLayoutProperty('navigation-route-glow', 'visibility', coordinates.length ? 'visible' : 'none');
+    if (fit && coordinates.length) fitCoordinates(coordinates, true);
+  };
+
+  const trailCodeFromTitle = () => {
+    const text = title?.textContent ?? '';
+    const match = text.match(/3D\s*·\s*([^—]+?)(?:\s*—|$)/);
+    return match?.[1]?.trim() ?? '';
+  };
+
+  const loadTrails = async () => {
+    if (trailsCache) return trailsCache;
+    const response = await fetch('https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/trails', {
+      headers: { Accept: 'application/json' }, cache: 'no-store', credentials: 'omit'
+    });
+    if (!response.ok) return [];
+    const payload = await response.json();
+    trailsCache = Array.isArray(payload) ? payload as ApiTrail[] : [];
+    return trailsCache;
+  };
+
+  const setSelectedTrail = async (code: string, fit = false) => {
+    if (!code || !terrainMap || !terrainMap.isStyleLoaded()) return;
+    const allTrails = await loadTrails();
+    const item = allTrails.find(entry => entry.key === code);
+    const segments = item?.trail?.segments ?? [];
+    const coordinates = segments.flatMap(segment => segment.map(([lng, lat]) => [Number(lng), Number(lat)] as [number, number]))
+      .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
+    activeTrailCode = code;
+    ensureDynamicLayers();
+    getLineSource('selected-trail')?.setData({
+      type: 'Feature',
+      properties: { color: item?.trail?.color || '#84a06e' },
+      geometry: { type: 'LineString', coordinates }
+    });
+    if (title && item?.trail?.name) title.textContent = `3D · ${code} — ${item.trail.name}`;
+    if (fit && coordinates.length && !runtime.__panachaikoNavigationPlan) fitCoordinates(coordinates, false);
+  };
+
+  const updateGps = (position: GeolocationPosition, follow = true) => {
+    lastGps = position;
+    if (!terrainMap) return;
+    const lngLat: [number, number] = [position.coords.longitude, position.coords.latitude];
+    if (!gpsMarker) {
+      const el = document.createElement('div');
+      el.className = 'terrain-gps-dot';
+      gpsMarker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(lngLat).addTo(terrainMap);
+    } else {
+      gpsMarker.setLngLat(lngLat);
+    }
+
+    if (follow && runtime.__panachaikoNavigationPlan && overlay?.classList.contains('open')) {
+      const heading = Number.isFinite(position.coords.heading ?? NaN) ? Number(position.coords.heading) : terrainMap.getBearing();
+      terrainMap.easeTo({ center: lngLat, zoom: Math.max(terrainMap.getZoom(), 16), pitch: 70, bearing: heading, duration: 700 });
+    }
+  };
+
+  const startGpsWatch = () => {
+    if (gpsWatch !== null || !navigator.geolocation) return;
+    gpsWatch = navigator.geolocation.watchPosition(position => updateGps(position, true), () => {}, {
+      enableHighAccuracy: true, maximumAge: 3000, timeout: 20000
+    });
+  };
+
+  const stopGpsWatch = () => {
+    if (gpsWatch !== null) navigator.geolocation.clearWatch(gpsWatch);
+    gpsWatch = null;
+  };
+
+  const syncCurrentContent = (fit = false) => {
+    if (!terrainMap || !terrainMap.isStyleLoaded()) return;
+    const plan = runtime.__panachaikoNavigationPlan;
+    setNavigationRoute(plan, Boolean(fit && plan));
+    const code = plan?.code || trailCodeFromTitle() || activeTrailCode;
+    if (code) void setSelectedTrail(code, Boolean(fit && !plan));
+    if (lastGps) updateGps(lastGps, false);
+  };
+
+  const openTerrain = () => {
+    overlay?.classList.add('open');
+    initializeMap();
+    window.setTimeout(() => {
+      terrainMap?.resize();
+      syncCurrentContent(true);
+      startGpsWatch();
+    }, 80);
+  };
+
+  document.getElementById('view3dBtn')?.addEventListener('click', () => window.setTimeout(openTerrain, 0));
+  document.getElementById('nav3dBtn')?.addEventListener('click', () => window.setTimeout(openTerrain, 0));
+  closeButton?.addEventListener('click', stopGpsWatch);
+  document.getElementById('nav2dBtn')?.addEventListener('click', stopGpsWatch);
+
+  document.addEventListener('panachaiko:navigation-start', event => {
+    const plan = (event as CustomEvent<NavigationPlan>).detail;
+    runtime.__panachaikoNavigationPlan = plan;
+    if (terrainMap?.isStyleLoaded()) {
+      setNavigationRoute(plan, overlay?.classList.contains('open') ?? false);
+      void setSelectedTrail(plan.code, false);
+    }
+  });
+
+  document.addEventListener('panachaiko:navigation-exit', () => {
+    setNavigationRoute(undefined, false);
+    if (overlay?.classList.contains('open')) syncCurrentContent(false);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopGpsWatch();
+    else if (overlay?.classList.contains('open')) startGpsWatch();
+  });
+</script>

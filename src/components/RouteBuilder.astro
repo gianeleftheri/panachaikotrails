@@ -1,22 +1,73 @@
 <section class="route-builder-panel" id="routeBuilderPanel" aria-label="Κατασκευή διαδρομής">
   <div class="rb-title">Κατασκευή διαδρομής</div>
+
   <div class="rb-step">
     <div class="rb-step-label"><span class="rb-step-num">1</span>Αφετηρία</div>
     <button class="rb-gps-btn" id="rbGpsBtn" type="button">📍 Χρήση της θέσης μου (GPS)</button>
     <div class="rb-status" id="rbGpsStatus"></div>
   </div>
+
   <div class="rb-step">
     <div class="rb-step-label"><span class="rb-step-num">2</span>Προορισμός — μονοπάτι</div>
     <select class="rb-select" id="rbTrailSelect">
       <option value="">— Διάλεξε μονοπάτι —</option>
     </select>
   </div>
+
   <div class="rb-step">
     <div class="rb-step-label"><span class="rb-step-num">3</span>Τρόπος υπολογισμού</div>
-    <label class="rb-radio"><input type="radio" name="rbMode" value="straight" checked /><span>📏 Ευθεία γραμμή</span></label>
-    <label class="rb-radio"><input type="radio" name="rbMode" value="ors" /><span>🗺️ Πραγματική διαδρομή</span></label>
-    <label class="rb-radio"><input type="radio" name="rbMode" value="ai" /><span>🤖 Κατά προσέγγιση (έδαφος)</span></label>
+    <div class="rb-mode-grid" role="radiogroup" aria-label="Τρόπος υπολογισμού διαδρομής">
+      <label class="rb-mode-option">
+        <input type="radio" name="rbMode" value="straight" checked />
+        <span><b>📏 Ευθεία</b><small>Από τη θέση σου στο κοντινότερο σημείο</small></span>
+      </label>
+      <label class="rb-mode-option">
+        <input type="radio" name="rbMode" value="ors" />
+        <span><b>🗺️ Πραγματική</b><small>Μέσω οδικού/πεζοπορικού routing</small></span>
+      </label>
+      <label class="rb-mode-option">
+        <input type="radio" name="rbMode" value="ai" />
+        <span><b>🤖 Έδαφος</b><small>Κατά προσέγγιση διαδρομή εδάφους</small></span>
+      </label>
+    </div>
   </div>
+
   <button class="rb-calc-btn" id="rbCalcBtn" type="button" disabled>Υπολογισμός διαδρομής</button>
   <div class="rb-status" id="rbResultStatus"></div>
 </section>
+
+<style>
+  .route-builder-panel{z-index:1200!important;pointer-events:auto!important}
+  .rb-mode-grid{display:grid;gap:7px}
+  .rb-mode-option{position:relative;display:block;cursor:pointer}
+  .rb-mode-option input{position:absolute;opacity:0;pointer-events:none}
+  .rb-mode-option>span{display:flex;flex-direction:column;gap:2px;padding:9px 10px;border:1px solid var(--brass);border-radius:6px;background:rgba(255,255,255,.025);color:var(--parchment-dim);transition:.15s ease;user-select:none}
+  .rb-mode-option b{font-size:12.5px;font-weight:600;color:var(--parchment)}
+  .rb-mode-option small{font-size:10px;line-height:1.35;color:var(--parchment-faint)}
+  .rb-mode-option:hover>span{background:rgba(255,255,255,.055);border-color:var(--brass-solid)}
+  .rb-mode-option input:checked+span{background:var(--rust-dim);border-color:var(--rust);box-shadow:inset 3px 0 0 var(--rust)}
+  .rb-mode-option input:focus-visible+span{outline:2px solid var(--parchment);outline-offset:2px}
+</style>
+
+<script>
+  const routeToggle = document.getElementById('routeBuilderToggle');
+  const routePanel = document.getElementById('routeBuilderPanel');
+  const drawer = document.getElementById('trailDrawer');
+  const drawerHandle = document.getElementById('trailDrawerHandle');
+
+  routeToggle?.addEventListener('click', () => {
+    window.setTimeout(() => {
+      if (routePanel?.classList.contains('open')) {
+        drawer?.classList.remove('open');
+        drawerHandle?.classList.remove('open');
+      }
+    }, 0);
+  });
+
+  document.querySelectorAll<HTMLInputElement>('input[name="rbMode"]').forEach(input => {
+    input.addEventListener('change', () => {
+      const result = document.getElementById('rbResultStatus');
+      if (result) result.textContent = '';
+    });
+  });
+</script>

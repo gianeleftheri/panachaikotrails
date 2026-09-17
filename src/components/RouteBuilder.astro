@@ -1,0 +1,22 @@
+<section class="route-builder-panel" id="routeBuilderPanel" aria-label="Κατασκευή διαδρομής">
+  <div class="rb-title">Κατασκευή διαδρομής</div>
+  <div class="rb-step">
+    <div class="rb-step-label"><span class="rb-step-num">1</span>Αφετηρία</div>
+    <button class="rb-gps-btn" id="rbGpsBtn" type="button">📍 Χρήση της θέσης μου (GPS)</button>
+    <div class="rb-status" id="rbGpsStatus"></div>
+  </div>
+  <div class="rb-step">
+    <div class="rb-step-label"><span class="rb-step-num">2</span>Προορισμός — μονοπάτι</div>
+    <select class="rb-select" id="rbTrailSelect">
+      <option value="">— Διάλεξε μονοπάτι —</option>
+    </select>
+  </div>
+  <div class="rb-step">
+    <div class="rb-step-label"><span class="rb-step-num">3</span>Τρόπος υπολογισμού</div>
+    <label class="rb-radio"><input type="radio" name="rbMode" value="straight" checked /><span>📏 Ευθεία γραμμή</span></label>
+    <label class="rb-radio"><input type="radio" name="rbMode" value="ors" /><span>🗺️ Πραγματική διαδρομή</span></label>
+    <label class="rb-radio"><input type="radio" name="rbMode" value="ai" /><span>🤖 Κατά προσέγγιση (έδαφος)</span></label>
+  </div>
+  <button class="rb-calc-btn" id="rbCalcBtn" type="button" disabled>Υπολογισμός διαδρομής</button>
+  <div class="rb-status" id="rbResultStatus"></div>
+</section>

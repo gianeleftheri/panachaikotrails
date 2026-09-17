@@ -1,0 +1,24 @@
+<button class="trail-drawer-handle" id="trailDrawerHandle" type="button" title="Άνοιγμα/κλείσιμο πληροφοριών μονοπατιού" aria-label="Άνοιγμα/κλείσιμο πληροφοριών μονοπατιού">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+</button>
+
+<aside class="trail-drawer" id="trailDrawer" aria-live="polite">
+  <button class="td-close" id="tdClose" type="button" title="Κλείσιμο" aria-label="Κλείσιμο">✕</button>
+  <div class="card-bar" id="tdCardBar"></div>
+  <div class="td-titleblock" id="tdTitleBlock">
+    <div class="big">Κανένα μονοπάτι επιλεγμένο</div>
+    <p>Επιλέξτε ένα μονοπάτι στον χάρτη ή στη λίστα για να δείτε αναλυτικές πληροφορίες.</p>
+  </div>
+  <div class="td-tabs" id="tdTabs" hidden>
+    <button class="td-tab active" data-tab="info" type="button">Πληροφορίες</button>
+    <button class="td-tab" data-tab="notes" type="button">Ενδείξεις<span class="td-tab-count" id="tdCountNotes"></span></button>
+    <button class="td-tab" data-tab="photos" type="button">Φωτογραφίες<span class="td-tab-count" id="tdCountPhotos"></span></button>
+    <button class="td-tab" data-tab="videos" type="button">Βίντεο<span class="td-tab-count" id="tdCountVideos"></span></button>
+  </div>
+  <div class="td-body" id="tdBody">
+    <div class="td-panel" data-panel="info"></div>
+    <div class="td-panel" data-panel="notes" hidden></div>
+    <div class="td-panel" data-panel="photos" hidden></div>
+    <div class="td-panel" data-panel="videos" hidden></div>
+  </div>
+</aside>

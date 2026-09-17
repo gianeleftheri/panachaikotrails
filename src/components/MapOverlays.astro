@@ -1,0 +1,29 @@
+<div class="shelter-panel" id="shelterPanel"></div>
+
+<div class="view3d-overlay" id="view3dOverlay">
+  <div class="view3d-topbar">
+    <span class="view3d-title" id="view3dTitle">3D προβολή</span>
+    <button class="view3d-close" id="view3dClose" type="button">✕ Κλείσιμο</button>
+  </div>
+  <div id="map3d"><div class="view3d-placeholder">Η 3D προβολή θα συνδεθεί στο επόμενο βήμα με MapLibre terrain.</div></div>
+  <div class="view3d-hint" id="view3dHint"></div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close" type="button" aria-label="Κλείσιμο">✕</button>
+  <button class="lightbox-nav prev" id="lightbox-prev" type="button" aria-label="Προηγούμενη">‹</button>
+  <img id="lightbox-img" src="" alt="" />
+  <button class="lightbox-nav next" id="lightbox-next" type="button" aria-label="Επόμενη">›</button>
+  <div class="lightbox-caption" id="lightbox-caption"></div>
+</div>
+
+<div class="distance-badge" id="distanceBadge"></div>
+<div class="route-mode-toggle" id="routeModeToggle">
+  <button data-mode="straight" class="active" type="button">📏 Ευθεία</button>
+  <button data-mode="ors" type="button">🗺️ Πραγματική</button>
+  <button data-mode="ai" type="button">🤖 AI εδάφους</button>
+</div>
+<div class="on-trail-panel" id="onTrailPanel"></div>
+<div class="content-panel-overlay" id="contentPanelOverlay">
+  <div class="content-panel" id="contentPanel"></div>
+</div>

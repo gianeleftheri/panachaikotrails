@@ -1,8 +1,24 @@
 export type TrailPoint = [longitude: number, latitude: number, elevation?: number | null];
-export type TrailNote = { title?: string; text: string; category?: string; lat?: number; lng?: number };
 export type TrailStatus = 'existing' | 'planned' | 'investigation';
+export type TrailPoiCategory = 'note' | 'shelter' | 'hazard' | 'water' | 'viewpoint' | 'photo' | 'video' | 'general' | string;
+
+export type TrailPoi = {
+  id?: number;
+  title?: string;
+  text: string;
+  category?: TrailPoiCategory;
+  lat?: number | null;
+  lng?: number | null;
+  media_ids?: number[];
+  media_urls?: string[];
+  featured_image_url?: string | null;
+  video_url?: string;
+  verified_at?: string;
+};
+
 export type Trail = {
   name: string;
+  description?: string;
   existing: boolean;
   status?: TrailStatus;
   color: string;
@@ -12,8 +28,11 @@ export type Trail = {
   gain_m: number;
   loss_m: number;
   segments: TrailPoint[][];
-  photos: unknown[];
-  videos: unknown[];
-  notes: TrailNote[];
+  photos: TrailPoi[];
+  videos: TrailPoi[];
+  notes: TrailPoi[];
+  source?: string;
+  verified_at?: string;
 };
+
 export type TrailCollection = Record<string, Trail>;

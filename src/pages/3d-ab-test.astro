@@ -33,25 +33,25 @@ const payload = {
       .head strong{font-size:14px}.badge{font:11px ui-monospace,SFMono-Regular,Consolas,monospace;color:#b7d69b}
       .map{height:62vh;min-height:430px;background:#050b08}
       iframe{width:100%;height:62vh;min-height:430px;border:0;display:block;background:#050b08}
-      .diag{padding:9px 12px;border-top:1px solid #493f2e;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;color:#d9d0bc;min-height:48px}
+      .diag{padding:9px 12px;border-top:1px solid #493f2e;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;color:#d9d0bc;min-height:58px}
       .ok{color:#9bd078}.warn{color:#efc36c}.bad{color:#ff8e7a}
       @media(max-width:900px){.grid{grid-template-columns:1fr}.map,iframe{height:54vh;min-height:360px}}
     </style>
   </head>
   <body>
     <h1>MapLibre A/B diagnostic</h1>
-    <p class="sub">Ίδια γεωμετρία, ίδια Esri imagery, ίδιο AWS Terrarium DEM. Αριστερά το σημερινό bundled MapLibre 6.10.0 μέσω Astro/Vite. Δεξιά το MapLibre 4.7.1 με απλό script, όπως στο αρχικό HTML.</p>
+    <p class="sub">Ίδια γεωμετρία, ίδια Esri imagery, ίδιο AWS Terrarium DEM. Αριστερά το σημερινό bundled MapLibre 6.10.0 μέσω Astro/Vite. Δεξιά το MapLibre 4.7.1 με απλό script, όπως στο αρχικό HTML. Το test ζωγραφίζει το GeoJSON μόλις φορτωθεί το style — δεν περιμένει όλα τα raster/DEM tiles.</p>
 
     <div class="grid">
       <section class="card">
-        <div class="head"><strong>Test A · bundled v6</strong><span class="badge" id="v6Label">loading…</span></div>
+        <div class="head"><strong>Test A · bundled v6</strong><span class="badge" id="v6Label">initializing…</span></div>
         <div id="mapV6" class="map"></div>
-        <div id="diagV6" class="diag">Αναμονή…</div>
+        <div id="diagV6" class="diag">Περιμένω style.load…</div>
       </section>
       <section class="card">
-        <div class="head"><strong>Test B · original-style v4.7.1</strong><span class="badge" id="v4Label">loading…</span></div>
+        <div class="head"><strong>Test B · original-style v4.7.1</strong><span class="badge" id="v4Label">initializing…</span></div>
         <iframe id="v4Frame" title="MapLibre 4.7.1 diagnostic"></iframe>
-        <div id="diagV4" class="diag">Αναμονή…</div>
+        <div id="diagV4" class="diag">Περιμένω style.load…</div>
       </section>
     </div>
 
@@ -69,7 +69,11 @@ const payload = {
       };
 
       const data = JSON.parse(document.getElementById('trailPayload')?.textContent || '{}') as TrailPayload;
-      const segments = (data.segments || []).map(segment => segment.map(point => [Number(point[0]), Number(point[1])] as [number,number]).filter(point => Number.isFinite(point[0]) && Number.isFinite(point[1]))).filter(segment => segment.length > 1);
+      const segments = (data.segments || [])
+        .map(segment => segment
+          .map(point => [Number(point[0]), Number(point[1])] as [number,number])
+          .filter(point => Number.isFinite(point[0]) && Number.isFinite(point[1])))
+        .filter(segment => segment.length > 1);
       const pointCount = segments.reduce((sum, segment) => sum + segment.length, 0);
       const geojson = { type:'Feature' as const, properties:{}, geometry:{ type:'MultiLineString' as const, coordinates:segments } };
 
@@ -118,11 +122,15 @@ const payload = {
       });
       map6.addControl(new maplibregl.NavigationControl({ visualizePitch:true }), 'top-right');
 
+      let v6Installed = false;
       map6.on('error', event => {
         console.error('v6 diagnostic error', event.error);
       });
-
-      map6.once('load', () => {
+      map6.on('style.load', () => {
+        if (v6Installed) return;
+        v6Installed = true;
+        if (v6Label) v6Label.textContent = `MapLibre ${(maplibregl as any).version || '6.x'} · style ready`;
+        if (diagV6) { diagV6.className = 'diag warn'; diagV6.textContent = `${data.key} · ${data.name}\nstyle.load=true · adding GeoJSON…`; }
         map6.addSource('trailLine', { type:'geojson', data:geojson });
         map6.addLayer({
           id:'trailLineCasing', type:'line', source:'trailLine',
@@ -135,18 +143,24 @@ const payload = {
           layout:{ 'line-cap':'round', 'line-join':'round' }
         });
         fit(map6);
-        if (v6Label) v6Label.textContent = `MapLibre ${(maplibregl as any).version || '6.x'}`;
-
         window.setTimeout(() => {
           const sourceExists = Boolean(map6.getSource('trailLine'));
           const layerExists = Boolean(map6.getLayer('trailLineMain'));
-          const rendered = map6.queryRenderedFeatures(undefined, { layers:['trailLineMain'] }).length;
+          let rendered = 0;
+          try { rendered = map6.queryRenderedFeatures(undefined, { layers:['trailLineMain'] }).length; } catch {}
           if (diagV6) {
             diagV6.className = `diag ${rendered > 0 ? 'ok' : 'bad'}`;
-            diagV6.textContent = `${data.key} · ${data.name}\nsegments=${segments.length} points=${pointCount}\nsource=${sourceExists} layer=${layerExists} renderedFeatures=${rendered}`;
+            diagV6.textContent = `${data.key} · ${data.name}\nsegments=${segments.length} points=${pointCount}\nstyle.load=true source=${sourceExists} layer=${layerExists} renderedFeatures=${rendered}`;
           }
-        }, 1800);
+        }, 1500);
       });
+
+      window.setTimeout(() => {
+        if (!v6Installed && diagV6) {
+          diagV6.className = 'diag bad';
+          diagV6.textContent = `${data.key} · ${data.name}\nstyle.load=false μετά από 8s`;
+        }
+      }, 8000);
 
       const v4Frame = document.getElementById('v4Frame') as HTMLIFrameElement | null;
       if (v4Frame) {
@@ -157,7 +171,6 @@ const payload = {
 </head><body><div id="map"></div>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"><\/script>
 <script>
-let pending=null;
 function render(data){
   const segments=(data.segments||[]).map(seg=>seg.map(p=>[Number(p[0]),Number(p[1])]).filter(p=>Number.isFinite(p[0])&&Number.isFinite(p[1]))).filter(seg=>seg.length>1);
   const geojson={type:'Feature',properties:{},geometry:{type:'MultiLineString',coordinates:segments}};
@@ -169,17 +182,22 @@ function render(data){
     },layers:[{id:'satellite',type:'raster',source:'satellite'}],terrain:{source:'terrainSource',exaggeration:1.4}}
   });
   map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
-  map.once('load',()=>{
+  let installed=false;
+  map.on('style.load',()=>{
+    if(installed)return;
+    installed=true;
+    parent.postMessage({type:'maplibre-v4-style',version:maplibregl.version},'*');
     map.addSource('trailLine',{type:'geojson',data:geojson});
     map.addLayer({id:'trailLineCasing',type:'line',source:'trailLine',paint:{'line-color':'#000','line-width':9,'line-opacity':.55},layout:{'line-cap':'round','line-join':'round'}});
     map.addLayer({id:'trailLineMain',type:'line',source:'trailLine',paint:{'line-color':data.color||'#f59e0b','line-width':6,'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
     const bounds=new maplibregl.LngLatBounds();segments.flat().forEach(p=>bounds.extend(p));
     if(!bounds.isEmpty())map.fitBounds(bounds,{padding:55,pitch:62,duration:0,maxZoom:14.5});
     setTimeout(()=>{
-      const rendered=map.queryRenderedFeatures(undefined,{layers:['trailLineMain']}).length;
-      parent.postMessage({type:'maplibre-v4-result',version:maplibregl.version,source:Boolean(map.getSource('trailLine')),layer:Boolean(map.getLayer('trailLineMain')),rendered,segments:segments.length,points:segments.reduce((s,x)=>s+x.length,0)},'*');
-    },1800);
+      let rendered=0;try{rendered=map.queryRenderedFeatures(undefined,{layers:['trailLineMain']}).length}catch(e){}
+      parent.postMessage({type:'maplibre-v4-result',version:maplibregl.version,style:true,source:Boolean(map.getSource('trailLine')),layer:Boolean(map.getLayer('trailLineMain')),rendered,segments:segments.length,points:segments.reduce((s,x)=>s+x.length,0)},'*');
+    },1500);
   });
+  setTimeout(()=>{if(!installed)parent.postMessage({type:'maplibre-v4-timeout',version:maplibregl.version},'*')},8000);
 }
 window.addEventListener('message',e=>{if(e.data&&e.data.type==='panachaiko-trail')render(e.data.payload)});
 parent.postMessage({type:'maplibre-v4-ready'},'*');
@@ -190,13 +208,20 @@ parent.postMessage({type:'maplibre-v4-ready'},'*');
         if (event.data?.type === 'maplibre-v4-ready') {
           v4Frame?.contentWindow?.postMessage({ type:'panachaiko-trail', payload:data }, '*');
         }
+        if (event.data?.type === 'maplibre-v4-style') {
+          if (v4Label) v4Label.textContent = `MapLibre ${event.data.version || '4.7.1'} · style ready`;
+          if (diagV4) { diagV4.className = 'diag warn'; diagV4.textContent = `${data.key} · ${data.name}\nstyle.load=true · adding GeoJSON…`; }
+        }
         if (event.data?.type === 'maplibre-v4-result') {
           const result = event.data;
-          if (v4Label) v4Label.textContent = `MapLibre ${result.version || '4.7.1'}`;
+          if (v4Label) v4Label.textContent = `MapLibre ${result.version || '4.7.1'} · tested`;
           if (diagV4) {
             diagV4.className = `diag ${result.rendered > 0 ? 'ok' : 'bad'}`;
-            diagV4.textContent = `${data.key} · ${data.name}\nsegments=${result.segments} points=${result.points}\nsource=${result.source} layer=${result.layer} renderedFeatures=${result.rendered}`;
+            diagV4.textContent = `${data.key} · ${data.name}\nsegments=${result.segments} points=${result.points}\nstyle.load=${Boolean(result.style)} source=${result.source} layer=${result.layer} renderedFeatures=${result.rendered}`;
           }
+        }
+        if (event.data?.type === 'maplibre-v4-timeout') {
+          if (diagV4) { diagV4.className = 'diag bad'; diagV4.textContent = `${data.key} · ${data.name}\nstyle.load=false μετά από 8s`; }
         }
       });
     </script>

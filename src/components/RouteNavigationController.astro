@@ -2,6 +2,8 @@
   import L from 'leaflet';
 
   type RoutePoint = [number, number];
+  type RawTrailPoint = [number, number, number?];
+  type TrailSegment = RoutePoint[];
   type ApiTrail = {
     key?: string;
     trail?: {
@@ -9,7 +11,7 @@
       length_km?: number;
       gain_m?: number;
       loss_m?: number;
-      segments?: Array<Array<[number, number, number?]>>;
+      segments?: Array<Array<RawTrailPoint>>;
     };
   };
   type RoutingResponse = {
@@ -31,6 +33,20 @@
     trailDistanceM: number;
     estimatedSeconds: number;
   };
+  type GraphEdge = {
+    index: number;
+    a: number;
+    b: number;
+    points: TrailSegment;
+    length: number;
+  };
+  type MainTrailRoute = {
+    segments: TrailSegment[];
+    points: RoutePoint[];
+    totalSegments: number;
+    usedSegments: number;
+    omittedSegments: number;
+  };
 
   const runtime = window as typeof window & {
     __panachaikoMap?: L.Map;
@@ -39,6 +55,7 @@
     __panachaikoNavigationPlan?: NavigationPlan;
   };
 
+  const SEGMENT_SNAP_METERS = 60;
   let cachedPosition: GeolocationPosition | null = null;
   let pendingPlan: NavigationPlan | null = null;
 
@@ -118,15 +135,118 @@
     return item.trail;
   };
 
-  const flattenTrail = (segments: Array<Array<[number, number, number?]>>): RoutePoint[] => {
-    const points: RoutePoint[] = [];
-    segments.forEach(segment => segment.forEach(raw => {
-      const point: RoutePoint = [Number(raw[1]), Number(raw[0])];
-      if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) return;
-      const previous = points.at(-1);
-      if (!previous || previous[0] !== point[0] || previous[1] !== point[1]) points.push(point);
+  const normaliseTrailSegments = (segments: Array<Array<RawTrailPoint>>): TrailSegment[] => segments
+    .map(segment => segment
+      .map(raw => [Number(raw[1]), Number(raw[0])] as RoutePoint)
+      .filter(point => Number.isFinite(point[0]) && Number.isFinite(point[1]))
+      .filter((point, index, points) => index === 0 || point[0] !== points[index - 1][0] || point[1] !== points[index - 1][1]))
+    .filter(segment => segment.length >= 2);
+
+  // Trail JSON is a MultiLineString. The old code flattened every stored section into
+  // one polyline, so Leaflet invented straight lines between unrelated sections. We
+  // now build a graph from section endpoints, keep the stored first section as the
+  // official start, and follow the longest connected route to a terminal endpoint.
+  const buildMainTrailRoute = (rawSegments: Array<Array<RawTrailPoint>>): MainTrailRoute => {
+    const segments = normaliseTrailSegments(rawSegments);
+    if (!segments.length) return { segments: [], points: [], totalSegments: 0, usedSegments: 0, omittedSegments: 0 };
+    if (segments.length === 1) return { segments, points: [...segments[0]], totalSegments: 1, usedSegments: 1, omittedSegments: 0 };
+
+    const nodes: RoutePoint[] = [];
+    const nodeFor = (point: RoutePoint) => {
+      let bestIndex = -1;
+      let bestDistance = Number.POSITIVE_INFINITY;
+      nodes.forEach((node, index) => {
+        const distance = haversine(point, node);
+        if (distance < bestDistance) { bestDistance = distance; bestIndex = index; }
+      });
+      if (bestIndex >= 0 && bestDistance <= SEGMENT_SNAP_METERS) return bestIndex;
+      nodes.push(point);
+      return nodes.length - 1;
+    };
+
+    const edges: GraphEdge[] = segments.map((points, index) => ({
+      index,
+      a: nodeFor(points[0]),
+      b: nodeFor(points.at(-1)!),
+      points,
+      length: pathDistance(points)
     }));
-    return points;
+
+    const adjacency: Array<Array<{ edgeIndex: number; to: number }>> = Array.from({ length: nodes.length }, () => []);
+    edges.forEach(edge => {
+      adjacency[edge.a].push({ edgeIndex: edge.index, to: edge.b });
+      adjacency[edge.b].push({ edgeIndex: edge.index, to: edge.a });
+    });
+
+    const firstEdge = edges[0];
+    const startNode = firstEdge.a;
+    const seedNode = firstEdge.b;
+    const dist = new Array(nodes.length).fill(Number.POSITIVE_INFINITY) as number[];
+    const previousNode = new Array(nodes.length).fill(-1) as number[];
+    const previousEdge = new Array(nodes.length).fill(-1) as number[];
+    const visited = new Array(nodes.length).fill(false) as boolean[];
+    dist[seedNode] = 0;
+
+    for (let iteration = 0; iteration < nodes.length; iteration += 1) {
+      let current = -1;
+      let currentDistance = Number.POSITIVE_INFINITY;
+      for (let i = 0; i < nodes.length; i += 1) {
+        if (!visited[i] && dist[i] < currentDistance) { current = i; currentDistance = dist[i]; }
+      }
+      if (current < 0) break;
+      visited[current] = true;
+      adjacency[current].forEach(link => {
+        if (link.edgeIndex === firstEdge.index) return;
+        const edge = edges[link.edgeIndex];
+        const candidate = currentDistance + edge.length;
+        if (candidate < dist[link.to]) {
+          dist[link.to] = candidate;
+          previousNode[link.to] = current;
+          previousEdge[link.to] = link.edgeIndex;
+        }
+      });
+    }
+
+    const reachable = nodes.map((_, index) => index).filter(index => Number.isFinite(dist[index]));
+    const terminals = reachable.filter(index => index !== seedNode && adjacency[index].filter(link => link.edgeIndex !== firstEdge.index).length <= 1);
+    const candidates = terminals.length ? terminals : reachable.filter(index => index !== seedNode);
+    let targetNode = seedNode;
+    candidates.forEach(index => { if (dist[index] > dist[targetNode]) targetNode = index; });
+
+    const continuation: Array<{ edgeIndex: number; from: number; to: number }> = [];
+    let cursor = targetNode;
+    while (cursor !== seedNode && previousEdge[cursor] >= 0) {
+      continuation.push({ edgeIndex: previousEdge[cursor], from: previousNode[cursor], to: cursor });
+      cursor = previousNode[cursor];
+    }
+    continuation.reverse();
+
+    const routeSegments: TrailSegment[] = [firstEdge.points];
+    let currentNode = seedNode;
+    continuation.forEach(step => {
+      const edge = edges[step.edgeIndex];
+      const oriented = edge.a === currentNode ? edge.points : [...edge.points].reverse();
+      routeSegments.push(oriented);
+      currentNode = step.to;
+    });
+
+    const points: RoutePoint[] = [];
+    routeSegments.forEach(segment => {
+      segment.forEach((point, index) => {
+        const previous = points.at(-1);
+        if (index === 0 && previous && haversine(previous, point) < 1) return;
+        points.push(point);
+      });
+    });
+
+    const usedSegments = routeSegments.length;
+    return {
+      segments: routeSegments,
+      points,
+      totalSegments: segments.length,
+      usedSegments,
+      omittedSegments: Math.max(0, segments.length - usedSegments)
+    };
   };
 
   const routeApproach = async (start: RoutePoint, end: RoutePoint, mode: string) => {
@@ -150,17 +270,21 @@
     return { points, distanceM, seconds };
   };
 
-  const drawPlan = (approach: RoutePoint[], trail: RoutePoint[]) => {
+  const drawPlan = (approach: RoutePoint[], trailSegments: TrailSegment[]) => {
     const map = runtime.__panachaikoMap;
     if (!map) throw new Error('Ο χάρτης δεν είναι ακόμη έτοιμος. Κάνε ανανέωση και δοκίμασε ξανά.');
     if (runtime.__panachaikoRouteLayer && map.hasLayer(runtime.__panachaikoRouteLayer)) map.removeLayer(runtime.__panachaikoRouteLayer);
     if (runtime.__panachaikoFullRouteLayer) map.removeLayer(runtime.__panachaikoFullRouteLayer);
+
     const group = L.layerGroup();
     L.polyline(approach, { color: '#3b82f6', weight: 5, opacity: .96, lineCap: 'round', lineJoin: 'round' }).addTo(group);
-    L.polyline(trail, { color: '#84a06e', weight: 6, opacity: .98, lineCap: 'round', lineJoin: 'round' }).addTo(group);
+    trailSegments.forEach(segment => {
+      L.polyline(segment, { color: '#84a06e', weight: 6, opacity: .98, lineCap: 'round', lineJoin: 'round' }).addTo(group);
+    });
     group.addTo(map);
     runtime.__panachaikoFullRouteLayer = group;
-    const all = [...approach, ...trail];
+
+    const all = [...approach, ...trailSegments.flat()];
     if (all.length) map.fitBounds(L.latLngBounds(all), { padding: [70, 70], maxZoom: 16 });
   };
 
@@ -211,12 +335,10 @@
       const position = await getPosition();
       const start: RoutePoint = [position.coords.latitude, position.coords.longitude];
       const trail = await loadTrail(code);
-      const trailPoints = flattenTrail(trail.segments!);
-      if (trailPoints.length < 2) throw new Error('Η γεωμετρία του μονοπατιού δεν είναι αρκετή για πλοήγηση.');
+      const mainRoute = buildMainTrailRoute(trail.segments!);
+      const trailPoints = mainRoute.points;
+      if (trailPoints.length < 2 || !mainRoute.segments.length) throw new Error('Δεν βρέθηκε συνεχής κύρια πορεία μέσα στα τμήματα του μονοπατιού.');
 
-      // The stored geometry order defines the official hiking direction:
-      // first point = αρχή, last point = τέλος. We always route GPS -> first point,
-      // then continue over the entire trail to the stored final point.
       const approach = await routeApproach(start, trailPoints[0], mode);
       const trailDistanceM = pathDistance(trailPoints);
       const ascent = Number(trail.gain_m ?? 0);
@@ -237,11 +359,14 @@
         estimatedSeconds
       };
       runtime.__panachaikoNavigationPlan = pendingPlan;
-      drawPlan(approach.points, trailPoints);
+      drawPlan(approach.points, mainRoute.segments);
       ensureStartButton();
 
       if (result) {
-        result.innerHTML = `Προσέγγιση στην αρχή: <b>${formatDistance(approach.distanceM)}</b><br>Μονοπάτι μέχρι το τέλος: <b>${formatDistance(trailDistanceM)}</b><br>Σύνολο: <b>${formatDistance(totalDistanceM)}</b> · περίπου <b>${formatTime(estimatedSeconds)}</b><br><span style="opacity:.72">Μετά πάτησε «Κλείδωμα & έναρξη πλοήγησης».</span>`;
+        const topologyNote = mainRoute.omittedSegments
+          ? `<br><span style="opacity:.72">Κύρια συνεχής πορεία: ${mainRoute.usedSegments}/${mainRoute.totalSegments} τμήματα. ${mainRoute.omittedSegments} κλαδιά/ασύνδετα τμήματα δεν ενώνονται τεχνητά με ευθείες.</span>`
+          : '';
+        result.innerHTML = `Προσέγγιση στην αρχή: <b>${formatDistance(approach.distanceM)}</b><br>Μονοπάτι μέχρι το τέλος: <b>${formatDistance(trailDistanceM)}</b><br>Σύνολο: <b>${formatDistance(totalDistanceM)}</b> · περίπου <b>${formatTime(estimatedSeconds)}</b>${topologyNote}<br><span style="opacity:.72">Μετά πάτησε «Κλείδωμα & έναρξη πλοήγησης».</span>`;
         result.className = 'rb-status ok';
       }
     } catch (error) {

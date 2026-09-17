@@ -8,7 +8,7 @@
   :global(.view3d-hint){z-index:5;pointer-events:none;background:rgba(18,32,26,.9);border:1px solid rgba(184,157,112,.45);border-radius:18px;padding:7px 12px;color:#f3ede0;font:11px/1.3 ui-monospace,Menlo,Consolas,monospace;white-space:nowrap}
   :global(.terrain-gps-dot){width:18px;height:18px;border-radius:50%;background:#3b82f6;border:3px solid #fff;box-shadow:0 0 0 8px rgba(59,130,246,.22),0 3px 12px rgba(0,0,0,.6)}
   :global(.terrain-endpoint){display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:3px solid #fff;color:#fff;font:700 11px/1 Arial,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.55)}
-  :global(.terrain-start){background:#22c55e}.terrain-end{background:#ef4444}
+  :global(.terrain-start){background:#22c55e}:global(.terrain-end){background:#ef4444}
   @media(max-width:760px){:global(.view3d-hint){bottom:max(10px,env(safe-area-inset-bottom));max-width:calc(100vw - 28px);overflow:hidden;text-overflow:ellipsis}}
 </style>
 
@@ -22,6 +22,7 @@
     name: string;
     mode: string;
     points: RoutePoint[];
+    approachPointCount?: number;
     totalDistanceM: number;
     approachDistanceM: number;
     trailDistanceM: number;
@@ -55,6 +56,7 @@
   let gpsWatch: number | null = null;
   let lastGps: GeolocationPosition | null = null;
   let selectedCode = '';
+  let navigationActive = false;
 
   const emptyLine = () => ({ type: 'Feature' as const, properties: {}, geometry: { type: 'MultiLineString' as const, coordinates: [] as number[][][] } });
   const emptyRoute = () => ({ type: 'Feature' as const, properties: {}, geometry: { type: 'LineString' as const, coordinates: [] as number[][] } });
@@ -64,13 +66,13 @@
     if (!terrainMap || !terrainMap.isStyleLoaded()) return;
     if (!terrainMap.getSource('selected-trail')) {
       terrainMap.addSource('selected-trail', { type: 'geojson', data: emptyLine() });
-      terrainMap.addLayer({ id:'trail-shadow', type:'line', source:'selected-trail', paint:{ 'line-color':'#07100b', 'line-width':14, 'line-opacity':.9 } });
-      terrainMap.addLayer({ id:'trail-highlight', type:'line', source:'selected-trail', paint:{ 'line-color':'#ff6b35', 'line-width':8, 'line-opacity':1 } });
+      terrainMap.addLayer({ id:'trail-shadow', type:'line', source:'selected-trail', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100b', 'line-width':14, 'line-opacity':.9 } });
+      terrainMap.addLayer({ id:'trail-highlight', type:'line', source:'selected-trail', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#ff6b35', 'line-width':8, 'line-opacity':1 } });
     }
     if (!terrainMap.getSource('navigation-route')) {
       terrainMap.addSource('navigation-route', { type: 'geojson', data: emptyRoute() });
-      terrainMap.addLayer({ id:'route-shadow', type:'line', source:'navigation-route', paint:{ 'line-color':'#07100b', 'line-width':13, 'line-opacity':.86 } });
-      terrainMap.addLayer({ id:'route-line', type:'line', source:'navigation-route', paint:{ 'line-color':'#38bdf8', 'line-width':7, 'line-opacity':1 } });
+      terrainMap.addLayer({ id:'route-shadow', type:'line', source:'navigation-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100b', 'line-width':13, 'line-opacity':.86 } });
+      terrainMap.addLayer({ id:'route-line', type:'line', source:'navigation-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#38bdf8', 'line-width':7, 'line-opacity':1 } });
     }
   };
 
@@ -113,6 +115,9 @@
       ensureLayers();
       sync(true);
     });
+    terrainMap.on('idle', () => {
+      if (overlay?.classList.contains('open')) sync(false);
+    });
     terrainMap.on('error', event => {
       console.warn('MapLibre 3D error', event.error);
       if (hint) hint.textContent = '3D: πρόβλημα φόρτωσης tile — γίνεται νέα προσπάθεια.';
@@ -123,6 +128,8 @@
   const activeCodeFromUi = () => {
     const plan = runtime.__panachaikoNavigationPlan;
     if (plan?.code) return plan.code;
+    const selected = (document.getElementById('rbTrailSelect') as HTMLSelectElement | null)?.value;
+    if (selected) return selected;
     const activeRow = document.querySelector<HTMLElement>('.trail-row.active .trail-row-code');
     if (activeRow?.textContent?.trim()) return activeRow.textContent.trim();
     const text = title?.textContent ?? '';
@@ -167,18 +174,22 @@
     if (first) startMarker = endpointMarker(first,true);
     if (last) endMarker = endpointMarker(last,false);
     if (fit) fitSegments(segments);
-    if (hint) hint.textContent = segments.length ? `${code} · πορτοκαλί/έγχρωμη γραμμή · Α=αρχή · Τ=τέλος · πραγματικό 3D terrain` : `Δεν βρέθηκε γεωμετρία για ${code}`;
+    if (hint && !runtime.__panachaikoNavigationPlan) hint.textContent = segments.length ? `${code} · μονοπάτι · Α=αρχή · Τ=τέλος · πραγματικό 3D terrain` : `Δεν βρέθηκε γεωμετρία για ${code}`;
   };
 
   const renderNavigation = (fit=false) => {
     if (!terrainMap?.isStyleLoaded()) return;
     const plan = runtime.__panachaikoNavigationPlan;
     ensureLayers();
-    const coords = (plan?.points ?? []).map(([lat,lng]) => [lng,lat] as [number,number]);
+    const coords = (plan?.points ?? []).map(([lat,lng]) => [Number(lng),Number(lat)] as [number,number]).filter(([lng,lat]) => Number.isFinite(lng) && Number.isFinite(lat));
     source('navigation-route')?.setData({ type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates:coords } });
-    terrainMap.setLayoutProperty('route-line','visibility',coords.length ? 'visible':'none');
-    terrainMap.setLayoutProperty('route-shadow','visibility',coords.length ? 'visible':'none');
-    if (fit && coords.length) fitSegments([coords]);
+    terrainMap.setLayoutProperty('route-line','visibility',coords.length > 1 ? 'visible':'none');
+    terrainMap.setLayoutProperty('route-shadow','visibility',coords.length > 1 ? 'visible':'none');
+    if (fit && coords.length > 1) fitSegments([coords]);
+    if (hint && plan) {
+      const state = navigationActive ? 'LIVE πλοήγηση' : 'Προεπισκόπηση';
+      hint.textContent = `${state} · ${plan.code} · ${coords.length} σημεία · μπλε=ολόκληρη πορεία · Α/Τ=μονοπάτι`;
+    }
   };
 
   const updateGps = (position:GeolocationPosition, follow=true) => {
@@ -189,7 +200,10 @@
       const el = document.createElement('div'); el.className='terrain-gps-dot';
       gpsMarker = new maplibregl.Marker({ element:el, anchor:'center' }).setLngLat(lngLat).addTo(terrainMap);
     } else gpsMarker.setLngLat(lngLat);
-    if (follow && runtime.__panachaikoNavigationPlan && overlay?.classList.contains('open')) {
+
+    // Before the user presses "Κλείδωμα & έναρξη", 3D is an overview: keep the
+    // whole GPS→trail→finish route in frame. Camera follow starts only in live navigation.
+    if (follow && navigationActive && runtime.__panachaikoNavigationPlan && overlay?.classList.contains('open')) {
       const heading = Number.isFinite(position.coords.heading ?? NaN) ? Number(position.coords.heading) : terrainMap.getBearing();
       terrainMap.easeTo({ center:lngLat, zoom:Math.max(terrainMap.getZoom(),16), pitch:72, bearing:heading, duration:650 });
     }
@@ -212,7 +226,8 @@
   const open3d = () => {
     overlay?.classList.add('open');
     initialize();
-    window.setTimeout(() => { terrainMap?.resize(); sync(true); startGps(); }, 100);
+    window.setTimeout(() => { terrainMap?.resize(); sync(true); startGps(); }, 120);
+    window.setTimeout(() => { terrainMap?.resize(); sync(true); }, 650);
   };
 
   document.getElementById('view3dBtn')?.addEventListener('click', () => window.setTimeout(open3d,0));
@@ -221,11 +236,13 @@
   document.getElementById('nav2dBtn')?.addEventListener('click', stopGps);
 
   document.addEventListener('panachaiko:navigation-start', event => {
+    navigationActive = true;
     runtime.__panachaikoNavigationPlan = (event as CustomEvent<NavigationPlan>).detail;
     if (terrainMap?.isStyleLoaded()) sync(overlay?.classList.contains('open') ?? false);
   });
   document.addEventListener('panachaiko:navigation-exit', () => {
-    if (terrainMap?.isStyleLoaded()) renderNavigation(false);
+    navigationActive = false;
+    if (terrainMap?.isStyleLoaded()) sync(false);
   });
 
   if (title) {
@@ -236,6 +253,19 @@
       }
     }).observe(title,{ childList:true, subtree:true, characterData:true });
   }
+
+  let lastPlanSignature = '';
+  window.setInterval(() => {
+    if (!terrainMap?.isStyleLoaded() || !overlay?.classList.contains('open')) return;
+    const plan = runtime.__panachaikoNavigationPlan;
+    const first = plan?.points?.[0];
+    const last = plan?.points?.at(-1);
+    const signature = plan ? `${plan.code}|${plan.points.length}|${first?.join(',')}|${last?.join(',')}` : '';
+    if (signature !== lastPlanSignature) {
+      lastPlanSignature = signature;
+      sync(Boolean(plan));
+    }
+  }, 500);
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) stopGps(); else if (overlay?.classList.contains('open')) startGps();

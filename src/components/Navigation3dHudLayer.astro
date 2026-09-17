@@ -1,0 +1,18 @@
+<style is:global>
+  /* The MapLibre 3D overlay sits at z-index 3000. Keep the active navigation HUD
+     above it so the same live guidance/stats/2D-3D controls remain visible. */
+  body.navigation-active #navigationHud.nav-hud {
+    z-index: 4200 !important;
+    pointer-events: auto;
+  }
+
+  body.navigation-active #view3dOverlay.open .view3d-hint {
+    bottom: 360px;
+  }
+
+  @media (max-width: 760px) {
+    body.navigation-active #view3dOverlay.open .view3d-hint {
+      display: none;
+    }
+  }
+</style>

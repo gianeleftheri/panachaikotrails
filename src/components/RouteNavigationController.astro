@@ -25,6 +25,7 @@
     name: string;
     mode: string;
     points: RoutePoint[];
+    approachPointCount: number;
     totalDistanceM: number;
     approachDistanceM: number;
     trailDistanceM: number;
@@ -171,7 +172,7 @@
       startButton.type = 'button';
       startButton.className = 'rb-calc-btn';
       startButton.style.marginTop = '8px';
-      startButton.textContent = '▶ Έναρξη πλοήγησης';
+      startButton.textContent = '🔒 Κλείδωμα & έναρξη πλοήγησης';
       document.getElementById('rbCalcBtn')?.insertAdjacentElement('afterend', startButton);
       startButton.addEventListener('click', () => {
         if (!pendingPlan) return;
@@ -197,7 +198,7 @@
     const result = document.getElementById('rbResultStatus');
     const code = trailSelect?.value ?? '';
     if (!code) return;
-    const mode = document.querySelector<HTMLInputElement>('input[name="rbMode"]:checked')?.value ?? 'straight';
+    const mode = document.querySelector<HTMLInputElement>('input[name="rbMode"]:checked')?.value ?? 'ors';
     const startButton = document.getElementById('rbStartNavBtn') as HTMLButtonElement | null;
     if (startButton) startButton.hidden = true;
     pendingPlan = null;
@@ -213,6 +214,8 @@
       let trailPoints = flattenTrail(trail.segments!);
       if (trailPoints.length < 2) throw new Error('Η γεωμετρία του μονοπατιού δεν είναι αρκετή για πλοήγηση.');
 
+      // The nearer trail endpoint is treated as the trail start for this hike.
+      // After locking, navigation continues across the whole trail to the opposite endpoint.
       const firstDistance = haversine(start, trailPoints[0]);
       const lastDistance = haversine(start, trailPoints[trailPoints.length - 1]);
       const reversed = lastDistance < firstDistance;
@@ -231,6 +234,7 @@
         name: trail.name ?? code,
         mode,
         points: fullPoints,
+        approachPointCount: approach.points.length,
         totalDistanceM,
         approachDistanceM: approach.distanceM,
         trailDistanceM,
@@ -241,7 +245,7 @@
       ensureStartButton();
 
       if (result) {
-        result.innerHTML = `Προσέγγιση: <b>${formatDistance(approach.distanceM)}</b><br>Μονοπάτι: <b>${formatDistance(trailDistanceM)}</b><br>Σύνολο: <b>${formatDistance(totalDistanceM)}</b> · περίπου <b>${formatTime(estimatedSeconds)}</b>`;
+        result.innerHTML = `Προσέγγιση στην αρχή: <b>${formatDistance(approach.distanceM)}</b><br>Μονοπάτι μέχρι το τέλος: <b>${formatDistance(trailDistanceM)}</b><br>Σύνολο: <b>${formatDistance(totalDistanceM)}</b> · περίπου <b>${formatTime(estimatedSeconds)}</b><br><span style="opacity:.72">Μετά πάτησε «Κλείδωμα & έναρξη πλοήγησης».</span>`;
         result.className = 'rb-status ok';
       }
     } catch (error) {
@@ -251,7 +255,7 @@
       }
     } finally {
       calcButton.disabled = false;
-      calcButton.textContent = 'Υπολογισμός διαδρομής';
+      calcButton.textContent = 'Υπολογισμός ολόκληρης διαδρομής';
     }
   }, { capture: true });
 

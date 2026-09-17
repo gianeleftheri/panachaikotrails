@@ -1,12 +1,12 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import type { Trail, TrailCollection, TrailPoint } from '../types/trail';
+import type { Trail, TrailCollection, TrailPoi, TrailPoint } from '../types/trail';
+import { loadInitialTrails, refreshTrailsFromCms } from './trail-data';
+import { createTrailContentController } from './trail-content';
 
-type TrailDataModule = { key: string; trail: Trail };
 type UserPosition = { lat: number; lng: number; accuracy: number };
 
-const trailModules = import.meta.glob<TrailDataModule>('../data/trails/*.json', { eager: true, import: 'default' });
-const trails: TrailCollection = Object.values(trailModules).reduce<TrailCollection>((all, item) => ({ ...all, [item.key]: item.trail }), {});
+let trails: TrailCollection = loadInitialTrails();
 const app = document.querySelector<HTMLElement>('[data-trail-app]');
 
 if (app) {
@@ -47,8 +47,10 @@ if (app) {
   L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
 
   const layers = new Map<string, L.FeatureGroup>();
+  const visibleLines = new Map<string, L.Polyline[]>();
+  const poiLayer = L.layerGroup().addTo(map);
   const allBounds: L.LatLngExpression[] = [];
-  const codes = Object.keys(trails).sort((a, b) => trails[b].length_km - trails[a].length_km);
+  let codes: string[] = [];
   let selectedCode: string | null = null;
   let userPosition: UserPosition | null = null;
   let watchId: number | null = null;
@@ -56,13 +58,45 @@ if (app) {
   let routeLine: L.Polyline | null = null;
   let shelterLine: L.Polyline | null = null;
 
+  const contentController = createTrailContentController(map, code => trails[code]);
+
+  const escapeHtml = (value: unknown) => String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+
   const styleFor = (trail: Trail, active = false): L.PathOptions => ({
-    color: active ? '#f3ede0' : trail.existing ? '#84a06e' : '#9c917c',
-    weight: active ? 6 : 3,
-    opacity: active ? 1 : .9,
-    dashArray: trail.existing ? undefined : '3 7',
-    lineCap: 'round'
+    color: trail.color || (trail.existing ? '#84a06e' : '#9c917c'),
+    weight: active ? 6 : 3.5,
+    opacity: active ? .98 : trail.existing ? .82 : .62,
+    dashArray: trail.existing ? undefined : '2 8',
+    lineCap: 'round',
+    lineJoin: 'round'
   });
+
+  const setTrailStyle = (code: string, active = false, hover = false) => {
+    const trail = trails[code];
+    if (!trail) return;
+    const style = styleFor(trail, active);
+    if (hover && !active) {
+      style.weight = 5.5;
+      style.opacity = .98;
+    }
+    visibleLines.get(code)?.forEach(line => {
+      line.setStyle(style);
+      if (active) line.bringToFront();
+    });
+  };
+
+  const poiEmoji = (category?: string) => ({
+    forest: '🌲', viewpoint: '👁️', rest: '🪑', danger: '⚠️', hazard: '⚠️', water: '💧', flag: '🚩', shelter: '⛺', archaeological: '🏛️', photo: '📷', video: '🎬', note: '📍', general: '📍'
+  }[category ?? 'general'] ?? '📍');
+
+  const poiLabel = (category?: string) => ({
+    forest: 'Δάσος', viewpoint: 'Θέα', rest: 'Ξεκούραση', danger: 'Προσοχή', hazard: 'Κίνδυνος', water: 'Νερό', flag: 'Αφετηρία/Τέλος', shelter: 'Καταφύγιο', archaeological: 'Αρχαιολογικός χώρος', photo: 'Φωτογραφία', video: 'Βίντεο', note: 'Ένδειξη', general: 'Σημείο'
+  }[category ?? 'general'] ?? 'Σημείο');
 
   const haversine = (lon1: number, lat1: number, lon2: number, lat2: number) => {
     const R = 6371000, rad = (v: number) => v * Math.PI / 180;
@@ -115,9 +149,23 @@ if (app) {
     document.querySelectorAll<HTMLElement>('.td-panel').forEach(panel => { panel.hidden = panel.dataset.panel !== button.dataset.tab; });
   });
 
+  const renderNote = (poi: TrailPoi) => `<div class="note-item"><div class="note-item-head"><span class="poi-kind">${poiEmoji(poi.category)} ${escapeHtml(poiLabel(poi.category))}</span>${poi.verified_at ? `<span class="poi-verified">✓ ${escapeHtml(poi.verified_at)}</span>` : ''}</div><div class="note-item-title">${escapeHtml(poi.title ?? 'Σημείο διαδρομής')}</div>${poi.text ? `<div>${escapeHtml(poi.text)}</div>` : ''}</div>`;
+
+  const renderPhoto = (poi: TrailPoi) => {
+    const urls = [poi.featured_image_url, ...(poi.media_urls ?? [])].filter((url): url is string => Boolean(url));
+    if (!urls.length) return `<div class="media-card"><div class="media-card-title">📷 ${escapeHtml(poi.title ?? 'Φωτογραφία')}</div><div class="empty-note">Δεν έχει συνδεθεί ακόμη αρχείο εικόνας.</div></div>`;
+    return urls.map(url => `<a class="media-card media-photo" href="${escapeHtml(url)}" target="_blank" rel="noopener"><img src="${escapeHtml(url)}" alt="${escapeHtml(poi.title ?? 'Φωτογραφία διαδρομής')}" loading="lazy"/><div class="media-card-title">${escapeHtml(poi.title ?? 'Φωτογραφία')}</div></a>`).join('');
+  };
+
+  const renderVideo = (poi: TrailPoi) => poi.video_url
+    ? `<a class="media-card media-video" href="${escapeHtml(poi.video_url)}" target="_blank" rel="noopener"><div class="media-video-icon">▶</div><div><div class="media-card-title">${escapeHtml(poi.title ?? 'Βίντεο')}</div>${poi.text ? `<div class="media-card-text">${escapeHtml(poi.text)}</div>` : ''}</div></a>`
+    : `<div class="media-card"><div class="media-card-title">🎬 ${escapeHtml(poi.title ?? 'Βίντεο')}</div><div class="empty-note">Δεν έχει συνδεθεί ακόμη URL βίντεο.</div></div>`;
+
   const fillDrawer = (code: string, trail: Trail) => {
+    const statusLabel = trail.status === 'investigation' ? 'υπό διερεύνηση' : trail.existing ? 'υπάρχει' : 'σχεδιάζεται';
+    const elevationRange = trail.elev_min === null || trail.elev_max === null ? '—' : `${trail.elev_min}–${trail.elev_max} μ`;
     tdCardBar.style.background = trail.color;
-    tdTitleBlock.innerHTML = `<div class="trail-card-code">${code}<span class="status-pill ${trail.existing ? 'status-existing' : 'status-planned'}">${trail.existing ? 'υπάρχει' : 'σχεδιάζεται'}</span></div><div class="trail-card-title">${trail.name}</div>`;
+    tdTitleBlock.innerHTML = `<div class="trail-card-code">${escapeHtml(code)}<span class="status-pill ${trail.existing ? 'status-existing' : 'status-planned'}">${escapeHtml(statusLabel)}</span></div><div class="trail-card-title">${escapeHtml(trail.name)}</div>`;
     tdTabs.hidden = false;
     const count = (id: string, value: number) => { const el = document.getElementById(id); if (el) el.textContent = value ? ` (${value})` : ''; };
     count('tdCountNotes', trail.notes.length); count('tdCountPhotos', trail.photos.length); count('tdCountVideos', trail.videos.length);
@@ -125,10 +173,11 @@ if (app) {
     const notes = document.querySelector<HTMLElement>('.td-panel[data-panel="notes"]');
     const photos = document.querySelector<HTMLElement>('.td-panel[data-panel="photos"]');
     const videos = document.querySelector<HTMLElement>('.td-panel[data-panel="videos"]');
-    if (info) info.innerHTML = `<div class="stat-grid"><div class="stat-box"><span class="label">Απόσταση</span><span class="value">${trail.length_km.toFixed(2)} χλμ</span></div><div class="stat-box"><span class="label">Υψόμετρο</span><span class="value">${trail.elev_min}–${trail.elev_max} μ</span></div><div class="stat-box"><span class="label">Ανάβαση</span><span class="value moss">+${trail.gain_m} μ</span></div><div class="stat-box"><span class="label">Κατάβαση</span><span class="value">−${trail.loss_m} μ</span></div></div><div class="section-label">Υψομετρικό προφίλ</div><div class="elevation-wrap">${elevationSvg(trail)}</div>`;
-    if (notes) notes.innerHTML = trail.notes.length ? `<div class="notes-list">${trail.notes.map(n => `<div class="note-item"><div class="note-item-title">${n.title ?? 'Σημείο διαδρομής'}</div>${n.text}</div>`).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί ενδείξεις ακόμα.</div>';
-    if (photos) photos.innerHTML = '<div class="empty-note">Δεν έχουν προστεθεί φωτογραφίες ακόμα.</div>';
-    if (videos) videos.innerHTML = '<div class="empty-note">Δεν έχουν προστεθεί βίντεο ακόμα.</div>';
+    const meta = [trail.source ? `Πηγή: ${escapeHtml(trail.source)}` : '', trail.verified_at ? `Επαλήθευση: ${escapeHtml(trail.verified_at)}` : ''].filter(Boolean).join(' · ');
+    if (info) info.innerHTML = `<div class="stat-grid"><div class="stat-box"><span class="label">Απόσταση</span><span class="value">${trail.length_km.toFixed(2)} χλμ</span></div><div class="stat-box"><span class="label">Υψόμετρο</span><span class="value">${elevationRange}</span></div><div class="stat-box"><span class="label">Ανάβαση</span><span class="value moss">+${trail.gain_m} μ</span></div><div class="stat-box"><span class="label">Κατάβαση</span><span class="value">−${trail.loss_m} μ</span></div></div>${trail.description ? `<div class="trail-description">${trail.description}</div>` : ''}${meta ? `<div class="trail-meta-line">${meta}</div>` : ''}<div class="section-label">Υψομετρικό προφίλ</div><div class="elevation-wrap">${elevationSvg(trail)}</div>`;
+    if (notes) notes.innerHTML = trail.notes.length ? `<div class="notes-list">${trail.notes.map(renderNote).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί ενδείξεις ακόμα — κάνε κλικ πάνω στη γραμμή του μονοπατιού για να προσθέσεις.</div>';
+    if (photos) photos.innerHTML = trail.photos.length ? `<div class="media-grid">${trail.photos.map(renderPhoto).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί φωτογραφίες ακόμα — κάνε κλικ πάνω στη γραμμή για προσθήκη.</div>';
+    if (videos) videos.innerHTML = trail.videos.length ? `<div class="media-list">${trail.videos.map(renderVideo).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί βίντεο ακόμα — κάνε κλικ πάνω στη γραμμή για προσθήκη.</div>';
     document.querySelectorAll('.td-tab').forEach(el => el.classList.toggle('active', (el as HTMLElement).dataset.tab === 'info'));
     document.querySelectorAll<HTMLElement>('.td-panel').forEach(panel => { panel.hidden = panel.dataset.panel !== 'info'; });
   };
@@ -143,37 +192,95 @@ if (app) {
     routeModeToggle?.classList.add('show');
   };
 
-  const selectTrail = (code: string) => {
+  const selectTrail = (code: string, fly = true) => {
     const trail = trails[code]; if (!trail) return;
     if (selectedCode) {
-      layers.get(selectedCode)?.eachLayer(layer => { if (layer instanceof L.Polyline) layer.setStyle(styleFor(trails[selectedCode!])); });
-      document.getElementById(`row-${selectedCode}`)?.classList.remove('active');
+      setTrailStyle(selectedCode, false);
+      const previousRow = document.getElementById(`row-${selectedCode}`);
+      previousRow?.classList.remove('active');
+      if (previousRow) previousRow.style.borderLeftColor = 'transparent';
     }
     selectedCode = code;
     const group = layers.get(code);
-    group?.eachLayer(layer => { if (layer instanceof L.Polyline) { layer.setStyle(styleFor(trail, true)); layer.bringToFront(); } });
-    document.getElementById(`row-${code}`)?.classList.add('active');
-    if (group?.getBounds().isValid()) map.flyToBounds(group.getBounds(), { padding: [80, 80], duration: .9, maxZoom: 15 });
+    setTrailStyle(code, true);
+    const row = document.getElementById(`row-${code}`);
+    row?.classList.add('active');
+    if (row) row.style.borderLeftColor = trail.color;
+    if (fly && group?.getBounds().isValid()) map.flyToBounds(group.getBounds(), { padding: [80, 80], duration: .9, maxZoom: 15 });
     fillDrawer(code, trail); openDrawer(); updateDistanceBadge();
     if (view3dTitle) view3dTitle.textContent = `3D · ${code} — ${trail.name}`;
   };
 
-  let totalLength = 0;
-  codes.forEach(code => {
-    const trail = trails[code]; totalLength += trail.length_km;
-    const group = L.featureGroup().addTo(map); layers.set(code, group);
-    trail.segments.forEach(segment => {
-      const points: L.LatLngExpression[] = segment.map(([lng, lat]) => [lat, lng]); points.forEach(p => allBounds.push(p));
-      L.polyline(points, styleFor(trail)).addTo(group).on('click', e => { L.DomEvent.stopPropagation(e); selectTrail(code); });
+  const renderPoiMarkers = () => {
+    poiLayer.clearLayers();
+    codes.forEach(code => {
+      const trail = trails[code];
+      const pois = [...trail.notes, ...trail.photos, ...trail.videos];
+      pois.forEach(poi => {
+        if (typeof poi.lat !== 'number' || typeof poi.lng !== 'number') return;
+        const icon = L.divIcon({ className: 'trail-poi-marker-wrap', html: `<div class="trail-poi-marker" title="${escapeHtml(poiLabel(poi.category))}">${poiEmoji(poi.category)}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] });
+        const marker = L.marker([poi.lat, poi.lng], { icon }).addTo(poiLayer);
+        marker.bindPopup(`<div class="poi-popup"><strong>${escapeHtml(poi.title ?? poiLabel(poi.category))}</strong><div>${escapeHtml(poiLabel(poi.category))} · ${escapeHtml(code)}</div>${poi.text ? `<p>${escapeHtml(poi.text)}</p>` : ''}</div>`);
+        marker.on('click', () => selectTrail(code, false));
+      });
     });
-    const row = document.createElement('button'); row.type = 'button'; row.className = 'trail-row'; row.id = `row-${code}`;
-    row.innerHTML = `<span class="trail-row-text"><span class="trail-row-code">${code}</span><span class="trail-row-name">${trail.name}</span></span><span class="trail-row-dist">${trail.length_km.toFixed(1)}χλμ</span>`;
-    row.addEventListener('click', () => { selectTrail(code); trailPanel.classList.remove('open'); trailMenuToggle?.classList.remove('open'); }); trailList.append(row);
-    if (rbTrailSelect) { const option = document.createElement('option'); option.value = code; option.textContent = `${code} — ${trail.name}`; rbTrailSelect.append(option); }
+  };
+
+  const renderTrails = (nextTrails: TrailCollection, fitMap: boolean) => {
+    const previousSelection = selectedCode;
+    selectedCode = null;
+    trails = nextTrails;
+    codes = Object.keys(trails).sort((a, b) => trails[b].length_km - trails[a].length_km);
+
+    layers.forEach(group => map.removeLayer(group));
+    layers.clear(); visibleLines.clear(); allBounds.length = 0; trailList.replaceChildren();
+
+    if (rbTrailSelect) {
+      const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = '— Διάλεξε μονοπάτι —'; rbTrailSelect.replaceChildren(placeholder);
+    }
+
+    let totalLength = 0;
+    codes.forEach(code => {
+      const trail = trails[code]; totalLength += trail.length_km;
+      const group = L.featureGroup().addTo(map); layers.set(code, group);
+      const codeLines: L.Polyline[] = [];
+
+      trail.segments.forEach(segment => {
+        const points: L.LatLngExpression[] = segment.map(([lng, lat]) => [lat, lng]);
+        points.forEach(p => allBounds.push(p));
+        const visibleLine = L.polyline(points, { ...styleFor(trail), interactive: false }).addTo(group); codeLines.push(visibleLine);
+        const hitLine = L.polyline(points, { color: '#000000', weight: 22, opacity: 0.001, lineCap: 'round', lineJoin: 'round', interactive: true, bubblingMouseEvents: false }).addTo(group);
+        hitLine.on('mouseover', () => { if (selectedCode !== code) setTrailStyle(code, false, true); });
+        hitLine.on('mouseout', () => { if (selectedCode !== code) setTrailStyle(code, false); });
+        hitLine.on('click', e => {
+          L.DomEvent.stopPropagation(e);
+          selectTrail(code, false);
+          trailPanel.classList.remove('open');
+          trailMenuToggle?.classList.remove('open');
+          contentController.showChoice(e.latlng, code);
+        });
+      });
+      visibleLines.set(code, codeLines);
+
+      const row = document.createElement('button'); row.type = 'button'; row.className = 'trail-row'; row.id = `row-${code}`; row.style.borderLeftColor = 'transparent';
+      row.innerHTML = `<span class="trail-row-text"><span class="trail-row-code">${escapeHtml(code)}</span><span class="trail-row-name">${escapeHtml(trail.name)}</span></span><span class="trail-row-dist">${trail.length_km.toFixed(1)}χλμ</span>`;
+      row.addEventListener('click', () => { selectTrail(code); trailPanel.classList.remove('open'); trailMenuToggle?.classList.remove('open'); }); trailList.append(row);
+      if (rbTrailSelect) { const option = document.createElement('option'); option.value = code; option.textContent = `${code} — ${trail.name}`; rbTrailSelect.append(option); }
+    });
+
+    renderPoiMarkers();
+    const countElement = document.getElementById('trail-count'); const lengthElement = document.getElementById('total-length');
+    if (countElement) countElement.textContent = String(codes.length); if (lengthElement) lengthElement.textContent = totalLength.toFixed(1);
+    app.dataset.trailCount = String(codes.length);
+    if (fitMap && allBounds.length) map.fitBounds(L.latLngBounds(allBounds), { padding: [40, 40] });
+    if (previousSelection && trails[previousSelection]) selectTrail(previousSelection, false);
+  };
+
+  renderTrails(trails, true);
+  void refreshTrailsFromCms().then(cmsTrails => {
+    if (!cmsTrails) { app.dataset.trailSource = 'fallback'; return; }
+    renderTrails(cmsTrails, false); app.dataset.trailSource = 'cms';
   });
-  document.getElementById('trail-count')!.textContent = String(codes.length);
-  document.getElementById('total-length')!.textContent = totalLength.toFixed(1);
-  if (allBounds.length) map.fitBounds(L.latLngBounds(allBounds), { padding: [40, 40] });
 
   trailMenuToggle?.addEventListener('click', () => { const open = trailPanel.classList.toggle('open'); trailMenuToggle.classList.toggle('open', open); trailMenuToggle.setAttribute('aria-expanded', String(open)); routeBuilderPanel?.classList.remove('open'); routeBuilderToggle?.classList.remove('open'); });
   routeBuilderToggle?.addEventListener('click', () => { const open = routeBuilderPanel?.classList.toggle('open') ?? false; routeBuilderToggle.classList.toggle('open', open); routeBuilderToggle.setAttribute('aria-expanded', String(open)); trailPanel.classList.remove('open'); trailMenuToggle?.classList.remove('open'); });
@@ -216,14 +323,14 @@ if (app) {
     shelterPanel.classList.add('show');
     if (!userPosition) { shelterPanel.innerHTML = '<div class="sh-title">🆘 Χρειάζεται GPS</div><div class="sh-sub">Ενεργοποίησε πρώτα τη θέση σου.</div><button class="sh-close" type="button">Κλείσιμο</button>'; shelterPanel.querySelector('button')?.addEventListener('click', () => shelterPanel.classList.remove('show')); return; }
     const shelters = codes.flatMap(code => trails[code].notes.filter(n => n.category === 'shelter' && typeof n.lat === 'number' && typeof n.lng === 'number').map(n => ({ ...n, code })));
-    if (!shelters.length) { shelterPanel.innerHTML = '<div class="sh-title">🆘 Δεν υπάρχουν καταχωρημένα καταφύγια</div><div class="sh-sub">Θα προστεθούν δυναμικά από το περιεχόμενο.</div><button class="sh-close" type="button">Κλείσιμο</button>'; shelterPanel.querySelector('button')?.addEventListener('click', () => shelterPanel.classList.remove('show')); return; }
+    if (!shelters.length) { shelterPanel.innerHTML = '<div class="sh-title">🆘 Δεν υπάρχουν καταχωρημένα καταφύγια</div><div class="sh-sub">Πρόσθεσε καταφύγιο από το WordPress → Σημεία διαδρομών.</div><button class="sh-close" type="button">Κλείσιμο</button>'; shelterPanel.querySelector('button')?.addEventListener('click', () => shelterPanel.classList.remove('show')); return; }
     const nearest = shelters.map(s => ({ ...s, distance: haversine(userPosition!.lng, userPosition!.lat, s.lng!, s.lat!) })).sort((a, b) => a.distance - b.distance)[0];
     if (shelterLine) map.removeLayer(shelterLine); shelterLine = L.polyline([[userPosition.lat, userPosition.lng], [nearest.lat!, nearest.lng!]], { color: '#dc2626', weight: 5 }).addTo(map);
-    shelterPanel.innerHTML = `<div class="sh-title">🆘 ${nearest.title ?? 'Κοντινότερο καταφύγιο'}</div><div class="sh-sub">${nearest.code} · ${(nearest.distance / 1000).toFixed(2)} χλμ σε ευθεία</div><button class="sh-close" type="button">Κλείσιμο</button>`;
+    shelterPanel.innerHTML = `<div class="sh-title">🆘 ${escapeHtml(nearest.title ?? 'Κοντινότερο καταφύγιο')}</div><div class="sh-sub">${escapeHtml(nearest.code)} · ${(nearest.distance / 1000).toFixed(2)} χλμ σε ευθεία</div><button class="sh-close" type="button">Κλείσιμο</button>`;
     shelterPanel.querySelector('button')?.addEventListener('click', () => { shelterPanel.classList.remove('show'); if (shelterLine) { map.removeLayer(shelterLine); shelterLine = null; } });
   });
 
-  view3dBtn?.addEventListener('click', () => { if (!selectedCode) { selectTrail(codes[0]); } view3dOverlay?.classList.add('open'); });
+  view3dBtn?.addEventListener('click', () => { if (!selectedCode && codes.length) { selectTrail(codes[0]); } view3dOverlay?.classList.add('open'); });
   view3dClose?.addEventListener('click', () => view3dOverlay?.classList.remove('open'));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { view3dOverlay?.classList.remove('open'); routeBuilderPanel?.classList.remove('open'); } });
 }

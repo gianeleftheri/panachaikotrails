@@ -1,0 +1,267 @@
+<script>
+  import L from 'leaflet';
+
+  type RoutePoint = [number, number];
+  type ApiTrail = {
+    key?: string;
+    trail?: {
+      name?: string;
+      length_km?: number;
+      gain_m?: number;
+      loss_m?: number;
+      segments?: Array<Array<[number, number, number?]>>;
+    };
+  };
+  type RoutingResponse = {
+    ok?: boolean;
+    shape?: string;
+    shape_precision?: number;
+    distance_km?: number | null;
+    time_seconds?: number | null;
+    message?: string;
+  };
+  type NavigationPlan = {
+    code: string;
+    name: string;
+    mode: string;
+    points: RoutePoint[];
+    totalDistanceM: number;
+    approachDistanceM: number;
+    trailDistanceM: number;
+    estimatedSeconds: number;
+  };
+
+  const runtime = window as typeof window & {
+    __panachaikoMap?: L.Map;
+    __panachaikoRouteLayer?: L.Polyline;
+    __panachaikoFullRouteLayer?: L.LayerGroup;
+    __panachaikoNavigationPlan?: NavigationPlan;
+  };
+
+  let cachedPosition: GeolocationPosition | null = null;
+  let pendingPlan: NavigationPlan | null = null;
+
+  const formatDistance = (meters: number) => meters < 1000
+    ? `${Math.round(meters)} μ`
+    : `${(meters / 1000).toFixed(meters < 10000 ? 2 : 1)} χλμ`;
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.max(1, Math.round(seconds / 60));
+    if (minutes < 60) return `${minutes} λεπτά`;
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    return rest ? `${hours}ω ${rest}λ` : `${hours} ώρες`;
+  };
+
+  const haversine = (a: RoutePoint, b: RoutePoint) => {
+    const R = 6371000;
+    const rad = (v: number) => v * Math.PI / 180;
+    const dLat = rad(b[0] - a[0]);
+    const dLng = rad(b[1] - a[1]);
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(x));
+  };
+
+  const pathDistance = (points: RoutePoint[]) => points.slice(1).reduce((sum, point, index) => sum + haversine(points[index], point), 0);
+
+  const decodePolyline = (encoded: string, precision = 6): RoutePoint[] => {
+    const coordinates: RoutePoint[] = [];
+    let index = 0;
+    let lat = 0;
+    let lng = 0;
+    const factor = 10 ** precision;
+    while (index < encoded.length) {
+      let result = 0, shift = 0, byte = 0;
+      do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20 && index < encoded.length);
+      lat += (result & 1) ? ~(result >> 1) : (result >> 1);
+      result = 0; shift = 0;
+      do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20 && index < encoded.length);
+      lng += (result & 1) ? ~(result >> 1) : (result >> 1);
+      coordinates.push([lat / factor, lng / factor]);
+    }
+    return coordinates;
+  };
+
+  const getPosition = () => new Promise<GeolocationPosition>((resolve, reject) => {
+    if (cachedPosition && Date.now() - cachedPosition.timestamp < 10 * 60 * 1000) {
+      resolve(cachedPosition);
+      return;
+    }
+    if (!navigator.geolocation) {
+      reject(new Error('Το GPS δεν είναι διαθέσιμο.'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(position => {
+      cachedPosition = position;
+      resolve(position);
+    }, reject, { enableHighAccuracy: true, maximumAge: 10 * 60 * 1000, timeout: 30000 });
+  });
+
+  document.getElementById('rbGpsBtn')?.addEventListener('click', () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(position => { cachedPosition = position; }, () => {}, {
+      enableHighAccuracy: true,
+      maximumAge: 10 * 60 * 1000,
+      timeout: 20000
+    });
+  });
+
+  const loadTrail = async (code: string) => {
+    const response = await fetch('https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/trails', {
+      headers: { Accept: 'application/json' }, cache: 'no-store', credentials: 'omit'
+    });
+    if (!response.ok) throw new Error('Δεν φορτώθηκαν τα δεδομένα του μονοπατιού.');
+    const payload = await response.json() as ApiTrail[];
+    const item = payload.find(entry => entry?.key === code);
+    if (!item?.trail?.segments?.length) throw new Error('Το επιλεγμένο μονοπάτι δεν έχει διαθέσιμη γεωμετρία.');
+    return item.trail;
+  };
+
+  const flattenTrail = (segments: Array<Array<[number, number, number?]>>): RoutePoint[] => {
+    const points: RoutePoint[] = [];
+    segments.forEach(segment => segment.forEach(raw => {
+      const point: RoutePoint = [Number(raw[1]), Number(raw[0])];
+      if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) return;
+      const previous = points.at(-1);
+      if (!previous || previous[0] !== point[0] || previous[1] !== point[1]) points.push(point);
+    }));
+    return points;
+  };
+
+  const routeApproach = async (start: RoutePoint, end: RoutePoint, mode: string) => {
+    if (mode !== 'ors') {
+      const points = [start, end];
+      const distanceM = haversine(start, end);
+      return { points, distanceM, seconds: distanceM / 1.2 };
+    }
+    const response = await fetch('https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/route', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ start_lat: start[0], start_lng: start[1], end_lat: end[0], end_lng: end[1] }),
+      credentials: 'omit'
+    });
+    const payload = await response.json().catch(() => ({})) as RoutingResponse;
+    if (!response.ok || !payload.shape) throw new Error(payload.message || 'Δεν βρέθηκε πεζοπορική πρόσβαση προς την αρχή του μονοπατιού.');
+    const points = decodePolyline(payload.shape, payload.shape_precision ?? 6);
+    if (points.length < 2) throw new Error('Η υπηρεσία δρομολόγησης δεν επέστρεψε έγκυρη πορεία.');
+    const distanceM = typeof payload.distance_km === 'number' ? payload.distance_km * 1000 : pathDistance(points);
+    const seconds = typeof payload.time_seconds === 'number' ? payload.time_seconds : distanceM / 1.2;
+    return { points, distanceM, seconds };
+  };
+
+  const drawPlan = (approach: RoutePoint[], trail: RoutePoint[]) => {
+    const map = runtime.__panachaikoMap;
+    if (!map) throw new Error('Ο χάρτης δεν είναι ακόμη έτοιμος. Κάνε ανανέωση και δοκίμασε ξανά.');
+    if (runtime.__panachaikoRouteLayer && map.hasLayer(runtime.__panachaikoRouteLayer)) map.removeLayer(runtime.__panachaikoRouteLayer);
+    if (runtime.__panachaikoFullRouteLayer) map.removeLayer(runtime.__panachaikoFullRouteLayer);
+    const group = L.layerGroup();
+    L.polyline(approach, { color: '#3b82f6', weight: 5, opacity: .96, lineCap: 'round', lineJoin: 'round' }).addTo(group);
+    L.polyline(trail, { color: '#84a06e', weight: 6, opacity: .98, lineCap: 'round', lineJoin: 'round' }).addTo(group);
+    group.addTo(map);
+    runtime.__panachaikoFullRouteLayer = group;
+    const all = [...approach, ...trail];
+    if (all.length) map.fitBounds(L.latLngBounds(all), { padding: [70, 70], maxZoom: 16 });
+  };
+
+  const ensureStartButton = () => {
+    let startButton = document.getElementById('rbStartNavBtn') as HTMLButtonElement | null;
+    if (!startButton) {
+      startButton = document.createElement('button');
+      startButton.id = 'rbStartNavBtn';
+      startButton.type = 'button';
+      startButton.className = 'rb-calc-btn';
+      startButton.style.marginTop = '8px';
+      startButton.textContent = '▶ Έναρξη πλοήγησης';
+      document.getElementById('rbCalcBtn')?.insertAdjacentElement('afterend', startButton);
+      startButton.addEventListener('click', () => {
+        if (!pendingPlan) return;
+        document.getElementById('routeBuilderPanel')?.classList.remove('open');
+        document.getElementById('routeBuilderToggle')?.classList.remove('open');
+        document.getElementById('trailDrawer')?.classList.remove('open');
+        document.dispatchEvent(new CustomEvent<NavigationPlan>('panachaiko:navigation-start', { detail: pendingPlan }));
+      });
+    }
+    startButton.hidden = false;
+    return startButton;
+  };
+
+  document.addEventListener('click', async event => {
+    const target = event.target as HTMLElement | null;
+    const calcButton = target?.closest<HTMLButtonElement>('#rbCalcBtn');
+    if (!calcButton) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    const trailSelect = document.getElementById('rbTrailSelect') as HTMLSelectElement | null;
+    const result = document.getElementById('rbResultStatus');
+    const code = trailSelect?.value ?? '';
+    if (!code) return;
+    const mode = document.querySelector<HTMLInputElement>('input[name="rbMode"]:checked')?.value ?? 'straight';
+    const startButton = document.getElementById('rbStartNavBtn') as HTMLButtonElement | null;
+    if (startButton) startButton.hidden = true;
+    pendingPlan = null;
+
+    calcButton.disabled = true;
+    calcButton.textContent = 'Υπολογισμός ολόκληρης διαδρομής…';
+    if (result) { result.textContent = 'Υπολογίζω GPS → αρχή μονοπατιού → τέλος μονοπατιού…'; result.className = 'rb-status warn'; }
+
+    try {
+      const position = await getPosition();
+      const start: RoutePoint = [position.coords.latitude, position.coords.longitude];
+      const trail = await loadTrail(code);
+      let trailPoints = flattenTrail(trail.segments!);
+      if (trailPoints.length < 2) throw new Error('Η γεωμετρία του μονοπατιού δεν είναι αρκετή για πλοήγηση.');
+
+      const firstDistance = haversine(start, trailPoints[0]);
+      const lastDistance = haversine(start, trailPoints[trailPoints.length - 1]);
+      const reversed = lastDistance < firstDistance;
+      if (reversed) trailPoints = [...trailPoints].reverse();
+
+      const approach = await routeApproach(start, trailPoints[0], mode);
+      const trailDistanceM = pathDistance(trailPoints);
+      const ascent = reversed ? Number(trail.loss_m ?? 0) : Number(trail.gain_m ?? 0);
+      const trailSeconds = (trailDistanceM / 5000) * 3600 + (Math.max(0, ascent) / 600) * 3600;
+      const totalDistanceM = approach.distanceM + trailDistanceM;
+      const estimatedSeconds = approach.seconds + trailSeconds;
+      const fullPoints = [...approach.points, ...trailPoints.slice(1)];
+
+      pendingPlan = {
+        code,
+        name: trail.name ?? code,
+        mode,
+        points: fullPoints,
+        totalDistanceM,
+        approachDistanceM: approach.distanceM,
+        trailDistanceM,
+        estimatedSeconds
+      };
+      runtime.__panachaikoNavigationPlan = pendingPlan;
+      drawPlan(approach.points, trailPoints);
+      ensureStartButton();
+
+      if (result) {
+        result.innerHTML = `Προσέγγιση: <b>${formatDistance(approach.distanceM)}</b><br>Μονοπάτι: <b>${formatDistance(trailDistanceM)}</b><br>Σύνολο: <b>${formatDistance(totalDistanceM)}</b> · περίπου <b>${formatTime(estimatedSeconds)}</b>`;
+        result.className = 'rb-status ok';
+      }
+    } catch (error) {
+      if (result) {
+        result.textContent = error instanceof Error ? error.message : 'Ο υπολογισμός απέτυχε.';
+        result.className = 'rb-status warn';
+      }
+    } finally {
+      calcButton.disabled = false;
+      calcButton.textContent = 'Υπολογισμός διαδρομής';
+    }
+  }, { capture: true });
+
+  document.addEventListener('panachaiko:navigation-exit', event => {
+    const finish = Boolean((event as CustomEvent<{ finish?: boolean }>).detail?.finish);
+    const panel = document.getElementById('routeBuilderPanel');
+    const toggle = document.getElementById('routeBuilderToggle');
+    if (!finish) {
+      panel?.classList.add('open');
+      toggle?.classList.add('open');
+    }
+  });
+</script>

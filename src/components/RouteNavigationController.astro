@@ -211,19 +211,15 @@
       const position = await getPosition();
       const start: RoutePoint = [position.coords.latitude, position.coords.longitude];
       const trail = await loadTrail(code);
-      let trailPoints = flattenTrail(trail.segments!);
+      const trailPoints = flattenTrail(trail.segments!);
       if (trailPoints.length < 2) throw new Error('Η γεωμετρία του μονοπατιού δεν είναι αρκετή για πλοήγηση.');
 
-      // The nearer trail endpoint is treated as the trail start for this hike.
-      // After locking, navigation continues across the whole trail to the opposite endpoint.
-      const firstDistance = haversine(start, trailPoints[0]);
-      const lastDistance = haversine(start, trailPoints[trailPoints.length - 1]);
-      const reversed = lastDistance < firstDistance;
-      if (reversed) trailPoints = [...trailPoints].reverse();
-
+      // The stored geometry order defines the official hiking direction:
+      // first point = αρχή, last point = τέλος. We always route GPS -> first point,
+      // then continue over the entire trail to the stored final point.
       const approach = await routeApproach(start, trailPoints[0], mode);
       const trailDistanceM = pathDistance(trailPoints);
-      const ascent = reversed ? Number(trail.loss_m ?? 0) : Number(trail.gain_m ?? 0);
+      const ascent = Number(trail.gain_m ?? 0);
       const trailSeconds = (trailDistanceM / 5000) * 3600 + (Math.max(0, ascent) / 600) * 3600;
       const totalDistanceM = approach.distanceM + trailDistanceM;
       const estimatedSeconds = approach.seconds + trailSeconds;

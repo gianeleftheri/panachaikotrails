@@ -15,6 +15,7 @@
   import * as maplibregl from 'maplibre-gl';
   import 'maplibre-gl/dist/maplibre-gl.css';
   import { getTrailNavigationConfig } from '../data/trail-navigation';
+  import { decodeHtmlEntities } from '../scripts/text-normalize';
 
   type Coord = [number, number];
   type RoutePoint = [number, number];
@@ -172,7 +173,7 @@
     if (first) startMarker = endpoint(first,true);
     if (last) endMarker = endpoint(last,false);
     selectedCode = code;
-    if (title) title.textContent = `3D · ${code}${trail?.name ? ` — ${trail.name}` : ''}`;
+    if (title) title.textContent = `3D · ${code}${trail?.name ? ` — ${decodeHtmlEntities(trail.name)}` : ''}`;
     if (doFit) fit(segments);
     if (hint) hint.textContent = segments.length ? `${code} · φόρτωση 3D πορείας…` : `Δεν βρέθηκε γεωμετρία για ${code}`;
     reportLineHealth(code);

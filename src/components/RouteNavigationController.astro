@@ -1,6 +1,7 @@
 <script>
   import L from 'leaflet';
   import { getTrailNavigationConfig } from '../data/trail-navigation';
+  import { decodeHtmlEntities } from '../scripts/text-normalize';
 
   type RoutePoint = [number, number];
   type RawTrailPoint = [number, number, number?];
@@ -468,7 +469,7 @@
 
       pendingPlan = {
         code,
-        name: trail.name ?? code,
+        name: decodeHtmlEntities(trail.name ?? code),
         mode,
         points: fullPoints,
         approachPointCount: approach.points.length,

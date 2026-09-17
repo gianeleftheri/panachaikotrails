@@ -1,10 +1,11 @@
 import type { Trail, TrailCollection, TrailPoi, TrailPoint, TrailStatus } from '../types/trail';
+import { decodeHtmlEntities } from './text-normalize';
 
 type TrailDataModule = { key: string; trail: unknown };
 type ApiTrailItem = { key?: unknown; trail?: unknown };
 type TrailCache = { savedAt: number; trails: TrailCollection };
 
-const CACHE_KEY = 'panachaiko-trails-cache-v4';
+const CACHE_KEY = 'panachaiko-trails-cache-v5';
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const CMS_TRAILS_URL = import.meta.env.PUBLIC_TRAILS_API_URL || 'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/trails';
 
@@ -38,8 +39,8 @@ const normalizePoi = (value: unknown): TrailPoi | null => {
   const raw = value as Record<string, unknown>;
   return {
     id: Number.isFinite(Number(raw.id)) ? Number(raw.id) : undefined,
-    title: typeof raw.title === 'string' ? raw.title : undefined,
-    text: typeof raw.text === 'string' ? raw.text : '',
+    title: typeof raw.title === 'string' ? decodeHtmlEntities(raw.title) : undefined,
+    text: typeof raw.text === 'string' ? decodeHtmlEntities(raw.text) : '',
     category: typeof raw.category === 'string' ? raw.category : 'general',
     lat: asNullableNumber(raw.lat),
     lng: asNullableNumber(raw.lng),
@@ -77,8 +78,8 @@ const normalizeTrail = (value: unknown, fallback?: Trail): Trail | null => {
   const segments = apiSegments.length ? apiSegments : (fallback?.segments ?? []);
 
   return {
-    name: typeof raw.name === 'string' && raw.name.trim() ? raw.name : (fallback?.name ?? ''),
-    description: typeof raw.description === 'string' ? raw.description : (fallback?.description ?? ''),
+    name: decodeHtmlEntities(typeof raw.name === 'string' && raw.name.trim() ? raw.name : (fallback?.name ?? '')),
+    description: decodeHtmlEntities(typeof raw.description === 'string' ? raw.description : (fallback?.description ?? '')),
     existing,
     status: asStatus(raw.status, existing),
     color: typeof raw.color === 'string' && raw.color ? raw.color : (fallback?.color ?? '#84a06e'),
@@ -91,7 +92,7 @@ const normalizeTrail = (value: unknown, fallback?: Trail): Trail | null => {
     photos: raw.photos === undefined ? (fallback?.photos ?? []) : normalizePoiArray(raw.photos),
     videos: raw.videos === undefined ? (fallback?.videos ?? []) : normalizePoiArray(raw.videos),
     notes: raw.notes === undefined ? (fallback?.notes ?? []) : normalizePoiArray(raw.notes),
-    source: typeof raw.source === 'string' ? raw.source : (fallback?.source ?? ''),
+    source: decodeHtmlEntities(typeof raw.source === 'string' ? raw.source : (fallback?.source ?? '')),
     verified_at: typeof raw.verified_at === 'string' ? raw.verified_at : (fallback?.verified_at ?? '')
   };
 };

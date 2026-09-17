@@ -20,6 +20,10 @@ import MapLibreTerrainV3 from './MapLibreTerrainV3.astro';
         <div><strong id="trail-count">0</strong>μονοπάτια</div>
         <div><strong id="total-length">0</strong>χλμ συνολικά</div>
       </div>
+      <div class="left-panel-actions" aria-label="Έλεγχος παραθύρου μονοπατιών">
+        <button class="trail-panel-pin" id="trailPanelPin" type="button" aria-label="Καρφίτσωμα παραθύρου μονοπατιών" aria-pressed="false" title="Κράτησε το παράθυρο ανοιχτό">📌</button>
+        <button class="trail-panel-close" id="trailPanelClose" type="button" aria-label="Κλείσιμο παραθύρου μονοπατιών" title="Κλείσιμο">×</button>
+      </div>
     </div>
     <div class="trail-list" id="trail-list"></div>
   </aside>

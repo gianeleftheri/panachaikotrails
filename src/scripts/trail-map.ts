@@ -13,6 +13,8 @@ if (app) {
   const mapElement = document.getElementById('map');
   const trailList = document.getElementById('trail-list');
   const trailPanel = document.getElementById('trailPanel');
+  const trailPanelPin = document.getElementById('trailPanelPin') as HTMLButtonElement | null;
+  const trailPanelClose = document.getElementById('trailPanelClose') as HTMLButtonElement | null;
   const trailMenuToggle = document.getElementById('trailMenuToggle') as HTMLButtonElement | null;
   const routeBuilderToggle = document.getElementById('routeBuilderToggle') as HTMLButtonElement | null;
   const routeBuilderPanel = document.getElementById('routeBuilderPanel');
@@ -58,6 +60,45 @@ if (app) {
   let shelterLine: L.Polyline | null = null;
 
   const contentController = createTrailContentController(map, code => trails[code]);
+
+  const desktopPanelQuery = window.matchMedia('(min-width: 761px)');
+  const panelPinStorageKey = 'panachaiko-trail-panel-pinned';
+  let trailPanelPinned = false;
+
+  const setTrailPanelOpen = (open: boolean) => {
+    trailPanel.classList.toggle('open', open);
+    trailMenuToggle?.classList.toggle('open', open);
+    trailMenuToggle?.setAttribute('aria-expanded', String(open));
+  };
+
+  const syncTrailPanelPin = (openWhenPinned = false) => {
+    const storedPinned = window.localStorage.getItem(panelPinStorageKey) === '1';
+    trailPanelPinned = desktopPanelQuery.matches && storedPinned;
+    trailPanel.classList.toggle('pinned', trailPanelPinned);
+    trailPanelPin?.classList.toggle('active', trailPanelPinned);
+    trailPanelPin?.setAttribute('aria-pressed', String(trailPanelPinned));
+    trailPanelPin?.setAttribute('title', trailPanelPinned ? 'Το παράθυρο μένει ανοιχτό' : 'Κράτησε το παράθυρο ανοιχτό');
+    if (openWhenPinned && trailPanelPinned) setTrailPanelOpen(true);
+  };
+
+  const closeTrailPanelAfterSelection = () => {
+    if (!trailPanelPinned || !desktopPanelQuery.matches) setTrailPanelOpen(false);
+  };
+
+  syncTrailPanelPin(true);
+  desktopPanelQuery.addEventListener('change', () => syncTrailPanelPin(false));
+
+  trailPanelPin?.addEventListener('click', event => {
+    event.stopPropagation();
+    const nextPinned = !(desktopPanelQuery.matches && window.localStorage.getItem(panelPinStorageKey) === '1');
+    window.localStorage.setItem(panelPinStorageKey, nextPinned ? '1' : '0');
+    syncTrailPanelPin(true);
+  });
+
+  trailPanelClose?.addEventListener('click', event => {
+    event.stopPropagation();
+    setTrailPanelOpen(false);
+  });
 
   const escapeHtml = (value: unknown) => String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -254,8 +295,7 @@ if (app) {
         hitLine.on('click', e => {
           L.DomEvent.stopPropagation(e);
           selectTrail(code, false);
-          trailPanel.classList.remove('open');
-          trailMenuToggle?.classList.remove('open');
+          closeTrailPanelAfterSelection();
           contentController.showChoice(e.latlng, code);
         });
       });
@@ -263,7 +303,7 @@ if (app) {
 
       const row = document.createElement('button'); row.type = 'button'; row.className = 'trail-row'; row.id = `row-${code}`; row.style.borderLeftColor = 'transparent';
       row.innerHTML = `<span class="trail-row-text"><span class="trail-row-code">${escapeHtml(code)}</span><span class="trail-row-name">${escapeHtml(trail.name)}</span></span><span class="trail-row-dist">${trail.length_km.toFixed(1)}χλμ</span>`;
-      row.addEventListener('click', () => { selectTrail(code); trailPanel.classList.remove('open'); trailMenuToggle?.classList.remove('open'); }); trailList.append(row);
+      row.addEventListener('click', () => { selectTrail(code); closeTrailPanelAfterSelection(); }); trailList.append(row);
       if (rbTrailSelect) { const option = document.createElement('option'); option.value = code; option.textContent = `${code} — ${trail.name}`; rbTrailSelect.append(option); }
     });
 
@@ -282,9 +322,8 @@ if (app) {
   });
 
   trailMenuToggle?.addEventListener('click', () => {
-    const open = trailPanel.classList.toggle('open');
-    trailMenuToggle.classList.toggle('open', open);
-    trailMenuToggle.setAttribute('aria-expanded', String(open));
+    const open = !trailPanel.classList.contains('open');
+    setTrailPanelOpen(open);
     routeBuilderPanel?.classList.remove('open');
     routeBuilderToggle?.classList.remove('open');
     closeDrawer();
@@ -294,8 +333,7 @@ if (app) {
     const open = routeBuilderPanel?.classList.toggle('open') ?? false;
     routeBuilderToggle.classList.toggle('open', open);
     routeBuilderToggle.setAttribute('aria-expanded', String(open));
-    trailPanel.classList.remove('open');
-    trailMenuToggle?.classList.remove('open');
+    setTrailPanelOpen(false);
     closeDrawer();
   });
 
@@ -338,8 +376,7 @@ if (app) {
     closeDrawer();
     routeBuilderPanel?.classList.remove('open');
     routeBuilderToggle?.classList.remove('open');
-    trailPanel.classList.remove('open');
-    trailMenuToggle?.classList.remove('open');
+    setTrailPanelOpen(false);
     if (!userPosition) { shelterPanel.innerHTML = '<div class="sh-title">🆘 Χρειάζεται GPS</div><div class="sh-sub">Ενεργοποίησε πρώτα τη θέση σου.</div><button class="sh-close" type="button">Κλείσιμο</button>'; shelterPanel.querySelector('button')?.addEventListener('click', () => shelterPanel.classList.remove('show')); return; }
     const shelters = codes.flatMap(code => trails[code].notes.filter(n => n.category === 'shelter' && typeof n.lat === 'number' && typeof n.lng === 'number').map(n => ({ ...n, code })));
     if (!shelters.length) { shelterPanel.innerHTML = '<div class="sh-title">🆘 Δεν υπάρχουν καταχωρημένα καταφύγια</div><div class="sh-sub">Πρόσθεσε καταφύγιο από το WordPress → Σημεία διαδρομών.</div><button class="sh-close" type="button">Κλείσιμο</button>'; shelterPanel.querySelector('button')?.addEventListener('click', () => shelterPanel.classList.remove('show')); return; }
@@ -353,8 +390,7 @@ if (app) {
     closeDrawer();
     routeBuilderPanel?.classList.remove('open');
     routeBuilderToggle?.classList.remove('open');
-    trailPanel.classList.remove('open');
-    trailMenuToggle?.classList.remove('open');
+    setTrailPanelOpen(false);
     if (!selectedCode && codes.length) selectTrail(codes[0]);
     view3dOverlay?.classList.add('open');
   });

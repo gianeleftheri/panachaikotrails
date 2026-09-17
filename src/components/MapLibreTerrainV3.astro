@@ -231,6 +231,17 @@
     if (map.getLayer('route3d-line')) map.setLayoutProperty('route3d-line','visibility',visible);
     if (map.getLayer('route3d-shadow')) map.setLayoutProperty('route3d-shadow','visibility',visible);
     if (coords.length > 1) renderRouteDots(coords); else clearMarkers(routeDots);
+
+    // During route preview/live navigation, A and T belong to the computed plan,
+    // not to the arbitrary storage direction of the raw trail MultiLineString.
+    if (plan && coords.length > 1) {
+      const splitIndex = Math.max(0, Math.min(coords.length - 1, (plan.approachPointCount ?? 1) - 1));
+      startMarker?.remove();
+      endMarker?.remove();
+      startMarker = endpoint(coords[splitIndex],true);
+      endMarker = endpoint(coords.at(-1)!,false);
+    }
+
     if (doFit && coords.length > 1) fit([coords]);
     if (hint && plan) hint.textContent = `${navigationActive?'LIVE':'Προεπισκόπηση'} · ${plan.code} · μπλε=ολόκληρη πορεία`;
   };

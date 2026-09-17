@@ -1,0 +1,220 @@
+<section class="nav-hud" id="navigationHud" aria-live="polite" aria-label="Πλοήγηση διαδρομής">
+  <div class="nav-hud-head">
+    <button class="nav-back" id="navBackBtn" type="button" aria-label="Επιστροφή στην επιλογή διαδρομής">←</button>
+    <div class="nav-title-wrap">
+      <div class="nav-kicker">ΠΛΟΗΓΗΣΗ</div>
+      <div class="nav-title" id="navTitle">—</div>
+    </div>
+    <div class="nav-view-switch" aria-label="Προβολή χάρτη">
+      <button class="active" id="nav2dBtn" type="button">2D</button>
+      <button id="nav3dBtn" type="button">3D</button>
+    </div>
+  </div>
+
+  <div class="nav-guidance" id="navGuidance">Περιμένω νέο στίγμα GPS…</div>
+
+  <div class="nav-stats">
+    <div><span class="nav-stat-value" id="navRemaining">—</span><span class="nav-stat-label">Απομένουν</span></div>
+    <div><span class="nav-stat-value" id="navEta">—</span><span class="nav-stat-label">Εκτίμηση</span></div>
+    <div><span class="nav-stat-value" id="navOffRoute">—</span><span class="nav-stat-label">Από πορεία</span></div>
+  </div>
+
+  <div class="nav-progress-track" aria-hidden="true"><div class="nav-progress" id="navProgress"></div></div>
+
+  <div class="nav-actions">
+    <button class="nav-follow active" id="navFollowBtn" type="button">◎ Ακολούθηση θέσης</button>
+    <button class="nav-finish" id="navFinishBtn" type="button">Τερματισμός</button>
+  </div>
+</section>
+
+<style>
+  .nav-hud{display:none;position:fixed;left:50%;bottom:22px;z-index:2200;transform:translateX(-50%);width:min(620px,calc(100vw - 28px));background:rgba(18,32,26,.95);border:1px solid var(--brass-solid);border-radius:12px;box-shadow:0 14px 46px rgba(0,0,0,.6);backdrop-filter:blur(16px);padding:12px 14px;color:var(--parchment)}
+  .nav-hud.open{display:block}.nav-hud.off-route{border-color:#d9a441}.nav-hud.arrived{border-color:var(--moss)}
+  .nav-hud-head{display:flex;align-items:center;gap:10px}.nav-back{width:36px;height:36px;border-radius:50%;border:1px solid var(--brass);background:rgba(255,255,255,.04);color:var(--parchment);cursor:pointer;font-size:20px}.nav-title-wrap{flex:1;min-width:0}.nav-kicker{font-size:9px;letter-spacing:.16em;color:var(--moss)}.nav-title{font:600 14px/1.25 var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .nav-view-switch{display:flex;padding:2px;border:1px solid var(--brass);border-radius:16px}.nav-view-switch button{border:0;background:none;color:var(--parchment-dim);border-radius:13px;padding:5px 9px;font-size:10.5px;cursor:pointer}.nav-view-switch button.active{background:var(--rust);color:#fff}
+  .nav-guidance{margin:11px 0 10px;padding:10px 12px;border-radius:7px;background:rgba(255,255,255,.04);font-size:13px;line-height:1.4}.nav-hud.off-route .nav-guidance{background:rgba(217,164,65,.12);color:#f0c976}.nav-hud.arrived .nav-guidance{background:rgba(132,160,110,.15);color:#b8d49e}
+  .nav-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.nav-stats>div{border:1px solid var(--brass);padding:8px 9px;border-radius:6px;background:rgba(255,255,255,.02)}.nav-stat-value{display:block;font:600 15px var(--serif)}.nav-stat-label{display:block;margin-top:2px;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--parchment-faint)}
+  .nav-progress-track{height:4px;background:rgba(255,255,255,.08);border-radius:4px;margin:10px 0 9px;overflow:hidden}.nav-progress{height:100%;width:0;background:var(--moss);transition:width .35s ease}
+  .nav-actions{display:flex;gap:8px}.nav-actions button{flex:1;border-radius:6px;padding:8px 10px;cursor:pointer;font-size:11.5px}.nav-follow{border:1px solid var(--brass);background:rgba(255,255,255,.035);color:var(--parchment-dim)}.nav-follow.active{border-color:var(--moss);color:var(--moss)}.nav-finish{border:1px solid rgba(207,90,52,.55);background:var(--rust-dim);color:#f0b09c}
+  body.navigation-active #trailMenuToggle,body.navigation-active #routeBuilderToggle{opacity:.35;pointer-events:none}
+  @media(max-width:760px){.nav-hud{bottom:max(10px,env(safe-area-inset-bottom));width:calc(100vw - 20px);padding:10px}.nav-title{font-size:12.5px}.nav-stats{gap:5px}.nav-stat-value{font-size:13px}.nav-guidance{font-size:12px}.nav-actions button{min-height:42px}}
+</style>
+
+<script>
+  import type L from 'leaflet';
+
+  type RoutePoint = [number, number];
+  type NavigationPlan = {
+    code: string;
+    name: string;
+    mode: string;
+    points: RoutePoint[];
+    totalDistanceM: number;
+    approachDistanceM: number;
+    trailDistanceM: number;
+    estimatedSeconds: number;
+  };
+
+  type Runtime = typeof window & {
+    __panachaikoMap?: L.Map;
+    __panachaikoNavigationPlan?: NavigationPlan;
+  };
+
+  const runtime = window as Runtime;
+  const hud = document.getElementById('navigationHud');
+  const title = document.getElementById('navTitle');
+  const guidance = document.getElementById('navGuidance');
+  const remainingEl = document.getElementById('navRemaining');
+  const etaEl = document.getElementById('navEta');
+  const offRouteEl = document.getElementById('navOffRoute');
+  const progressEl = document.getElementById('navProgress') as HTMLElement | null;
+  const followBtn = document.getElementById('navFollowBtn') as HTMLButtonElement | null;
+  const backBtn = document.getElementById('navBackBtn');
+  const finishBtn = document.getElementById('navFinishBtn');
+  const btn2d = document.getElementById('nav2dBtn');
+  const btn3d = document.getElementById('nav3dBtn');
+
+  let plan: NavigationPlan | null = null;
+  let watchId: number | null = null;
+  let follow = true;
+  let remainingFromIndex: number[] = [];
+
+  const haversine = (a: RoutePoint, b: RoutePoint) => {
+    const R = 6371000;
+    const rad = (v: number) => v * Math.PI / 180;
+    const dLat = rad(b[0] - a[0]);
+    const dLng = rad(b[1] - a[1]);
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(x));
+  };
+
+  const buildRemaining = (points: RoutePoint[]) => {
+    const result = new Array(points.length).fill(0);
+    for (let i = points.length - 2; i >= 0; i -= 1) result[i] = result[i + 1] + haversine(points[i], points[i + 1]);
+    return result;
+  };
+
+  const nearestIndex = (points: RoutePoint[], current: RoutePoint) => {
+    let bestIndex = 0;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    points.forEach((point, index) => {
+      const distance = haversine(current, point);
+      if (distance < bestDistance) { bestDistance = distance; bestIndex = index; }
+    });
+    return { index: bestIndex, distance: bestDistance };
+  };
+
+  const formatDistance = (meters: number) => meters < 1000 ? `${Math.round(meters)} μ` : `${(meters / 1000).toFixed(meters < 10000 ? 2 : 1)} χλμ`;
+  const formatTime = (seconds: number) => {
+    const minutes = Math.max(1, Math.round(seconds / 60));
+    if (minutes < 60) return `${minutes}′`;
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    return rest ? `${hours}ω ${rest}′` : `${hours}ω`;
+  };
+
+  const bearingArrow = (from: RoutePoint, to: RoutePoint) => {
+    const rad = (v: number) => v * Math.PI / 180;
+    const deg = (v: number) => v * 180 / Math.PI;
+    const y = Math.sin(rad(to[1] - from[1])) * Math.cos(rad(to[0]));
+    const x = Math.cos(rad(from[0])) * Math.sin(rad(to[0])) - Math.sin(rad(from[0])) * Math.cos(rad(to[0])) * Math.cos(rad(to[1] - from[1]));
+    const angle = (deg(Math.atan2(y, x)) + 360) % 360;
+    const arrows = ['↑','↗','→','↘','↓','↙','←','↖'];
+    return arrows[Math.round(angle / 45) % 8];
+  };
+
+  const setNavigationUi = (active: boolean) => {
+    hud?.classList.toggle('open', active);
+    document.body.classList.toggle('navigation-active', active);
+  };
+
+  const updatePosition = (position: GeolocationPosition) => {
+    if (!plan || !plan.points.length) return;
+    const current: RoutePoint = [position.coords.latitude, position.coords.longitude];
+    const nearest = nearestIndex(plan.points, current);
+    const remaining = nearest.distance + (remainingFromIndex[nearest.index] ?? 0);
+    const total = Math.max(plan.totalDistanceM, 1);
+    const progress = Math.max(0, Math.min(1, 1 - remaining / total));
+    const etaSeconds = Math.max(0, plan.estimatedSeconds * (remaining / total));
+    const threshold = Math.max(45, Math.min(100, position.coords.accuracy * 1.5));
+    const arrived = remaining <= Math.max(25, position.coords.accuracy);
+    const offRoute = !arrived && nearest.distance > threshold;
+
+    hud?.classList.toggle('off-route', offRoute);
+    hud?.classList.toggle('arrived', arrived);
+    if (remainingEl) remainingEl.textContent = formatDistance(Math.max(0, remaining));
+    if (etaEl) etaEl.textContent = arrived ? '0′' : formatTime(etaSeconds);
+    if (offRouteEl) offRouteEl.textContent = arrived ? 'Τέλος' : nearest.distance < 20 ? 'Εντός' : formatDistance(nearest.distance);
+    if (progressEl) progressEl.style.width = `${Math.round(progress * 100)}%`;
+
+    if (guidance) {
+      if (arrived) guidance.textContent = `✓ Έφτασες στο τέλος του ${plan.code}.`;
+      else if (offRoute) guidance.textContent = `${bearingArrow(current, plan.points[nearest.index])} Επιστροφή στη διαδρομή · ${formatDistance(nearest.distance)} μέχρι το κοντινότερο σημείο.`;
+      else if (nearest.index < Math.max(2, Math.round(plan.points.length * .15))) guidance.textContent = `Προσέγγιση προς ${plan.code} · συνέχισε πάνω στη μπλε πορεία.`;
+      else guidance.textContent = `Συνέχισε πάνω στο ${plan.code} προς το τέλος του μονοπατιού.`;
+    }
+
+    if (follow && runtime.__panachaikoMap) {
+      const zoom = Math.max(runtime.__panachaikoMap.getZoom(), 16);
+      runtime.__panachaikoMap.setView(current, zoom, { animate: true });
+    }
+  };
+
+  const startWatch = () => {
+    if (watchId !== null || !navigator.geolocation) return;
+    watchId = navigator.geolocation.watchPosition(updatePosition, () => {
+      if (guidance) guidance.textContent = 'Δεν υπάρχει νέο στίγμα GPS. Η διαδρομή παραμένει κλειδωμένη.';
+    }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 20000 });
+  };
+
+  const stopWatch = () => {
+    if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  };
+
+  const exitNavigation = (finish: boolean) => {
+    stopWatch();
+    setNavigationUi(false);
+    follow = true;
+    followBtn?.classList.add('active');
+    document.dispatchEvent(new CustomEvent('panachaiko:navigation-exit', { detail: { finish } }));
+  };
+
+  document.addEventListener('panachaiko:navigation-start', event => {
+    const detail = (event as CustomEvent<NavigationPlan>).detail;
+    if (!detail?.points?.length) return;
+    plan = detail;
+    runtime.__panachaikoNavigationPlan = detail;
+    remainingFromIndex = buildRemaining(plan.points);
+    if (title) title.textContent = `${plan.code} — ${plan.name}`;
+    if (remainingEl) remainingEl.textContent = formatDistance(plan.totalDistanceM);
+    if (etaEl) etaEl.textContent = formatTime(plan.estimatedSeconds);
+    if (offRouteEl) offRouteEl.textContent = '—';
+    if (progressEl) progressEl.style.width = '0%';
+    if (guidance) guidance.textContent = 'Η διαδρομή κλειδώθηκε. Ξεκινά η ζωντανή παρακολούθηση GPS.';
+    setNavigationUi(true);
+    startWatch();
+  });
+
+  followBtn?.addEventListener('click', () => {
+    follow = !follow;
+    followBtn.classList.toggle('active', follow);
+    followBtn.textContent = follow ? '◎ Ακολούθηση θέσης' : '○ Ελεύθερος χάρτης';
+  });
+  backBtn?.addEventListener('click', () => exitNavigation(false));
+  finishBtn?.addEventListener('click', () => exitNavigation(true));
+
+  btn2d?.addEventListener('click', () => {
+    btn2d.classList.add('active');
+    btn3d?.classList.remove('active');
+    document.getElementById('view3dOverlay')?.classList.remove('open');
+  });
+  btn3d?.addEventListener('click', () => {
+    btn3d.classList.add('active');
+    btn2d?.classList.remove('active');
+    const overlay = document.getElementById('view3dOverlay');
+    const hint = document.getElementById('view3dHint');
+    overlay?.classList.add('open');
+    if (hint) hint.textContent = 'Η ζωντανή 3D παρακολούθηση θα ολοκληρωθεί με MapLibre terrain στο επόμενο βήμα.';
+  });
+</script>

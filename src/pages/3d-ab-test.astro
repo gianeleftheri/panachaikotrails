@@ -1,0 +1,204 @@
+---
+type TrailShape = {
+  name?: string;
+  color?: string;
+  segments?: Array<Array<[number, number, number?]>>;
+};
+type TrailModule = { key: string; trail: TrailShape };
+
+const trailModules = import.meta.glob<TrailModule>('../data/trails/*.json', { eager: true, import: 'default' });
+const allTrails = Object.values(trailModules);
+const selected = allTrails.find(item => item?.key === 'Π-8') ?? allTrails[0];
+const payload = {
+  key: selected?.key ?? 'unknown',
+  name: selected?.trail?.name ?? 'Unknown trail',
+  color: selected?.trail?.color ?? '#f59e0b',
+  segments: selected?.trail?.segments ?? [],
+};
+---
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Panachaiko Trails · MapLibre A/B test</title>
+    <style>
+      html,body{margin:0;min-height:100%;background:#07100b;color:#eee8d8;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+      body{padding:18px;box-sizing:border-box}
+      h1{margin:0 0 6px;font-size:20px}
+      .sub{margin:0 0 14px;color:#b9b09c;font-size:13px;line-height:1.45}
+      .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+      .card{border:1px solid #695f47;border-radius:10px;overflow:hidden;background:#0d1913}
+      .head{padding:10px 12px;border-bottom:1px solid #493f2e;display:flex;justify-content:space-between;gap:10px;align-items:center}
+      .head strong{font-size:14px}.badge{font:11px ui-monospace,SFMono-Regular,Consolas,monospace;color:#b7d69b}
+      .map{height:62vh;min-height:430px;background:#050b08}
+      iframe{width:100%;height:62vh;min-height:430px;border:0;display:block;background:#050b08}
+      .diag{padding:9px 12px;border-top:1px solid #493f2e;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;color:#d9d0bc;min-height:48px}
+      .ok{color:#9bd078}.warn{color:#efc36c}.bad{color:#ff8e7a}
+      @media(max-width:900px){.grid{grid-template-columns:1fr}.map,iframe{height:54vh;min-height:360px}}
+    </style>
+  </head>
+  <body>
+    <h1>MapLibre A/B diagnostic</h1>
+    <p class="sub">Ίδια γεωμετρία, ίδια Esri imagery, ίδιο AWS Terrarium DEM. Αριστερά το σημερινό bundled MapLibre 6.10.0 μέσω Astro/Vite. Δεξιά το MapLibre 4.7.1 με απλό script, όπως στο αρχικό HTML.</p>
+
+    <div class="grid">
+      <section class="card">
+        <div class="head"><strong>Test A · bundled v6</strong><span class="badge" id="v6Label">loading…</span></div>
+        <div id="mapV6" class="map"></div>
+        <div id="diagV6" class="diag">Αναμονή…</div>
+      </section>
+      <section class="card">
+        <div class="head"><strong>Test B · original-style v4.7.1</strong><span class="badge" id="v4Label">loading…</span></div>
+        <iframe id="v4Frame" title="MapLibre 4.7.1 diagnostic"></iframe>
+        <div id="diagV4" class="diag">Αναμονή…</div>
+      </section>
+    </div>
+
+    <script id="trailPayload" type="application/json" set:html={JSON.stringify(payload)}></script>
+
+    <script>
+      import * as maplibregl from 'maplibre-gl';
+      import 'maplibre-gl/dist/maplibre-gl.css';
+
+      type TrailPayload = {
+        key: string;
+        name: string;
+        color: string;
+        segments: Array<Array<[number, number, number?]>>;
+      };
+
+      const data = JSON.parse(document.getElementById('trailPayload')?.textContent || '{}') as TrailPayload;
+      const segments = (data.segments || []).map(segment => segment.map(point => [Number(point[0]), Number(point[1])] as [number,number]).filter(point => Number.isFinite(point[0]) && Number.isFinite(point[1]))).filter(segment => segment.length > 1);
+      const pointCount = segments.reduce((sum, segment) => sum + segment.length, 0);
+      const geojson = { type:'Feature' as const, properties:{}, geometry:{ type:'MultiLineString' as const, coordinates:segments } };
+
+      const v6Label = document.getElementById('v6Label');
+      const diagV6 = document.getElementById('diagV6');
+      const diagV4 = document.getElementById('diagV4');
+      const v4Label = document.getElementById('v4Label');
+
+      const makeStyle = (): maplibregl.StyleSpecification => ({
+        version: 8,
+        sources: {
+          satellite: {
+            type: 'raster',
+            tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+            tileSize: 256,
+            attribution: 'Tiles © Esri — Esri, Maxar, Earthstar Geographics'
+          },
+          terrainSource: {
+            type: 'raster-dem',
+            tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+            tileSize: 256,
+            encoding: 'terrarium',
+            maxzoom: 15
+          }
+        },
+        layers: [{ id:'satellite', type:'raster', source:'satellite' }],
+        terrain: { source:'terrainSource', exaggeration:1.4 }
+      });
+
+      const fit = (map: maplibregl.Map) => {
+        const bounds = new maplibregl.LngLatBounds();
+        segments.flat().forEach(point => bounds.extend(point));
+        if (!bounds.isEmpty()) map.fitBounds(bounds, { padding:55, pitch:62, duration:0, maxZoom:14.5 });
+      };
+
+      const map6 = new maplibregl.Map({
+        container: 'mapV6',
+        style: makeStyle(),
+        center:[21.86,38.21],
+        zoom:13,
+        pitch:62,
+        bearing:0,
+        maxPitch:85,
+        renderWorldCopies:false,
+        canvasContextAttributes:{ antialias:true }
+      });
+      map6.addControl(new maplibregl.NavigationControl({ visualizePitch:true }), 'top-right');
+
+      map6.on('error', event => {
+        console.error('v6 diagnostic error', event.error);
+      });
+
+      map6.once('load', () => {
+        map6.addSource('trailLine', { type:'geojson', data:geojson });
+        map6.addLayer({
+          id:'trailLineCasing', type:'line', source:'trailLine',
+          paint:{ 'line-color':'#000000', 'line-width':9, 'line-opacity':.55 },
+          layout:{ 'line-cap':'round', 'line-join':'round' }
+        });
+        map6.addLayer({
+          id:'trailLineMain', type:'line', source:'trailLine',
+          paint:{ 'line-color':data.color || '#f59e0b', 'line-width':6, 'line-opacity':1 },
+          layout:{ 'line-cap':'round', 'line-join':'round' }
+        });
+        fit(map6);
+        if (v6Label) v6Label.textContent = `MapLibre ${(maplibregl as any).version || '6.x'}`;
+
+        window.setTimeout(() => {
+          const sourceExists = Boolean(map6.getSource('trailLine'));
+          const layerExists = Boolean(map6.getLayer('trailLineMain'));
+          const rendered = map6.queryRenderedFeatures(undefined, { layers:['trailLineMain'] }).length;
+          if (diagV6) {
+            diagV6.className = `diag ${rendered > 0 ? 'ok' : 'bad'}`;
+            diagV6.textContent = `${data.key} · ${data.name}\nsegments=${segments.length} points=${pointCount}\nsource=${sourceExists} layer=${layerExists} renderedFeatures=${rendered}`;
+          }
+        }, 1800);
+      });
+
+      const v4Frame = document.getElementById('v4Frame') as HTMLIFrameElement | null;
+      if (v4Frame) {
+        v4Frame.srcdoc = `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>html,body,#map{margin:0;width:100%;height:100%;background:#050b08}body{overflow:hidden}</style>
+</head><body><div id="map"></div>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"><\/script>
+<script>
+let pending=null;
+function render(data){
+  const segments=(data.segments||[]).map(seg=>seg.map(p=>[Number(p[0]),Number(p[1])]).filter(p=>Number.isFinite(p[0])&&Number.isFinite(p[1]))).filter(seg=>seg.length>1);
+  const geojson={type:'Feature',properties:{},geometry:{type:'MultiLineString',coordinates:segments}};
+  const map=new maplibregl.Map({
+    container:'map', pitch:62, bearing:0, zoom:13, center:[21.86,38.21], maxPitch:85,
+    style:{version:8,sources:{
+      satellite:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,attribution:'Tiles © Esri — Esri, Maxar, Earthstar Geographics'},
+      terrainSource:{type:'raster-dem',tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],tileSize:256,encoding:'terrarium',maxzoom:15}
+    },layers:[{id:'satellite',type:'raster',source:'satellite'}],terrain:{source:'terrainSource',exaggeration:1.4}}
+  });
+  map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
+  map.once('load',()=>{
+    map.addSource('trailLine',{type:'geojson',data:geojson});
+    map.addLayer({id:'trailLineCasing',type:'line',source:'trailLine',paint:{'line-color':'#000','line-width':9,'line-opacity':.55},layout:{'line-cap':'round','line-join':'round'}});
+    map.addLayer({id:'trailLineMain',type:'line',source:'trailLine',paint:{'line-color':data.color||'#f59e0b','line-width':6,'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
+    const bounds=new maplibregl.LngLatBounds();segments.flat().forEach(p=>bounds.extend(p));
+    if(!bounds.isEmpty())map.fitBounds(bounds,{padding:55,pitch:62,duration:0,maxZoom:14.5});
+    setTimeout(()=>{
+      const rendered=map.queryRenderedFeatures(undefined,{layers:['trailLineMain']}).length;
+      parent.postMessage({type:'maplibre-v4-result',version:maplibregl.version,source:Boolean(map.getSource('trailLine')),layer:Boolean(map.getLayer('trailLineMain')),rendered,segments:segments.length,points:segments.reduce((s,x)=>s+x.length,0)},'*');
+    },1800);
+  });
+}
+window.addEventListener('message',e=>{if(e.data&&e.data.type==='panachaiko-trail')render(e.data.payload)});
+parent.postMessage({type:'maplibre-v4-ready'},'*');
+<\/script></body></html>`;
+      }
+
+      window.addEventListener('message', event => {
+        if (event.data?.type === 'maplibre-v4-ready') {
+          v4Frame?.contentWindow?.postMessage({ type:'panachaiko-trail', payload:data }, '*');
+        }
+        if (event.data?.type === 'maplibre-v4-result') {
+          const result = event.data;
+          if (v4Label) v4Label.textContent = `MapLibre ${result.version || '4.7.1'}`;
+          if (diagV4) {
+            diagV4.className = `diag ${result.rendered > 0 ? 'ok' : 'bad'}`;
+            diagV4.textContent = `${data.key} · ${data.name}\nsegments=${result.segments} points=${result.points}\nsource=${result.source} layer=${result.layer} renderedFeatures=${result.rendered}`;
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

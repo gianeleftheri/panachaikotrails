@@ -8,6 +8,7 @@ type UserPosition = { lat: number; lng: number; accuracy: number };
 
 let trails: TrailCollection = loadInitialTrails();
 const app = document.querySelector<HTMLElement>('[data-trail-app]');
+const runtime = window as typeof window & { __panachaikoTrails?: TrailCollection };
 
 if (app) {
   const mapElement = document.getElementById('map');
@@ -197,9 +198,12 @@ if (app) {
     return urls.map(url => `<a class="media-card media-photo" href="${escapeHtml(url)}" target="_blank" rel="noopener"><img src="${escapeHtml(url)}" alt="${escapeHtml(poi.title ?? 'Φωτογραφία διαδρομής')}" loading="lazy"/><div class="media-card-title">${escapeHtml(poi.title ?? 'Φωτογραφία')}</div></a>`).join('');
   };
 
-  const renderVideo = (poi: TrailPoi) => poi.video_url
-    ? `<a class="media-card media-video" href="${escapeHtml(poi.video_url)}" target="_blank" rel="noopener"><div class="media-video-icon">▶</div><div><div class="media-card-title">${escapeHtml(poi.title ?? 'Βίντεο')}</div>${poi.text ? `<div class="media-card-text">${escapeHtml(poi.text)}</div>` : ''}</div></a>`
-    : `<div class="media-card"><div class="media-card-title">🎬 ${escapeHtml(poi.title ?? 'Βίντεο')}</div><div class="empty-note">Δεν έχει συνδεθεί ακόμη URL βίντεο.</div></div>`;
+  const renderVideo = (poi: TrailPoi) => {
+    const uploaded = (poi.media_urls ?? [])[0];
+    if (uploaded) return `<div class="media-card"><video controls preload="metadata" style="width:100%;max-height:260px" src="${escapeHtml(uploaded)}"></video><div class="media-card-title" style="margin-top:8px">🎬 ${escapeHtml(poi.title ?? 'Βίντεο')}</div>${poi.text ? `<div class="media-card-text">${escapeHtml(poi.text)}</div>` : ''}</div>`;
+    if (poi.video_url) return `<a class="media-card media-video" href="${escapeHtml(poi.video_url)}" target="_blank" rel="noopener"><div class="media-video-icon">▶</div><div><div class="media-card-title">${escapeHtml(poi.title ?? 'Βίντεο')}</div>${poi.text ? `<div class="media-card-text">${escapeHtml(poi.text)}</div>` : ''}</div></a>`;
+    return `<div class="media-card"><div class="media-card-title">🎬 ${escapeHtml(poi.title ?? 'Βίντεο')}</div><div class="empty-note">Δεν έχει συνδεθεί ακόμη αρχείο ή URL βίντεο.</div></div>`;
+  };
 
   const fillDrawer = (code: string, trail: Trail) => {
     const statusLabel = trail.status === 'investigation' ? 'υπό διερεύνηση' : trail.existing ? 'υπάρχει' : 'σχεδιάζεται';
@@ -270,6 +274,8 @@ if (app) {
     const previousSelection = selectedCode;
     selectedCode = null;
     trails = nextTrails;
+    runtime.__panachaikoTrails = trails;
+    document.dispatchEvent(new CustomEvent('panachaiko:trails-updated'));
     codes = Object.keys(trails).sort((a, b) => trails[b].length_km - trails[a].length_km);
 
     layers.forEach(group => map.removeLayer(group));

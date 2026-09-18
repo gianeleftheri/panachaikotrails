@@ -5,6 +5,11 @@
 
   type RoutePoint = [number, number];
   type RawTrailPoint = [number, number, number?];
+  type ApiNavigation = {
+    start?: { lat?: number; lng?: number; label?: string };
+    end?: { lat?: number; lng?: number; label?: string };
+    direction_verified?: boolean;
+  };
   type TrailSegment = RoutePoint[];
   type ApiTrail = {
     key?: string;
@@ -14,6 +19,7 @@
       gain_m?: number;
       loss_m?: number;
       segments?: Array<Array<RawTrailPoint>>;
+      navigation?: ApiNavigation;
     };
   };
   type RoutingResponse = {
@@ -196,13 +202,31 @@
     return { gain, loss };
   };
 
+  const navigationConfigFor = (code: string, navigation?: ApiNavigation) => {
+    const startLat = Number(navigation?.start?.lat);
+    const startLng = Number(navigation?.start?.lng);
+    const endLat = Number(navigation?.end?.lat);
+    const endLng = Number(navigation?.end?.lng);
+    if ([startLat, startLng, endLat, endLng].every(Number.isFinite)) {
+      return {
+        start: [startLat, startLng] as RoutePoint,
+        end: [endLat, endLng] as RoutePoint,
+        startLabel: navigation?.start?.label,
+        endLabel: navigation?.end?.label,
+        verified: navigation?.direction_verified
+      };
+    }
+    return getTrailNavigationConfig(code);
+  };
+
   const orientOfficialRoute = (
     code: string,
     routeSegments: TrailSegment[],
     rawSegments: Array<Array<RawTrailPoint>>,
-    totalSegments: number
+    totalSegments: number,
+    navigation?: ApiNavigation
   ): MainTrailRoute => {
-    const config = getTrailNavigationConfig(code);
+    const config = navigationConfigFor(code, navigation);
     let orientedSegments = routeSegments;
     let reversed = false;
     const rawPoints = flattenConnectedSegments(routeSegments);
@@ -234,10 +258,10 @@
     };
   };
 
-  const buildMainTrailRoute = (code: string, rawSegments: Array<Array<RawTrailPoint>>): MainTrailRoute => {
+  const buildMainTrailRoute = (code: string, rawSegments: Array<Array<RawTrailPoint>>, navigation?: ApiNavigation): MainTrailRoute => {
     const segments = normaliseTrailSegments(rawSegments);
-    if (!segments.length) return orientOfficialRoute(code, [], rawSegments, 0);
-    if (segments.length === 1) return orientOfficialRoute(code, [segments[0]], rawSegments, 1);
+    if (!segments.length) return orientOfficialRoute(code, [], rawSegments, 0, navigation);
+    if (segments.length === 1) return orientOfficialRoute(code, [segments[0]], rawSegments, 1, navigation);
 
     const nodes: RoutePoint[] = [];
     const nodeFor = (point: RoutePoint, excludedNode = -1) => {
@@ -344,7 +368,7 @@
     });
 
     if (bestDistance < 0 || bestStart === bestEnd) {
-      return orientOfficialRoute(code, [segments[0]], rawSegments, segments.length);
+      return orientOfficialRoute(code, [segments[0]], rawSegments, segments.length, navigation);
     }
 
     const steps: Array<{ edgeIndex: number; from: number; to: number }> = [];
@@ -364,7 +388,7 @@
       currentNode = step.to;
     });
 
-    return orientOfficialRoute(code, routeSegments, rawSegments, segments.length);
+    return orientOfficialRoute(code, routeSegments, rawSegments, segments.length, navigation);
   };
 
   const routeApproach = async (start: RoutePoint, end: RoutePoint, mode: string) => {
@@ -454,7 +478,7 @@
       const position = await getPosition();
       const start: RoutePoint = [position.coords.latitude, position.coords.longitude];
       const trail = await loadTrail(code);
-      const mainRoute = buildMainTrailRoute(code, trail.segments!);
+      const mainRoute = buildMainTrailRoute(code, trail.segments!, trail.navigation);
       const trailPoints = mainRoute.points;
       if (trailPoints.length < 2 || !mainRoute.segments.length) throw new Error('Δεν βρέθηκε συνεχής κύρια πορεία μέσα στα τμήματα του μονοπατιού.');
 

@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import { getTrailNavigationConfig } from '../data/trail-navigation';
+import type { TrailCollection } from '../types/trail';
 
 type RoutePoint = [number, number];
 type NavigationPlan = {
@@ -10,6 +11,7 @@ type NavigationPlan = {
 
 const runtime = window as typeof window & {
   __panachaikoMap?: L.Map;
+  __panachaikoTrails?: TrailCollection;
 };
 
 let endpointLayer: L.LayerGroup | null = null;
@@ -59,8 +61,20 @@ const renderPair = (
     .addTo(layer);
 };
 
+const navigationFor = (code: string) => {
+  const navigation = runtime.__panachaikoTrails?.[code]?.navigation;
+  if (navigation) return {
+    start: navigation.start,
+    end: navigation.end,
+    startLabel: navigation.start_label,
+    endLabel: navigation.end_label,
+    verified: navigation.direction_verified
+  };
+  return getTrailNavigationConfig(code);
+};
+
 const renderTrailEndpoints = (code: string) => {
-  const config = getTrailNavigationConfig(code);
+  const config = navigationFor(code);
   if (!config) {
     clearEndpoints();
     return;
@@ -92,7 +106,7 @@ const renderRouteEndpoints = (plan: NavigationPlan) => {
     return;
   }
 
-  const config = getTrailNavigationConfig(plan.code);
+  const config = navigationFor(plan.code);
   renderPair(
     start,
     end,

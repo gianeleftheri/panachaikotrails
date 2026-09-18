@@ -92,6 +92,10 @@ final class Panachaiko_Trails_REST {
         if ( is_wp_error( $post_id ) ) return $post_id;
 
         update_post_meta( $post_id, 'related_trail', (int) $trails[0] );
+        update_post_meta( $post_id, 'trail_code_snapshot', $trail_code );
+        update_post_meta( $post_id, 'submission_source', 'public_map' );
+        update_post_meta( $post_id, 'submitted_at', current_time( 'mysql', true ) );
+        update_post_meta( $post_id, 'submitted_by', get_current_user_id() );
         update_post_meta( $post_id, 'content_type', $content_type );
         update_post_meta( $post_id, 'poi_type', $category );
         update_post_meta( $post_id, 'latitude', $lat );
@@ -150,6 +154,18 @@ final class Panachaiko_Trails_REST {
         $stage = (string) get_post_meta( $post->ID, 'trail_stage', true );
         $geometry = self::decode_geometry( (string) get_post_meta( $post->ID, 'geometry_json', true ) );
         $pois = self::get_pois_for_trail( $post->ID );
+        $start_lat = self::meta_nullable_number( $post->ID, 'start_lat' );
+        $start_lng = self::meta_nullable_number( $post->ID, 'start_lng' );
+        $end_lat = self::meta_nullable_number( $post->ID, 'end_lat' );
+        $end_lng = self::meta_nullable_number( $post->ID, 'end_lng' );
+        $navigation = null;
+        if ( null !== $start_lat && null !== $start_lng && null !== $end_lat && null !== $end_lng ) {
+            $navigation = array(
+                'start' => array( 'lat' => $start_lat, 'lng' => $start_lng, 'label' => (string) get_post_meta( $post->ID, 'start_label', true ) ),
+                'end' => array( 'lat' => $end_lat, 'lng' => $end_lng, 'label' => (string) get_post_meta( $post->ID, 'end_label', true ) ),
+                'direction_verified' => (bool) get_post_meta( $post->ID, 'direction_verified', true ),
+            );
+        }
         $notes = array_values( array_filter( $pois, static fn( array $poi ): bool => 'note' === $poi['content_type'] ) );
         $photos = array_values( array_filter( $pois, static fn( array $poi ): bool => 'photo' === $poi['content_type'] ) );
         $videos = array_values( array_filter( $pois, static fn( array $poi ): bool => 'video' === $poi['content_type'] ) );
@@ -172,6 +188,7 @@ final class Panachaiko_Trails_REST {
             'notes' => $notes,
             'source' => (string) get_post_meta( $post->ID, 'data_source', true ),
             'verified_at' => (string) get_post_meta( $post->ID, 'last_verified_at', true ),
+            'navigation' => $navigation,
         ) );
     }
 
@@ -197,6 +214,7 @@ final class Panachaiko_Trails_REST {
                 'featured_image_url' => is_string( $featured ) ? $featured : null,
                 'video_url' => (string) get_post_meta( $poi->ID, 'external_video_url', true ),
                 'verified_at' => (string) get_post_meta( $poi->ID, 'verified_at', true ),
+                'created_at' => get_post_time( DATE_ATOM, true, $poi ),
             );
         }, $posts );
     }

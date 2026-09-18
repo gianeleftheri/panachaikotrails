@@ -1,4 +1,4 @@
-import type { Trail, TrailCollection, TrailPoi, TrailPoint, TrailStatus } from '../types/trail';
+import type { Trail, TrailCollection, TrailNavigation, TrailPoi, TrailPoint, TrailStatus } from '../types/trail';
 import { decodeHtmlEntities } from './text-normalize';
 
 type TrailDataModule = { key: string; trail: unknown };
@@ -48,13 +48,33 @@ const normalizePoi = (value: unknown): TrailPoi | null => {
     media_urls: asStringArray(raw.media_urls),
     featured_image_url: typeof raw.featured_image_url === 'string' && raw.featured_image_url ? raw.featured_image_url : null,
     video_url: typeof raw.video_url === 'string' ? raw.video_url : '',
-    verified_at: typeof raw.verified_at === 'string' ? raw.verified_at : ''
+    verified_at: typeof raw.verified_at === 'string' ? raw.verified_at : '',
+    created_at: typeof raw.created_at === 'string' ? raw.created_at : ''
   };
 };
 
 const normalizePoiArray = (value: unknown): TrailPoi[] => Array.isArray(value)
   ? value.map(normalizePoi).filter((poi): poi is TrailPoi => Boolean(poi))
   : [];
+
+const normalizeNavigation = (value: unknown, fallback?: TrailNavigation): TrailNavigation | undefined => {
+  if (!value || typeof value !== 'object') return fallback;
+  const raw = value as Record<string, unknown>;
+  const startRaw = raw.start && typeof raw.start === 'object' ? raw.start as Record<string, unknown> : null;
+  const endRaw = raw.end && typeof raw.end === 'object' ? raw.end as Record<string, unknown> : null;
+  const startLat = startRaw ? Number(startRaw.lat) : NaN;
+  const startLng = startRaw ? Number(startRaw.lng) : NaN;
+  const endLat = endRaw ? Number(endRaw.lat) : NaN;
+  const endLng = endRaw ? Number(endRaw.lng) : NaN;
+  if (![startLat, startLng, endLat, endLng].every(Number.isFinite)) return fallback;
+  return {
+    start: [startLat, startLng],
+    end: [endLat, endLng],
+    start_label: typeof startRaw?.label === 'string' ? decodeHtmlEntities(startRaw.label) : fallback?.start_label,
+    end_label: typeof endRaw?.label === 'string' ? decodeHtmlEntities(endRaw.label) : fallback?.end_label,
+    direction_verified: typeof raw.direction_verified === 'boolean' ? raw.direction_verified : fallback?.direction_verified
+  };
+};
 
 const normalizeSegments = (value: unknown): TrailPoint[][] => {
   if (!Array.isArray(value)) return [];
@@ -93,7 +113,8 @@ const normalizeTrail = (value: unknown, fallback?: Trail): Trail | null => {
     videos: raw.videos === undefined ? (fallback?.videos ?? []) : normalizePoiArray(raw.videos),
     notes: raw.notes === undefined ? (fallback?.notes ?? []) : normalizePoiArray(raw.notes),
     source: decodeHtmlEntities(typeof raw.source === 'string' ? raw.source : (fallback?.source ?? '')),
-    verified_at: typeof raw.verified_at === 'string' ? raw.verified_at : (fallback?.verified_at ?? '')
+    verified_at: typeof raw.verified_at === 'string' ? raw.verified_at : (fallback?.verified_at ?? ''),
+    navigation: normalizeNavigation(raw.navigation, fallback?.navigation)
   };
 };
 

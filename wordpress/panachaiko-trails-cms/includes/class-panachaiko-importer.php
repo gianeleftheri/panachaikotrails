@@ -154,6 +154,7 @@ final class Panachaiko_Trails_Importer {
             'post_type'   => 'trail',
             'post_status' => 'publish',
             'post_title'  => sanitize_text_field( (string) ( $trail['name'] ?? $code ) ),
+            'post_content' => wp_kses_post( (string) ( $trail['description'] ?? '' ) ),
         );
 
         if ( $existing ) {
@@ -189,6 +190,7 @@ final class Panachaiko_Trails_Importer {
             )
         );
 
+        Panachaiko_Trails_Migrations::seed_navigation_for_trail( (int) $post_id, $code );
         self::import_legacy_notes( $post_id, $trail['notes'] ?? array() );
         return true;
     }

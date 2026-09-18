@@ -10,6 +10,8 @@ final class Panachaiko_Trails_Meta {
         add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_boxes' ) );
         add_action( 'save_post_trail', array( __CLASS__, 'save_trail_meta' ) );
         add_action( 'save_post_trail_poi', array( __CLASS__, 'save_poi_meta' ) );
+        add_filter( 'manage_trail_poi_posts_columns', array( __CLASS__, 'poi_columns' ) );
+        add_action( 'manage_trail_poi_posts_custom_column', array( __CLASS__, 'render_poi_column' ), 10, 2 );
     }
 
     public static function register(): void {
@@ -33,6 +35,12 @@ final class Panachaiko_Trails_Meta {
         register_post_meta( 'trail', 'geometry_json', $common + array( 'type' => 'string', 'sanitize_callback' => array( __CLASS__, 'sanitize_geometry_json' ) ) );
         register_post_meta( 'trail', 'data_source', $common + array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ) );
         register_post_meta( 'trail', 'last_verified_at', $common + array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ) );
+        foreach ( array( 'start_lat', 'start_lng', 'end_lat', 'end_lng' ) as $field ) {
+            register_post_meta( 'trail', $field, $common + array( 'type' => 'number', 'sanitize_callback' => array( __CLASS__, 'sanitize_number_or_null' ) ) );
+        }
+        register_post_meta( 'trail', 'start_label', $common + array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ) );
+        register_post_meta( 'trail', 'end_label', $common + array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ) );
+        register_post_meta( 'trail', 'direction_verified', $common + array( 'type' => 'boolean', 'sanitize_callback' => array( __CLASS__, 'sanitize_boolean' ) ) );
     }
 
     private static function register_poi_meta(): void {
@@ -52,6 +60,9 @@ final class Panachaiko_Trails_Meta {
         register_post_meta( 'trail_poi', 'external_video_url', $common + array( 'type' => 'string', 'sanitize_callback' => 'esc_url_raw' ) );
         register_post_meta( 'trail_poi', 'submitted_by', $common + array( 'type' => 'integer', 'sanitize_callback' => 'absint' ) );
         register_post_meta( 'trail_poi', 'verified_at', $common + array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ) );
+        register_post_meta( 'trail_poi', 'trail_code_snapshot', $common + array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ) );
+        register_post_meta( 'trail_poi', 'submission_source', $common + array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ) );
+        register_post_meta( 'trail_poi', 'submitted_at', $common + array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ) );
     }
 
     public static function render_trail_meta_box( WP_Post $post ): void {
@@ -67,6 +78,13 @@ final class Panachaiko_Trails_Meta {
         $source = (string) get_post_meta( $post->ID, 'data_source', true );
         $verified = (string) get_post_meta( $post->ID, 'last_verified_at', true );
         $geometry = (string) get_post_meta( $post->ID, 'geometry_json', true );
+        $start_lat = get_post_meta( $post->ID, 'start_lat', true );
+        $start_lng = get_post_meta( $post->ID, 'start_lng', true );
+        $start_label = (string) get_post_meta( $post->ID, 'start_label', true );
+        $end_lat = get_post_meta( $post->ID, 'end_lat', true );
+        $end_lng = get_post_meta( $post->ID, 'end_lng', true );
+        $end_label = (string) get_post_meta( $post->ID, 'end_label', true );
+        $direction_verified = (bool) get_post_meta( $post->ID, 'direction_verified', true );
         ?>
         <style>.panachaiko-meta-grid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:16px 20px}.panachaiko-meta-grid .wide{grid-column:1/-1}.panachaiko-meta-grid label{display:block;font-weight:600;margin-bottom:6px}.panachaiko-meta-grid input,.panachaiko-meta-grid select,.panachaiko-meta-grid textarea{width:100%}.panachaiko-meta-help{color:#646970;margin:6px 0 0}.panachaiko-geometry{font-family:monospace;font-size:12px;min-height:120px}@media(max-width:782px){.panachaiko-meta-grid{grid-template-columns:1fr}}</style>
         <div class="panachaiko-meta-grid">
@@ -80,6 +98,14 @@ final class Panachaiko_Trails_Meta {
             <div><label for="panachaiko_loss_m">Κατάβαση (μ)</label><input id="panachaiko_loss_m" name="panachaiko_loss_m" type="number" min="0" value="<?php echo esc_attr( $loss ); ?>" /></div>
             <div><label for="panachaiko_data_source">Πηγή δεδομένων</label><input id="panachaiko_data_source" name="panachaiko_data_source" type="text" value="<?php echo esc_attr( $source ); ?>" /></div>
             <div><label for="panachaiko_last_verified_at">Τελευταία επαλήθευση</label><input id="panachaiko_last_verified_at" name="panachaiko_last_verified_at" type="date" value="<?php echo esc_attr( $verified ); ?>" /></div>
+            <div class="wide"><hr /><h3>Επίσημη φορά πλοήγησης Α → Τ</h3></div>
+            <div><label for="panachaiko_start_label">Αφετηρία Α — ονομασία</label><input id="panachaiko_start_label" name="panachaiko_start_label" type="text" value="<?php echo esc_attr( $start_label ); ?>" /></div>
+            <div><label for="panachaiko_end_label">Τέλος Τ — ονομασία</label><input id="panachaiko_end_label" name="panachaiko_end_label" type="text" value="<?php echo esc_attr( $end_label ); ?>" /></div>
+            <div><label for="panachaiko_start_lat">Αφετηρία Α — latitude</label><input id="panachaiko_start_lat" name="panachaiko_start_lat" type="number" step="0.000001" value="<?php echo esc_attr( $start_lat ); ?>" /></div>
+            <div><label for="panachaiko_start_lng">Αφετηρία Α — longitude</label><input id="panachaiko_start_lng" name="panachaiko_start_lng" type="number" step="0.000001" value="<?php echo esc_attr( $start_lng ); ?>" /></div>
+            <div><label for="panachaiko_end_lat">Τέλος Τ — latitude</label><input id="panachaiko_end_lat" name="panachaiko_end_lat" type="number" step="0.000001" value="<?php echo esc_attr( $end_lat ); ?>" /></div>
+            <div><label for="panachaiko_end_lng">Τέλος Τ — longitude</label><input id="panachaiko_end_lng" name="panachaiko_end_lng" type="number" step="0.000001" value="<?php echo esc_attr( $end_lng ); ?>" /></div>
+            <div class="wide"><label><input name="panachaiko_direction_verified" type="checkbox" value="1" <?php checked( $direction_verified ); ?> /> Η φορά Α → Τ έχει επιβεβαιωθεί</label></div>
             <div class="wide"><label>Γεωμετρία διαδρομής (GeoJSON MultiLineString)</label><textarea class="panachaiko-geometry" readonly><?php echo esc_textarea( $geometry ); ?></textarea><p class="panachaiko-meta-help">Η γεωμετρία προστατεύεται από τυχαία επεξεργασία.</p></div>
         </div><?php
     }
@@ -93,6 +119,7 @@ final class Panachaiko_Trails_Meta {
         $lng = get_post_meta( $post->ID, 'longitude', true );
         $video = (string) get_post_meta( $post->ID, 'external_video_url', true );
         $verified = (string) get_post_meta( $post->ID, 'verified_at', true );
+        $media_ids = array_values( array_filter( array_map( 'absint', (array) get_post_meta( $post->ID, 'media_ids', true ) ) ) );
         $trails = get_posts( array( 'post_type' => 'trail', 'post_status' => 'publish', 'posts_per_page' => -1, 'orderby' => 'title', 'order' => 'ASC' ) );
         $types = array( 'general'=>'Γενικό','forest'=>'Δάσος','viewpoint'=>'Θέα','rest'=>'Ξεκούραση','danger'=>'Προσοχή','water'=>'Νερό','flag'=>'Αφετηρία/Τέλος','shelter'=>'Καταφύγιο','archaeological'=>'Αρχαιολογικός χώρος','hazard'=>'Κίνδυνος','note'=>'Ένδειξη','photo'=>'Φωτογραφία','video'=>'Βίντεο' );
         ?>
@@ -104,6 +131,7 @@ final class Panachaiko_Trails_Meta {
             <div><label for="panachaiko_longitude">Γεωγραφικό μήκος (lng)</label><input id="panachaiko_longitude" name="panachaiko_longitude" type="number" step="0.000001" value="<?php echo esc_attr( $lng ); ?>" /></div>
             <div><label for="panachaiko_verified_at">Επαληθεύτηκε</label><input id="panachaiko_verified_at" name="panachaiko_verified_at" type="date" value="<?php echo esc_attr( $verified ); ?>" /></div>
             <div class="wide"><label for="panachaiko_external_video_url">Εξωτερικό URL βίντεο</label><input id="panachaiko_external_video_url" name="panachaiko_external_video_url" type="url" value="<?php echo esc_attr( $video ); ?>" /><p class="panachaiko-meta-help">Για φωτογραφία μπορείς να χρησιμοποιήσεις την «Εικόνα άρθρου».</p></div>
+            <?php if ( $media_ids ) : ?><div class="wide"><label>Αποθηκευμένα αρχεία χρηστών</label><?php foreach ( $media_ids as $media_id ) : $media_url = wp_get_attachment_url( $media_id ); if ( ! $media_url ) continue; ?><p><a href="<?php echo esc_url( $media_url ); ?>" target="_blank" rel="noopener">Αρχείο #<?php echo esc_html( (string) $media_id ); ?></a></p><?php endforeach; ?></div><?php endif; ?>
         </div><?php
     }
 
@@ -113,11 +141,16 @@ final class Panachaiko_Trails_Meta {
         self::save_stage( $post_id ); self::save_color( $post_id );
         self::save_number( $post_id, 'length_km', 'panachaiko_length_km' ); self::save_number( $post_id, 'elev_min', 'panachaiko_elev_min' ); self::save_number( $post_id, 'elev_max', 'panachaiko_elev_max' ); self::save_number( $post_id, 'gain_m', 'panachaiko_gain_m' ); self::save_number( $post_id, 'loss_m', 'panachaiko_loss_m' );
         self::save_text( $post_id, 'data_source', 'panachaiko_data_source' ); self::save_text( $post_id, 'last_verified_at', 'panachaiko_last_verified_at' );
+        self::save_text( $post_id, 'start_label', 'panachaiko_start_label' ); self::save_text( $post_id, 'end_label', 'panachaiko_end_label' );
+        self::save_number( $post_id, 'start_lat', 'panachaiko_start_lat' ); self::save_number( $post_id, 'start_lng', 'panachaiko_start_lng' ); self::save_number( $post_id, 'end_lat', 'panachaiko_end_lat' ); self::save_number( $post_id, 'end_lng', 'panachaiko_end_lng' );
+        update_post_meta( $post_id, 'direction_verified', isset( $_POST['panachaiko_direction_verified'] ) ? 1 : 0 );
     }
 
     public static function save_poi_meta( int $post_id ): void {
         if ( ! self::can_save( $post_id, 'panachaiko_poi_meta_nonce', 'panachaiko_save_poi_meta' ) ) return;
-        update_post_meta( $post_id, 'related_trail', isset( $_POST['panachaiko_related_trail'] ) ? absint( $_POST['panachaiko_related_trail'] ) : 0 );
+        $related_trail = isset( $_POST['panachaiko_related_trail'] ) ? absint( $_POST['panachaiko_related_trail'] ) : 0;
+        update_post_meta( $post_id, 'related_trail', $related_trail );
+        if ( $related_trail ) { $snapshot = (string) get_post_meta( $related_trail, 'trail_code', true ); if ( $snapshot ) update_post_meta( $post_id, 'trail_code_snapshot', $snapshot ); }
         $content_type = isset( $_POST['panachaiko_content_type'] ) ? self::sanitize_content_type( sanitize_text_field( wp_unslash( $_POST['panachaiko_content_type'] ) ) ) : 'note';
         update_post_meta( $post_id, 'content_type', $content_type );
         $type = isset( $_POST['panachaiko_poi_type'] ) ? self::sanitize_poi_type( sanitize_text_field( wp_unslash( $_POST['panachaiko_poi_type'] ) ) ) : 'general';
@@ -142,5 +175,30 @@ final class Panachaiko_Trails_Meta {
     public static function sanitize_poi_type( $value ): string { $allowed = array( 'general','forest','viewpoint','rest','danger','water','flag','shelter','archaeological','hazard','note','photo','video' ); return in_array( $value, $allowed, true ) ? $value : 'general'; }
     public static function sanitize_number_or_null( $value ) { if ( null === $value || '' === $value ) return null; return is_numeric( $value ) ? (float) $value : null; }
     public static function sanitize_float( $value ): float { return is_numeric( $value ) ? (float) $value : 0.0; }
+    public static function sanitize_boolean( $value ): bool { return (bool) rest_sanitize_boolean( $value ); }
+
+    public static function poi_columns( array $columns ): array {
+        $columns['panachaiko_trail'] = 'Μονοπάτι';
+        $columns['panachaiko_type'] = 'Τύπος';
+        $columns['panachaiko_category'] = 'Κατηγορία';
+        $columns['panachaiko_media'] = 'Αρχείο';
+        return $columns;
+    }
+
+    public static function render_poi_column( string $column, int $post_id ): void {
+        if ( 'panachaiko_trail' === $column ) {
+            $trail_id = absint( get_post_meta( $post_id, 'related_trail', true ) );
+            $code = $trail_id ? (string) get_post_meta( $trail_id, 'trail_code', true ) : (string) get_post_meta( $post_id, 'trail_code_snapshot', true );
+            echo esc_html( $code ?: '—' );
+        } elseif ( 'panachaiko_type' === $column ) {
+            echo esc_html( (string) get_post_meta( $post_id, 'content_type', true ) ?: 'note' );
+        } elseif ( 'panachaiko_category' === $column ) {
+            echo esc_html( (string) get_post_meta( $post_id, 'poi_type', true ) ?: 'general' );
+        } elseif ( 'panachaiko_media' === $column ) {
+            $ids = array_values( array_filter( array_map( 'absint', (array) get_post_meta( $post_id, 'media_ids', true ) ) ) );
+            if ( $ids ) echo esc_html( implode( ', ', array_map( static fn( int $id ): string => '#' . $id, $ids ) ) );
+            else { $url = (string) get_post_meta( $post_id, 'external_video_url', true ); echo $url ? 'URL' : '—'; }
+        }
+    }
     public static function sanitize_geometry_json( $value ): string { if ( ! is_string( $value ) ) return ''; $decoded = json_decode( $value, true ); if ( ! is_array( $decoded ) || 'MultiLineString' !== ( $decoded['type'] ?? null ) || ! isset( $decoded['coordinates'] ) || ! is_array( $decoded['coordinates'] ) ) return ''; return wp_json_encode( $decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ); }
 }

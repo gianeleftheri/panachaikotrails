@@ -54,6 +54,9 @@ if (app) {
   const allBounds: L.LatLngExpression[] = [];
   let codes: string[] = [];
   let selectedCode: string | null = null;
+  // Διατηρεί την τελευταία ρητή επιλογή του χρήστη ακόμη κι όταν τα δεδομένα
+  // ανανεώνονται από το WordPress και η λίστα/τα layers ξαναχτίζονται.
+  let requestedCode: string | null = null;
   let userPosition: UserPosition | null = null;
   let watchId: number | null = null;
   let userMarker: L.Marker | null = null;
@@ -248,6 +251,7 @@ if (app) {
 
   const selectTrail = (code: string, fly = true) => {
     const trail = trails[code]; if (!trail) return;
+    requestedCode = code;
     if (selectedCode) {
       setTrailStyle(selectedCode, false);
       const previousRow = document.getElementById(`row-${selectedCode}`);
@@ -282,7 +286,10 @@ if (app) {
   };
 
   const renderTrails = (nextTrails: TrailCollection, fitMap: boolean) => {
-    const previousSelection = selectedCode;
+    // Η ανανέωση CMS μπορεί να φτάσει ακριβώς τη στιγμή του πρώτου click.
+    // Προτιμάμε την τελευταία επιλογή που ζήτησε ο χρήστης, ώστε το drawer,
+    // η ενεργή γραμμή και το 3D να παραμένουν συγχρονισμένα.
+    const previousSelection = requestedCode ?? selectedCode;
     selectedCode = null;
     trails = nextTrails;
     runtime.__panachaikoTrails = trails;

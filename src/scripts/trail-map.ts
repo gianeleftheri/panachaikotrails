@@ -65,6 +65,7 @@ if (app) {
   let routeLine: L.Polyline | null = null;
   let shelterLine: L.Polyline | null = null;
   let selectionPulseTimers: number[] = [];
+  let autoCalculateAfterGps = false;
 
   const contentController = createTrailContentController(map, code => trails[code]);
 
@@ -327,6 +328,17 @@ if (app) {
     distanceBadge.classList.add('show');
   };
 
+  const syncRouteCalculationState = () => {
+    if (rbCalcBtn) rbCalcBtn.disabled = !(userPosition && rbTrailSelect?.value);
+  };
+
+  const maybeCalculateAfterGps = () => {
+    syncRouteCalculationState();
+    if (!autoCalculateAfterGps || !userPosition || !rbTrailSelect?.value || rbCalcBtn?.disabled) return;
+    autoCalculateAfterGps = false;
+    window.setTimeout(() => rbCalcBtn?.click(), 0);
+  };
+
   const selectTrail = (code: string, fly = true, pulse = true) => {
     const trail = trails[code]; if (!trail) return;
     requestedCode = code;
@@ -338,6 +350,9 @@ if (app) {
       if (previousRow) previousRow.style.borderLeftColor = 'transparent';
     }
     selectedCode = code;
+    if (rbTrailSelect) rbTrailSelect.value = code;
+    syncRouteCalculationState();
+    maybeCalculateAfterGps();
     const group = layers.get(code);
     setTrailStyle(code, true);
     if (pulse) pulseTrailSelection(code);
@@ -433,6 +448,8 @@ if (app) {
     const open = routeBuilderPanel?.classList.toggle('open') ?? false;
     routeBuilderToggle.classList.toggle('open', open);
     routeBuilderToggle.setAttribute('aria-expanded', String(open));
+    if (open && selectedCode && rbTrailSelect) rbTrailSelect.value = selectedCode;
+    syncRouteCalculationState();
     setTrailPanelOpen(false);
     closeDrawer();
   });
@@ -444,21 +461,32 @@ if (app) {
     locateBtn?.classList.add('active'); recenterBtn?.classList.add('show');
     if (rbGpsBtn) { rbGpsBtn.classList.add('active'); rbGpsBtn.textContent = '✅ Η θέση σου βρέθηκε'; }
     if (rbGpsStatus) { rbGpsStatus.textContent = `Ακρίβεια περίπου ${Math.round(userPosition.accuracy)} μ`; rbGpsStatus.className = 'rb-status ok'; }
-    if (rbCalcBtn) rbCalcBtn.disabled = !rbTrailSelect?.value;
+    syncRouteCalculationState();
     updateDistanceBadge();
+    maybeCalculateAfterGps();
   };
 
   const startGps = () => {
     if (!navigator.geolocation) { if (rbGpsStatus) rbGpsStatus.textContent = 'Το GPS δεν είναι διαθέσιμο.'; return; }
+    autoCalculateAfterGps = true;
+    if (rbCalcBtn) rbCalcBtn.disabled = true;
     if (rbGpsStatus) { rbGpsStatus.textContent = 'Αναζήτηση θέσης…'; rbGpsStatus.className = 'rb-status warn'; }
-    if (watchId === null) watchId = navigator.geolocation.watchPosition(applyPosition, () => { if (rbGpsStatus) rbGpsStatus.textContent = 'Δεν δόθηκε πρόσβαση στη θέση.'; }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 12000 });
+    if (watchId === null) watchId = navigator.geolocation.watchPosition(applyPosition, () => {
+      autoCalculateAfterGps = false;
+      syncRouteCalculationState();
+      if (rbGpsStatus) rbGpsStatus.textContent = 'Δεν δόθηκε πρόσβαση στη θέση.';
+    }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 12000 });
+    else if (userPosition) maybeCalculateAfterGps();
   };
   if (locateBtn) locateBtn.disabled = !('geolocation' in navigator);
   locateBtn?.addEventListener('click', startGps); rbGpsBtn?.addEventListener('click', startGps);
   recenterBtn?.addEventListener('click', () => { if (userPosition) { map.flyTo([userPosition.lat, userPosition.lng], 16); recenterBtn.classList.add('following'); } });
   map.on('dragstart', () => recenterBtn?.classList.remove('following'));
 
-  rbTrailSelect?.addEventListener('change', () => { if (rbCalcBtn) rbCalcBtn.disabled = !(userPosition && rbTrailSelect.value); });
+  rbTrailSelect?.addEventListener('change', () => {
+    syncRouteCalculationState();
+    maybeCalculateAfterGps();
+  });
   rbCalcBtn?.addEventListener('click', () => {
     if (!userPosition || !rbTrailSelect?.value) return;
     const code = rbTrailSelect.value; selectTrail(code);

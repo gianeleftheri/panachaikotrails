@@ -263,13 +263,13 @@
     const group = runtime.__panachaikoFullRouteLayer;
     if (!group || !detail.points.length) return;
     const end = detail.points.at(-1)!;
+    const splitIndex = Math.max(0, Math.min(detail.points.length - 1, detail.approachPointCount - 1));
+    const start = detail.points[splitIndex];
+    L.marker(start,{icon:waypointIcon('Α',true),interactive:false}).bindTooltip('Αφετηρία μονοπατιού',{direction:'top'}).addTo(group);
     if (detail.kind === 'shelter') {
       L.marker(end,{icon:waypointIcon('Κ',false),interactive:false}).bindTooltip(detail.destinationLabel ?? 'Καταφύγιο',{direction:'top'}).addTo(group);
       return;
     }
-    const splitIndex = Math.max(0, Math.min(detail.points.length - 1, detail.approachPointCount - 1));
-    const start = detail.points[splitIndex];
-    L.marker(start,{icon:waypointIcon('Α',true),interactive:false}).bindTooltip('Αφετηρία μονοπατιού',{direction:'top'}).addTo(group);
     L.marker(end,{icon:waypointIcon('Τ',false),interactive:false}).bindTooltip('Τέλος μονοπατιού',{direction:'top'}).addTo(group);
   };
 
@@ -311,14 +311,14 @@
 
   const updateLegUi = (approachRemaining: number, trailRemaining: number, arrived: boolean) => {
     if (plan?.kind === 'shelter') {
-      if (approachRemainingEl) approachRemainingEl.textContent = '✓';
+      if (approachRemainingEl) approachRemainingEl.textContent = formatDistance(Math.max(0, approachRemaining));
       if (trailRemainingEl) trailRemainingEl.textContent = formatDistance(Math.max(0, trailRemaining));
-      approachLeg?.classList.remove('active');
-      approachLeg?.classList.add('done');
-      trailLeg?.classList.toggle('active', !arrived);
+      approachLeg?.classList.toggle('active', !trailStarted && !arrived);
+      approachLeg?.classList.toggle('done', trailStarted || arrived);
+      trailLeg?.classList.toggle('active', trailStarted && !arrived);
       trailLeg?.classList.toggle('done', arrived);
-      if (approachStateEl) approachStateEl.textContent = 'Η θέση GPS επιβεβαιώθηκε';
-      if (trailStateEl) trailStateEl.textContent = arrived ? '✓ Έφτασες στο καταφύγιο' : 'Πραγματική πεζοπορική πορεία';
+      if (approachStateEl) approachStateEl.textContent = trailStarted || arrived ? '✓ Έφτασες στην επίσημη αφετηρία Α' : 'Μέχρι την επίσημη αφετηρία Α';
+      if (trailStateEl) trailStateEl.textContent = arrived ? '✓ Έφτασες στο καταφύγιο' : trailStarted ? 'Ακολούθησε το επίσημο μονοπάτι' : 'Ξεκινά όταν φτάσεις στην Α';
       return;
     }
     if (approachRemainingEl) approachRemainingEl.textContent = formatDistance(Math.max(0, approachRemaining));
@@ -362,7 +362,7 @@
     if (progressEl) progressEl.style.width = `${Math.round(progress * 100)}%`;
     if (progressTextEl) progressTextEl.textContent = `${Math.round(progress * 100)}% διαδρομής`;
     if (accuracyEl) accuracyEl.textContent = `GPS ±${Math.round(position.coords.accuracy)} μ`;
-    if (phaseEl) phaseEl.textContent = arrived ? 'ΟΛΟΚΛΗΡΩΣΗ' : plan.kind === 'shelter' ? 'ΠΡΟΣ ΚΑΤΑΦΥΓΙΟ' : trailStarted ? 'ΣΤΟ ΜΟΝΟΠΑΤΙ' : 'ΠΡΟΣΕΓΓΙΣΗ';
+    if (phaseEl) phaseEl.textContent = arrived ? 'ΟΛΟΚΛΗΡΩΣΗ' : trailStarted ? (plan.kind === 'shelter' ? 'ΣΤΟ ΜΟΝΟΠΑΤΙ → ΚΑΤΑΦΥΓΙΟ' : 'ΣΤΟ ΜΟΝΟΠΑΤΙ') : 'ΠΡΟΣΕΓΓΙΣΗ';
     updateLegUi(approachRemaining, trailRemaining, arrived);
 
     let speedKmh: number | null = typeof position.coords.speed === 'number' && position.coords.speed >= 0 ? position.coords.speed * 3.6 : null;
@@ -379,16 +379,19 @@
         ? `✓ Έφτασες στο ${plan.destinationLabel ?? 'καταφύγιο'}.`
         : `✓ Έφτασες στο τέλος Τ του ${plan.code}. Η πεζοπορία ολοκληρώθηκε.`;
       else if (offRoute) guidance.textContent = `${bearingArrow(current, target)} ΕΚΤΟΣ ΠΟΡΕΙΑΣ · ${formatDistance(activeNearest.distance)} μέχρι το κοντινότερο σημείο. Γύρισε προς το βέλος.`;
-      else if (plan.kind === 'shelter') guidance.textContent = `🥾 Ακολούθησε την πεζοπορική πορεία μέχρι το ${plan.destinationLabel ?? 'καταφύγιο'}.`;
+      else if (plan.kind === 'shelter' && !trailStarted) guidance.textContent = `🥾 Στάδιο 1/2 · Πήγαινε στην επίσημη αφετηρία Α του ${plan.code} ακολουθώντας τη μπλε πορεία.`;
+      else if (plan.kind === 'shelter') guidance.textContent = `🌲 Στάδιο 2/2 · Συνέχισε πάνω στο ${plan.code} μέχρι το ${plan.destinationLabel ?? 'καταφύγιο'}.`;
       else if (!trailStarted) guidance.textContent = `🥾 Στάδιο 1/2 · Πήγαινε στην επίσημη αφετηρία Α του ${plan.code} ακολουθώντας τη μπλε πορεία.`;
       else guidance.textContent = `🌲 Στάδιο 2/2 · Αφετηρία Α ολοκληρώθηκε. Συνέχισε πάνω στο ${plan.code} μέχρι το τέλος Τ.`;
     }
 
     if (offRoute) alertOffRoute(activeNearest.distance);
-    if (plan.kind !== 'shelter' && trailStarted && !lastTrailEntryAlert) {
+    if (trailStarted && !lastTrailEntryAlert) {
       lastTrailEntryAlert = true;
       beep(false);
-      speak(`Έφτασες στην αφετηρία του μονοπατιού ${plan.code}. Ξεκινά το δεύτερο στάδιο μέχρι το τέλος του μονοπατιού.`);
+      speak(plan.kind === 'shelter'
+        ? `Έφτασες στην αφετηρία του μονοπατιού ${plan.code}. Ξεκινά το δεύτερο στάδιο μέχρι το ${plan.destinationLabel ?? 'καταφύγιο'}.`
+        : `Έφτασες στην αφετηρία του μονοπατιού ${plan.code}. Ξεκινά το δεύτερο στάδιο μέχρι το τέλος του μονοπατιού.`);
     }
     if (arrived && soundEnabled && lastAlertAt !== -1) {
       lastAlertAt = -1;
@@ -441,25 +444,25 @@
     trailPoints = plan.points.slice(Math.max(0, split - 1));
     approachRemainingFromIndex = buildRemaining(approachPoints);
     trailRemainingFromIndex = buildRemaining(trailPoints);
-    trailStarted = plan.kind === 'shelter';
+    trailStarted = false;
     offRouteStreak = 0;
     lastAlertAt = 0;
     lastTrailEntryAlert = false;
     lastPosition = null;
     if (title) title.textContent = plan.kind === 'shelter' ? plan.name : `${plan.code} — ${plan.name}`;
-    if (approachTitleEl) approachTitleEl.textContent = plan.kind === 'shelter' ? '1 · Εντοπισμός GPS' : '1 · GPS → Αφετηρία Α';
-    if (trailTitleEl) trailTitleEl.textContent = plan.kind === 'shelter' ? '2 · Πορεία προς καταφύγιο' : '2 · Αφετηρία Α → Τέλος Τ';
+    if (approachTitleEl) approachTitleEl.textContent = '1 · GPS → Αφετηρία Α';
+    if (trailTitleEl) trailTitleEl.textContent = plan.kind === 'shelter' ? '2 · Αφετηρία Α → Καταφύγιο' : '2 · Αφετηρία Α → Τέλος Τ';
     if (remainingEl) remainingEl.textContent = formatDistance(plan.totalDistanceM);
     if (etaEl) etaEl.textContent = formatTime(plan.estimatedSeconds);
     if (offRouteEl) offRouteEl.textContent = '—';
     if (speedEl) speedEl.textContent = '—';
     if (accuracyEl) accuracyEl.textContent = 'GPS —';
-    if (phaseEl) phaseEl.textContent = plan.kind === 'shelter' ? 'ΠΡΟΣ ΚΑΤΑΦΥΓΙΟ' : 'ΠΡΟΣΕΓΓΙΣΗ';
+    if (phaseEl) phaseEl.textContent = 'ΠΡΟΣΕΓΓΙΣΗ';
     if (progressEl) progressEl.style.width = '0%';
     if (progressTextEl) progressTextEl.textContent = '0% διαδρομής';
     updateLegUi(plan.approachDistanceM, plan.trailDistanceM, false);
     if (guidance) guidance.textContent = plan.kind === 'shelter'
-      ? `🔒 Η διαδρομή κλειδώθηκε. Ακολούθησε την πραγματική πεζοπορική πορεία προς το ${plan.destinationLabel ?? 'καταφύγιο'}.`
+      ? `🔒 Η διαδρομή κλειδώθηκε. Στάδιο 1/2: GPS → επίσημη αφετηρία Α του ${plan.code}. Μετά ακολουθείς το μονοπάτι μέχρι το ${plan.destinationLabel ?? 'καταφύγιο'}.`
       : '🔒 Η διαδρομή κλειδώθηκε. Στάδιο 1/2: GPS → επίσημη αφετηρία Α. Μετά αρχίζει το μονοπάτι Α → Τ.';
     enterFocusedMap(detail);
     setNavigationUi(true);

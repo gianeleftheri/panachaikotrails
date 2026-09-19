@@ -224,6 +224,13 @@
     document.body.classList.toggle('navigation-active', active);
   };
 
+  const syncFollowUi = () => {
+    if (!followBtn) return;
+    followBtn.classList.toggle('active', follow);
+    followBtn.setAttribute('aria-pressed', String(follow));
+    followBtn.textContent = follow ? '◎ Ακολουθεί το GPS' : '○ Ελεύθερος χάρτης';
+  };
+
   const lockOtherControls = (active: boolean) => {
     const ids = ['trailMenuToggle','routeBuilderToggle','locateBtn','recenterBtn','shelterBtn','view3dBtn'];
     ids.forEach(id => {
@@ -426,7 +433,7 @@
     leaveFocusedMap();
     follow = true;
     trailStarted = false;
-    followBtn?.classList.add('active');
+    syncFollowUi();
     runtime.__panachaikoNavigationPlan = undefined;
     plan = null;
     document.dispatchEvent(new CustomEvent('panachaiko:navigation-exit', { detail: { finish } }));
@@ -436,6 +443,8 @@
     const detail = (event as CustomEvent<NavigationPlan>).detail;
     if (!detail?.points?.length) return;
     ensureAudio();
+    follow = true;
+    syncFollowUi();
     plan = detail;
     runtime.__panachaikoNavigationPlan = detail;
     remainingFromIndex = buildRemaining(plan.points);
@@ -472,9 +481,14 @@
 
   followBtn?.addEventListener('click', () => {
     follow = !follow;
-    followBtn.classList.toggle('active', follow);
-    followBtn.textContent = follow ? '◎ Ακολούθηση θέσης' : '○ Ελεύθερος χάρτης';
+    syncFollowUi();
+    if (follow && lastPosition && runtime.__panachaikoMap) {
+      const zoom = Math.max(runtime.__panachaikoMap.getZoom(), 16);
+      runtime.__panachaikoMap.setView(lastPosition.point, zoom, { animate: true });
+    }
   });
+
+  syncFollowUi();
 
   soundBtn?.addEventListener('click', () => {
     soundEnabled = !soundEnabled;

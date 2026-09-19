@@ -505,13 +505,33 @@ if (app) {
     routeBuilderPanel?.classList.remove('open');
     routeBuilderToggle?.classList.remove('open');
     setTrailPanelOpen(false);
-    if (!userPosition) { shelterPanel.innerHTML = '<div class="sh-title">🆘 Χρειάζεται GPS</div><div class="sh-sub">Ενεργοποίησε πρώτα τη θέση σου.</div><button class="sh-close" type="button">Κλείσιμο</button>'; shelterPanel.querySelector('button')?.addEventListener('click', () => shelterPanel.classList.remove('show')); return; }
-    const shelters = codes.flatMap(code => trails[code].notes.filter(n => n.category === 'shelter' && typeof n.lat === 'number' && typeof n.lng === 'number').map(n => ({ ...n, code })));
-    if (!shelters.length) { shelterPanel.innerHTML = '<div class="sh-title">🆘 Δεν υπάρχουν καταχωρημένα καταφύγια</div><div class="sh-sub">Πρόσθεσε καταφύγιο από το WordPress → Σημεία διαδρομών.</div><button class="sh-close" type="button">Κλείσιμο</button>'; shelterPanel.querySelector('button')?.addEventListener('click', () => shelterPanel.classList.remove('show')); return; }
-    const nearest = shelters.map(s => ({ ...s, distance: haversine(userPosition!.lng, userPosition!.lat, s.lng!, s.lat!) })).sort((a, b) => a.distance - b.distance)[0];
-    if (shelterLine) map.removeLayer(shelterLine); shelterLine = L.polyline([[userPosition.lat, userPosition.lng], [nearest.lat!, nearest.lng!]], { color: '#dc2626', weight: 5 }).addTo(map);
-    shelterPanel.innerHTML = `<div class="sh-title">🆘 ${escapeHtml(nearest.title ?? 'Κοντινότερο καταφύγιο')}</div><div class="sh-sub">${escapeHtml(nearest.code)} · ${(nearest.distance / 1000).toFixed(2)} χλμ σε ευθεία</div><button class="sh-close" type="button">Κλείσιμο</button>`;
-    shelterPanel.querySelector('button')?.addEventListener('click', () => { shelterPanel.classList.remove('show'); if (shelterLine) { map.removeLayer(shelterLine); shelterLine = null; } });
+
+    const closeShelterPanel = () => shelterPanel.classList.remove('show');
+    if (!userPosition) {
+      shelterPanel.innerHTML = '<div class="sh-title">🆘 Χρειάζεται GPS</div><div class="sh-sub">Ενεργοποίησε πρώτα τη θέση σου και ξαναπάτησε το SOS.</div><button class="sh-close" type="button">Κλείσιμο</button>';
+      shelterPanel.querySelector('.sh-close')?.addEventListener('click', closeShelterPanel);
+      return;
+    }
+
+    const shelters = codes.flatMap(code => trails[code].notes
+      .filter(note => note.category === 'shelter' && typeof note.lat === 'number' && typeof note.lng === 'number')
+      .map(note => ({ code, title: note.title ?? 'Καταφύγιο', lat: note.lat!, lng: note.lng! })));
+
+    if (!shelters.length) {
+      shelterPanel.innerHTML = '<div class="sh-title">🆘 Δεν υπάρχουν καταχωρημένα καταφύγια</div><div class="sh-sub">Πρόσθεσε καταφύγιο από το WordPress → Σημεία διαδρομών.</div><button class="sh-close" type="button">Κλείσιμο</button>';
+      shelterPanel.querySelector('.sh-close')?.addEventListener('click', closeShelterPanel);
+      return;
+    }
+
+    if (shelterLine) { map.removeLayer(shelterLine); shelterLine = null; }
+    shelterPanel.innerHTML = '<div class="sh-title">🆘 Αναζήτηση κοντινότερου καταφυγίου</div><div class="sh-sub">Υπολογίζω πραγματικές πεζοπορικές διαδρομές από τη θέση GPS…</div><button class="sh-close" type="button">Ακύρωση</button>';
+    shelterPanel.querySelector('.sh-close')?.addEventListener('click', closeShelterPanel);
+    document.dispatchEvent(new CustomEvent('panachaiko:shelter-route-request', {
+      detail: {
+        start: [userPosition.lat, userPosition.lng],
+        shelters
+      }
+    }));
   });
 
   view3dBtn?.addEventListener('click', () => {

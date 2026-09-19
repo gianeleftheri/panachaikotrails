@@ -23,6 +23,8 @@ final class Panachaiko_Trails_Migrations {
         'Π-1Α' => array( 'start_lat'=>38.21634, 'start_lng'=>21.81876, 'start_label'=>'ΣΥΝΔΕΣΗ ΑΠΟ Π-1', 'end_lat'=>38.22227, 'end_lng'=>21.81982, 'end_label'=>'ΣΥΝΔΕΣΗ ΠΡΟΣ Π-3', 'verified'=>false ),
     );
 
+    public static function navigation_map(): array { return self::NAVIGATION; }
+
     public static function init(): void {
         add_action( 'init', array( __CLASS__, 'maybe_migrate' ), 30 );
     }

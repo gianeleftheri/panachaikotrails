@@ -550,44 +550,90 @@
     const panel = document.getElementById('shelterPanel');
     if (!detail?.start || !detail.shelters?.length || !panel) return;
 
-    const nearestCandidates = [...detail.shelters]
-      .sort((a, b) => haversine(detail.start, [a.lat, a.lng]) - haversine(detail.start, [b.lat, b.lng]))
-      .slice(0, 5);
-
     try {
-      const routed = await Promise.all(nearestCandidates.map(async shelter => {
+      const routed = await Promise.all(detail.shelters.map(async shelter => {
         try {
-          const route = await routeApproach(detail.start, [shelter.lat, shelter.lng], 'ors');
-          return { shelter, route };
+          const trail = await loadTrail(shelter.code);
+          const mainRoute = buildMainTrailRoute(shelter.code, trail.segments!, trail.navigation);
+          if (mainRoute.points.length < 2 || !mainRoute.segments.length) return null;
+
+          const shelterTarget: RoutePoint = [shelter.lat, shelter.lng];
+          let shelterIndex = 0;
+          let shelterOffsetM = Number.POSITIVE_INFINITY;
+          mainRoute.points.forEach((point, index) => {
+            const distance = haversine(point, shelterTarget);
+            if (distance < shelterOffsetM) {
+              shelterOffsetM = distance;
+              shelterIndex = index;
+            }
+          });
+
+          // A shelter POI belongs to this trail. Refuse obviously mismatched data instead
+          // of drawing a misleading straight connector away from the official geometry.
+          if (shelterOffsetM > 250) return null;
+
+          const trailToShelter = mainRoute.points.slice(0, shelterIndex + 1);
+          if (!trailToShelter.length) return null;
+
+          // Stage 1 is always a real walking route from GPS to the OFFICIAL trail start.
+          // Stage 2 is exclusively the official trail geometry up to the shelter.
+          const approach = await routeApproach(detail.start, mainRoute.points[0], 'ors');
+          const trailDistanceM = pathDistance(trailToShelter);
+          const profile = gainLossFor(trailToShelter, elevationLookup(trail.segments!));
+          const trailSeconds = (trailDistanceM / 5000) * 3600 + (Math.max(0, profile.gain) / 600) * 3600;
+          const totalDistanceM = approach.distanceM + trailDistanceM;
+
+          return {
+            shelter,
+            trail,
+            mainRoute,
+            approach,
+            trailToShelter,
+            shelterOffsetM,
+            trailDistanceM,
+            trailSeconds,
+            totalDistanceM,
+            estimatedSeconds: approach.seconds + trailSeconds
+          };
         } catch {
           return null;
         }
       }));
+
       const best = routed
         .filter((item): item is NonNullable<typeof item> => Boolean(item))
-        .sort((a, b) => a.route.distanceM - b.route.distanceM)[0];
+        .sort((a, b) => a.totalDistanceM - b.totalDistanceM)[0];
 
-      if (!best) throw new Error('Δεν βρέθηκε διαθέσιμη πεζοπορική διαδρομή προς κάποιο καταφύγιο.');
+      if (!best) throw new Error('Δεν βρέθηκε ασφαλής πορεία προς καταχωρημένο καταφύγιο μέσω επίσημης αφετηρίας και μονοπατιού.');
 
-      const { shelter, route } = best;
+      const { shelter, mainRoute, approach, trailToShelter, shelterOffsetM, trailDistanceM, totalDistanceM, estimatedSeconds } = best;
+      const shelterTitle = decodeHtmlEntities(shelter.title);
+      const fullPoints = [...approach.points, ...trailToShelter.slice(1)];
+
       pendingPlan = {
         code: shelter.code,
-        name: `Προς ${decodeHtmlEntities(shelter.title)}`,
+        name: `Προς ${shelterTitle} μέσω ${shelter.code}`,
         mode: 'ors',
         kind: 'shelter',
-        destinationLabel: decodeHtmlEntities(shelter.title),
-        points: route.points,
-        approachPointCount: 1,
-        totalDistanceM: route.distanceM,
-        approachDistanceM: 0,
-        trailDistanceM: route.distanceM,
-        estimatedSeconds: route.seconds
+        destinationLabel: shelterTitle,
+        points: fullPoints,
+        approachPointCount: approach.points.length,
+        totalDistanceM,
+        approachDistanceM: approach.distanceM,
+        trailDistanceM,
+        estimatedSeconds
       };
       runtime.__panachaikoNavigationPlan = pendingPlan;
-      drawPlan(route.points, []);
+
+      // One blue approach to Α, then one green official trail section to the shelter.
+      drawPlan(approach.points, trailToShelter.length > 1 ? [trailToShelter] : []);
       document.dispatchEvent(new CustomEvent<NavigationPlan>('panachaiko:route-preview', { detail: pendingPlan }));
 
-      panel.innerHTML = `<div class="sh-title">🆘 ${escapeHtml(shelter.title)}</div><div class="sh-sub">Πραγματική πεζοπορική πορεία μέσω δρόμων και διαθέσιμου δικτύου μονοπατιών.<br><b>${formatDistance(route.distanceM)}</b> · περίπου <b>${formatTime(route.seconds)}</b></div><button class="rb-calc-btn" id="shelterStartNavBtn" type="button">🔒 Κλείδωμα & έναρξη πλοήγησης</button><button class="sh-close" type="button" style="margin-top:7px">Κλείσιμο</button>`;
+      const startLabel = mainRoute.startLabel ? ` · ${escapeHtml(mainRoute.startLabel)}` : '';
+      const offsetNote = shelterOffsetM > 25
+        ? `<br><span style="opacity:.72">Το καταχωρημένο σημείο του καταφυγίου απέχει περίπου ${formatDistance(shelterOffsetM)} από τη χάραξη· η πλοήγηση σταματά στο κοντινότερο σημείο του μονοπατιού.</span>`
+        : '';
+      panel.innerHTML = `<div class="sh-title">🆘 ${escapeHtml(shelterTitle)}</div><div class="sh-sub"><b>1.</b> GPS → επίσημη αφετηρία Α του ${escapeHtml(shelter.code)}${startLabel}: <b>${formatDistance(approach.distanceM)}</b><br><b>2.</b> Πάνω στο ${escapeHtml(shelter.code)} → καταφύγιο: <b>${formatDistance(trailDistanceM)}</b><br>Σύνολο: <b>${formatDistance(totalDistanceM)}</b> · περίπου <b>${formatTime(estimatedSeconds)}</b>${offsetNote}</div><button class="rb-calc-btn" id="shelterStartNavBtn" type="button">🔒 Κλείδωμα & έναρξη πλοήγησης</button><button class="sh-close" type="button" style="margin-top:7px">Κλείσιμο</button>`;
       panel.querySelector('#shelterStartNavBtn')?.addEventListener('click', () => {
         if (!pendingPlan) return;
         panel.classList.remove('show');

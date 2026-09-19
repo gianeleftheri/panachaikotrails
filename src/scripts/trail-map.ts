@@ -62,6 +62,7 @@ if (app) {
   let userMarker: L.Marker | null = null;
   let routeLine: L.Polyline | null = null;
   let shelterLine: L.Polyline | null = null;
+  let selectionPulseTimers: number[] = [];
 
   const contentController = createTrailContentController(map, code => trails[code]);
 
@@ -132,6 +133,25 @@ if (app) {
       line.setStyle(style);
       if (active) line.bringToFront();
     });
+  };
+
+  const pulseTrailSelection = (code: string) => {
+    selectionPulseTimers.forEach(timer => window.clearTimeout(timer));
+    selectionPulseTimers = [];
+
+    // Επτά εναλλαγές ανά 200 ms: συνολικά περίπου 1,4 δευτερόλεπτα.
+    for (let step = 0; step < 7; step += 1) {
+      const timer = window.setTimeout(() => {
+        if (selectedCode !== code) return;
+        const dimmed = step % 2 === 0;
+        visibleLines.get(code)?.forEach(line => line.setStyle({
+          opacity: dimmed ? .22 : 1,
+          weight: dimmed ? 4 : 8
+        }));
+        if (step === 6) setTrailStyle(code, true);
+      }, step * 200);
+      selectionPulseTimers.push(timer);
+    }
   };
 
   const poiEmoji = (category?: string) => ({
@@ -249,7 +269,7 @@ if (app) {
     distanceBadge.classList.add('show');
   };
 
-  const selectTrail = (code: string, fly = true) => {
+  const selectTrail = (code: string, fly = true, pulse = true) => {
     const trail = trails[code]; if (!trail) return;
     requestedCode = code;
     if (selectedCode) {
@@ -261,6 +281,7 @@ if (app) {
     selectedCode = code;
     const group = layers.get(code);
     setTrailStyle(code, true);
+    if (pulse) pulseTrailSelection(code);
     const row = document.getElementById(`row-${code}`);
     row?.classList.add('active');
     if (row) row.style.borderLeftColor = trail.color;
@@ -336,7 +357,7 @@ if (app) {
     if (countElement) countElement.textContent = String(codes.length); if (lengthElement) lengthElement.textContent = totalLength.toFixed(1);
     app.dataset.trailCount = String(codes.length);
     if (fitMap && allBounds.length) map.fitBounds(L.latLngBounds(allBounds), { padding: [40, 40] });
-    if (previousSelection && trails[previousSelection]) selectTrail(previousSelection, false);
+    if (previousSelection && trails[previousSelection]) selectTrail(previousSelection, false, false);
   };
 
   renderTrails(trails, true);

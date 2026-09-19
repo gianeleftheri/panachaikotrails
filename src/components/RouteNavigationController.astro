@@ -34,6 +34,8 @@
     code: string;
     name: string;
     mode: string;
+    kind?: 'trail' | 'shelter';
+    destinationLabel?: string;
     points: RoutePoint[];
     approachPointCount: number;
     totalDistanceM: number;
@@ -41,6 +43,9 @@
     trailDistanceM: number;
     estimatedSeconds: number;
   };
+  type ShelterCandidate = { code: string; title: string; lat: number; lng: number };
+  type ShelterRouteRequest = { start: RoutePoint; shelters: ShelterCandidate[] };
+
   type GraphEdge = {
     index: number;
     a: number;
@@ -75,6 +80,13 @@
   const SEGMENT_SNAP_METERS = 35;
   let cachedPosition: GeolocationPosition | null = null;
   let pendingPlan: NavigationPlan | null = null;
+
+  const escapeHtml = (value: unknown) => String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 
   const formatDistance = (meters: number) => meters < 1000
     ? `${Math.round(meters)} μ`
@@ -404,7 +416,7 @@
       credentials: 'omit'
     });
     const payload = await response.json().catch(() => ({})) as RoutingResponse;
-    if (!response.ok || !payload.shape) throw new Error(payload.message || 'Δεν βρέθηκε πεζοπορική πρόσβαση προς την αρχή του μονοπατιού.');
+    if (!response.ok || !payload.shape) throw new Error(payload.message || 'Δεν βρέθηκε πραγματική πεζοπορική πρόσβαση προς τον προορισμό.');
     const points = decodePolyline(payload.shape, payload.shape_precision ?? 6);
     if (points.length < 2) throw new Error('Η υπηρεσία δρομολόγησης δεν επέστρεψε έγκυρη πορεία.');
     const distanceM = typeof payload.distance_km === 'number' ? payload.distance_km * 1000 : pathDistance(points);
@@ -532,6 +544,61 @@
       calcButton.textContent = 'Υπολογισμός ολόκληρης διαδρομής';
     }
   }, { capture: true });
+
+  document.addEventListener('panachaiko:shelter-route-request', async event => {
+    const detail = (event as CustomEvent<ShelterRouteRequest>).detail;
+    const panel = document.getElementById('shelterPanel');
+    if (!detail?.start || !detail.shelters?.length || !panel) return;
+
+    const nearestCandidates = [...detail.shelters]
+      .sort((a, b) => haversine(detail.start, [a.lat, a.lng]) - haversine(detail.start, [b.lat, b.lng]))
+      .slice(0, 5);
+
+    try {
+      const routed = await Promise.all(nearestCandidates.map(async shelter => {
+        try {
+          const route = await routeApproach(detail.start, [shelter.lat, shelter.lng], 'ors');
+          return { shelter, route };
+        } catch {
+          return null;
+        }
+      }));
+      const best = routed
+        .filter((item): item is NonNullable<typeof item> => Boolean(item))
+        .sort((a, b) => a.route.distanceM - b.route.distanceM)[0];
+
+      if (!best) throw new Error('Δεν βρέθηκε διαθέσιμη πεζοπορική διαδρομή προς κάποιο καταφύγιο.');
+
+      const { shelter, route } = best;
+      pendingPlan = {
+        code: shelter.code,
+        name: `Προς ${decodeHtmlEntities(shelter.title)}`,
+        mode: 'ors',
+        kind: 'shelter',
+        destinationLabel: decodeHtmlEntities(shelter.title),
+        points: route.points,
+        approachPointCount: 1,
+        totalDistanceM: route.distanceM,
+        approachDistanceM: 0,
+        trailDistanceM: route.distanceM,
+        estimatedSeconds: route.seconds
+      };
+      runtime.__panachaikoNavigationPlan = pendingPlan;
+      drawPlan(route.points, []);
+      document.dispatchEvent(new CustomEvent<NavigationPlan>('panachaiko:route-preview', { detail: pendingPlan }));
+
+      panel.innerHTML = `<div class="sh-title">🆘 ${escapeHtml(shelter.title)}</div><div class="sh-sub">Πραγματική πεζοπορική πορεία μέσω δρόμων και διαθέσιμου δικτύου μονοπατιών.<br><b>${formatDistance(route.distanceM)}</b> · περίπου <b>${formatTime(route.seconds)}</b></div><button class="rb-calc-btn" id="shelterStartNavBtn" type="button">🔒 Κλείδωμα & έναρξη πλοήγησης</button><button class="sh-close" type="button" style="margin-top:7px">Κλείσιμο</button>`;
+      panel.querySelector('#shelterStartNavBtn')?.addEventListener('click', () => {
+        if (!pendingPlan) return;
+        panel.classList.remove('show');
+        document.dispatchEvent(new CustomEvent<NavigationPlan>('panachaiko:navigation-start', { detail: pendingPlan }));
+      });
+      panel.querySelector('.sh-close')?.addEventListener('click', () => panel.classList.remove('show'));
+    } catch (error) {
+      panel.innerHTML = `<div class="sh-title">🆘 Δεν ολοκληρώθηκε ο υπολογισμός</div><div class="sh-sub">${escapeHtml(error instanceof Error ? error.message : 'Ο υπολογισμός απέτυχε.')}</div><button class="sh-close" type="button">Κλείσιμο</button>`;
+      panel.querySelector('.sh-close')?.addEventListener('click', () => panel.classList.remove('show'));
+    }
+  });
 
   document.addEventListener('panachaiko:navigation-exit', event => {
     const finish = Boolean((event as CustomEvent<{ finish?: boolean }>).detail?.finish);

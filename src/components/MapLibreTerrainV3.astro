@@ -68,6 +68,14 @@
   let endMarker: maplibregl.Marker | null = null;
   let lastGps: GeolocationPosition | null = null;
   let lastPlanSignature = '';
+  let loadTimeout: number | null = null;
+
+  const showLoadError = (message: string) => {
+    if (loadTimeout !== null) window.clearTimeout(loadTimeout);
+    loadTimeout = null;
+    if (hint) hint.textContent = message;
+    container?.setAttribute('data-terrain-state', 'error');
+  };
 
   const emptyMulti = () => ({type:'Feature' as const,properties:{},geometry:{type:'MultiLineString' as const,coordinates:[] as number[][][]}});
   const emptyLine = () => ({type:'Feature' as const,properties:{},geometry:{type:'LineString' as const,coordinates:[] as number[][]}});
@@ -232,29 +240,52 @@
   const initialize = () => {
     if (!container) return null;
     if (map) { window.setTimeout(() => map?.resize(),0); return map; }
-    map = new maplibregl.Map({
-      container,
-      style,
-      center:[21.835,38.2],
-      zoom:12,
-      pitch:64,
-      bearing:-20,
-      minZoom:8,
-      maxZoom:18,
-      maxPitch:85,
-      renderWorldCopies:false,
-      canvasContextAttributes:{antialias:true}
-    });
+
+    if (typeof maplibregl.supported === 'function' && !maplibregl.supported()) {
+      showLoadError('Η συσκευή ή ο browser δεν υποστηρίζει WebGL2. Συνέχισε με τον 2D χάρτη.');
+      return null;
+    }
+
+    container.setAttribute('data-terrain-state', 'loading');
+    if (hint) hint.textContent = 'Φόρτωση MapLibre terrain…';
+    loadTimeout = window.setTimeout(() => {
+      if (!styleReady) showLoadError('Το 3D δεν φορτώθηκε εγκαίρως. Έλεγξε τη σύνδεση ή συνέχισε με τον 2D χάρτη.');
+    }, 12000);
+
+    try {
+      map = new maplibregl.Map({
+        container,
+        style,
+        center:[21.835,38.2],
+        zoom:12,
+        pitch:64,
+        bearing:-20,
+        minZoom:8,
+        maxZoom:18,
+        maxPitch:85,
+        renderWorldCopies:false,
+        canvasContextAttributes:{antialias:true}
+      });
+    } catch (error) {
+      console.warn('MapLibre 3D initialization',error);
+      map = null;
+      showLoadError('Δεν ήταν δυνατή η εκκίνηση του 3D. Συνέχισε με τον 2D χάρτη.');
+      return null;
+    }
+
     map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-right');
     map.addControl(new maplibregl.ScaleControl({unit:'metric',maxWidth:110}),'bottom-left');
     map.on('style.load',()=>{
       styleReady=true;
+      if (loadTimeout !== null) window.clearTimeout(loadTimeout);
+      loadTimeout=null;
+      container.setAttribute('data-terrain-state', 'ready');
       ensureLayers();
       sync(true);
     });
     map.on('error',event=>{
       console.warn('MapLibre 3D',event.error);
-      if (hint && !styleReady) hint.textContent='3D: σφάλμα φόρτωσης χάρτη';
+      if (!styleReady) showLoadError('3D: σφάλμα φόρτωσης χάρτη. Συνέχισε με τον 2D χάρτη.');
     });
     return map;
   };

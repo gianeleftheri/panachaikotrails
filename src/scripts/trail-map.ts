@@ -193,12 +193,18 @@ if (app) {
   const renderNote = (poi: TrailPoi) => `<div class="note-item"><div class="note-item-head"><span class="poi-kind">${poiEmoji(poi.category)} ${escapeHtml(poiLabel(poi.category))}</span>${poi.verified_at ? `<span class="poi-verified">✓ ${escapeHtml(poi.verified_at)}</span>` : ''}</div><div class="note-item-title">${escapeHtml(poi.title ?? 'Σημείο διαδρομής')}</div>${poi.text ? `<div>${escapeHtml(poi.text)}</div>` : ''}</div>`;
 
   const renderPhoto = (poi: TrailPoi) => {
-    const urls = Array.from(new Set(
-      [poi.featured_image_url, ...(poi.media_urls ?? [])]
-        .filter((url): url is string => Boolean(url))
-        .map(url => url.trim())
-        .filter(Boolean)
-    ));
+    // WordPress returns the uploaded image both in media_urls and as
+    // featured_image_url. The featured URL can point to a resized derivative
+    // (e.g. -1024x768), so string-based deduplication is not reliable.
+    // Uploaded media is canonical; featured image is only a legacy fallback.
+    const mediaUrls = (poi.media_urls ?? [])
+      .filter((url): url is string => Boolean(url))
+      .map(url => url.trim())
+      .filter(Boolean);
+    const urls = mediaUrls.length
+      ? Array.from(new Set(mediaUrls))
+      : (poi.featured_image_url ? [poi.featured_image_url.trim()] : []).filter(Boolean);
+
     if (!urls.length) return `<div class="media-card"><div class="media-card-title">📷 ${escapeHtml(poi.title ?? 'Φωτογραφία')}</div><div class="empty-note">Δεν έχει συνδεθεί ακόμη αρχείο εικόνας.</div></div>`;
     return urls.map(url => `<a class="media-card media-photo" href="${escapeHtml(url)}" target="_blank" rel="noopener"><img src="${escapeHtml(url)}" alt="${escapeHtml(poi.title ?? 'Φωτογραφία διαδρομής')}" loading="lazy"/><div class="media-card-title">${escapeHtml(poi.title ?? 'Φωτογραφία')}</div></a>`).join('');
   };

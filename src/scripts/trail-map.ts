@@ -51,6 +51,8 @@ if (app) {
   const layers = new Map<string, L.FeatureGroup>();
   const visibleLines = new Map<string, L.Polyline[]>();
   const poiLayer = L.layerGroup().addTo(map);
+  const poiRegistry = new Map<string, { code: string; poi: TrailPoi }>();
+  const activePoiMarkers = new Map<string, L.Marker>();
   const allBounds: L.LatLngExpression[] = [];
   let codes: string[] = [];
   let selectedCode: string | null = null;
@@ -162,6 +164,56 @@ if (app) {
     forest: 'Δάσος', viewpoint: 'Θέα', rest: 'Ξεκούραση', danger: 'Προσοχή', hazard: 'Κίνδυνος', water: 'Νερό', flag: 'Αφετηρία/Τέλος', shelter: 'Καταφύγιο', archaeological: 'Αρχαιολογικός χώρος', photo: 'Φωτογραφία', video: 'Βίντεο', note: 'Ένδειξη', general: 'Σημείο'
   }[category ?? 'general'] ?? 'Σημείο');
 
+  const poiKey = (code: string, kind: string, index: number, poi: TrailPoi) =>
+    `${code}:${kind}:${encodeURIComponent(String(poi.id ?? index))}`;
+
+  const setPoiButtonActive = (key: string, active: boolean) => {
+    trailDrawer.querySelectorAll<HTMLButtonElement>('.poi-map-btn').forEach(button => {
+      if (button.dataset.poiKey !== key) return;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+      button.textContent = active ? '✓ Στον χάρτη' : '📍 Εμφάνιση στον χάρτη';
+    });
+  };
+
+  const clearSelectedPoiMarkers = () => {
+    poiLayer.clearLayers();
+    activePoiMarkers.clear();
+    trailDrawer.querySelectorAll<HTMLButtonElement>('.poi-map-btn').forEach(button => {
+      button.classList.remove('active');
+      button.setAttribute('aria-pressed', 'false');
+      button.textContent = '📍 Εμφάνιση στον χάρτη';
+    });
+  };
+
+  const showPoiOnMap = (key: string) => {
+    const item = poiRegistry.get(key);
+    if (!item || typeof item.poi.lat !== 'number' || typeof item.poi.lng !== 'number') return;
+
+    let marker = activePoiMarkers.get(key);
+    if (!marker) {
+      const { code, poi } = item;
+      const icon = L.divIcon({
+        className: 'trail-poi-marker-wrap',
+        html: `<div class="trail-poi-marker" title="${escapeHtml(poiLabel(poi.category))}">${poiEmoji(poi.category)}</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+      });
+      marker = L.marker([poi.lat, poi.lng], { icon }).addTo(poiLayer);
+      marker.bindPopup(`<div class="poi-popup"><strong>${escapeHtml(poi.title ?? poiLabel(poi.category))}</strong><div>${escapeHtml(poiLabel(poi.category))} · ${escapeHtml(code)}</div>${poi.text ? `<p>${escapeHtml(poi.text)}</p>` : ''}</div>`);
+      activePoiMarkers.set(key, marker);
+      setPoiButtonActive(key, true);
+    }
+
+    map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 16), { duration: .7 });
+    marker.openPopup();
+  };
+
+  const mapButton = (poi: TrailPoi, key: string) =>
+    typeof poi.lat === 'number' && typeof poi.lng === 'number'
+      ? `<button type="button" class="poi-map-btn${activePoiMarkers.has(key) ? ' active' : ''}" data-poi-key="${escapeHtml(key)}" aria-pressed="${activePoiMarkers.has(key)}">${activePoiMarkers.has(key) ? '✓ Στον χάρτη' : '📍 Εμφάνιση στον χάρτη'}</button>`
+      : '';
+
   const haversine = (lon1: number, lat1: number, lon2: number, lat2: number) => {
     const R = 6371000, rad = (v: number) => v * Math.PI / 180;
     const dLat = rad(lat2 - lat1), dLon = rad(lon2 - lon1);
@@ -213,13 +265,16 @@ if (app) {
     document.querySelectorAll<HTMLElement>('.td-panel').forEach(panel => { panel.hidden = panel.dataset.panel !== button.dataset.tab; });
   });
 
-  const renderNote = (poi: TrailPoi) => `<div class="note-item"><div class="note-item-head"><span class="poi-kind">${poiEmoji(poi.category)} ${escapeHtml(poiLabel(poi.category))}</span>${poi.verified_at ? `<span class="poi-verified">✓ ${escapeHtml(poi.verified_at)}</span>` : ''}</div><div class="note-item-title">${escapeHtml(poi.title ?? 'Σημείο διαδρομής')}</div>${poi.text ? `<div>${escapeHtml(poi.text)}</div>` : ''}</div>`;
+  trailDrawer.addEventListener('click', event => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('.poi-map-btn');
+    if (!button?.dataset.poiKey) return;
+    event.preventDefault();
+    showPoiOnMap(button.dataset.poiKey);
+  });
 
-  const renderPhoto = (poi: TrailPoi) => {
-    // WordPress returns the uploaded image both in media_urls and as
-    // featured_image_url. The featured URL can point to a resized derivative
-    // (e.g. -1024x768), so string-based deduplication is not reliable.
-    // Uploaded media is canonical; featured image is only a legacy fallback.
+  const renderNote = (poi: TrailPoi, key: string) => `<div class="note-item"><div class="note-item-head"><span class="poi-kind">${poiEmoji(poi.category)} ${escapeHtml(poiLabel(poi.category))}</span>${poi.verified_at ? `<span class="poi-verified">✓ ${escapeHtml(poi.verified_at)}</span>` : ''}</div><div class="note-item-title">${escapeHtml(poi.title ?? 'Σημείο διαδρομής')}</div>${poi.text ? `<div>${escapeHtml(poi.text)}</div>` : ''}${mapButton(poi, key)}</div>`;
+
+  const renderPhoto = (poi: TrailPoi, key: string) => {
     const mediaUrls = (poi.media_urls ?? [])
       .filter((url): url is string => Boolean(url))
       .map(url => url.trim())
@@ -227,16 +282,19 @@ if (app) {
     const urls = mediaUrls.length
       ? Array.from(new Set(mediaUrls))
       : (poi.featured_image_url ? [poi.featured_image_url.trim()] : []).filter(Boolean);
-
-    if (!urls.length) return `<div class="media-card"><div class="media-card-title">📷 ${escapeHtml(poi.title ?? 'Φωτογραφία')}</div><div class="empty-note">Δεν έχει συνδεθεί ακόμη αρχείο εικόνας.</div></div>`;
-    return urls.map(url => `<a class="media-card media-photo" href="${escapeHtml(url)}" target="_blank" rel="noopener"><img src="${escapeHtml(url)}" alt="${escapeHtml(poi.title ?? 'Φωτογραφία διαδρομής')}" loading="lazy"/><div class="media-card-title">${escapeHtml(poi.title ?? 'Φωτογραφία')}</div></a>`).join('');
+    const cards = urls.length
+      ? urls.map(url => `<a class="media-card media-photo" href="${escapeHtml(url)}" target="_blank" rel="noopener"><img src="${escapeHtml(url)}" alt="${escapeHtml(poi.title ?? 'Φωτογραφία διαδρομής')}" loading="lazy"/><div class="media-card-title">${escapeHtml(poi.title ?? 'Φωτογραφία')}</div></a>`).join('')
+      : `<div class="media-card"><div class="media-card-title">📷 ${escapeHtml(poi.title ?? 'Φωτογραφία')}</div><div class="empty-note">Δεν έχει συνδεθεί ακόμη αρχείο εικόνας.</div></div>`;
+    return `<div class="media-entry">${cards}${mapButton(poi, key)}</div>`;
   };
 
-  const renderVideo = (poi: TrailPoi) => {
+  const renderVideo = (poi: TrailPoi, key: string) => {
     const uploaded = (poi.media_urls ?? [])[0];
-    if (uploaded) return `<div class="media-card"><video controls preload="metadata" style="width:100%;max-height:260px" src="${escapeHtml(uploaded)}"></video><div class="media-card-title" style="margin-top:8px">🎬 ${escapeHtml(poi.title ?? 'Βίντεο')}</div>${poi.text ? `<div class="media-card-text">${escapeHtml(poi.text)}</div>` : ''}</div>`;
-    if (poi.video_url) return `<a class="media-card media-video" href="${escapeHtml(poi.video_url)}" target="_blank" rel="noopener"><div class="media-video-icon">▶</div><div><div class="media-card-title">${escapeHtml(poi.title ?? 'Βίντεο')}</div>${poi.text ? `<div class="media-card-text">${escapeHtml(poi.text)}</div>` : ''}</div></a>`;
-    return `<div class="media-card"><div class="media-card-title">🎬 ${escapeHtml(poi.title ?? 'Βίντεο')}</div><div class="empty-note">Δεν έχει συνδεθεί ακόμη αρχείο ή URL βίντεο.</div></div>`;
+    let card: string;
+    if (uploaded) card = `<div class="media-card"><video controls preload="metadata" style="width:100%;max-height:260px" src="${escapeHtml(uploaded)}"></video><div class="media-card-title" style="margin-top:8px">🎬 ${escapeHtml(poi.title ?? 'Βίντεο')}</div>${poi.text ? `<div class="media-card-text">${escapeHtml(poi.text)}</div>` : ''}</div>`;
+    else if (poi.video_url) card = `<a class="media-card media-video" href="${escapeHtml(poi.video_url)}" target="_blank" rel="noopener"><div class="media-video-icon">▶</div><div><div class="media-card-title">${escapeHtml(poi.title ?? 'Βίντεο')}</div>${poi.text ? `<div class="media-card-text">${escapeHtml(poi.text)}</div>` : ''}</div></a>`;
+    else card = `<div class="media-card"><div class="media-card-title">🎬 ${escapeHtml(poi.title ?? 'Βίντεο')}</div><div class="empty-note">Δεν έχει συνδεθεί ακόμη αρχείο ή URL βίντεο.</div></div>`;
+    return `<div class="media-entry">${card}${mapButton(poi, key)}</div>`;
   };
 
   const fillDrawer = (code: string, trail: Trail) => {
@@ -253,9 +311,9 @@ if (app) {
     const videos = document.querySelector<HTMLElement>('.td-panel[data-panel="videos"]');
     const meta = [trail.source ? `Πηγή: ${escapeHtml(trail.source)}` : '', trail.verified_at ? `Επαλήθευση: ${escapeHtml(trail.verified_at)}` : ''].filter(Boolean).join(' · ');
     if (info) info.innerHTML = `<div class="stat-grid"><div class="stat-box"><span class="label">Απόσταση</span><span class="value">${trail.length_km.toFixed(2)} χλμ</span></div><div class="stat-box"><span class="label">Υψόμετρο</span><span class="value">${elevationRange}</span></div><div class="stat-box"><span class="label">Ανάβαση</span><span class="value moss">+${trail.gain_m} μ</span></div><div class="stat-box"><span class="label">Κατάβαση</span><span class="value">−${trail.loss_m} μ</span></div></div>${trail.description ? `<div class="trail-description">${trail.description}</div>` : ''}${meta ? `<div class="trail-meta-line">${meta}</div>` : ''}<div class="section-label">Υψομετρικό προφίλ</div><div class="elevation-wrap">${elevationSvg(trail)}</div>`;
-    if (notes) notes.innerHTML = trail.notes.length ? `<div class="notes-list">${trail.notes.map(renderNote).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί ενδείξεις ακόμα — κάνε κλικ πάνω στη γραμμή του μονοπατιού για να προσθέσεις.</div>';
-    if (photos) photos.innerHTML = trail.photos.length ? `<div class="media-grid">${trail.photos.map(renderPhoto).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί φωτογραφίες ακόμα — κάνε κλικ πάνω στη γραμμή για προσθήκη.</div>';
-    if (videos) videos.innerHTML = trail.videos.length ? `<div class="media-list">${trail.videos.map(renderVideo).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί βίντεο ακόμα — κάνε κλικ πάνω στη γραμμή για προσθήκη.</div>';
+    if (notes) notes.innerHTML = trail.notes.length ? `<div class="notes-list">${trail.notes.map((poi, index) => renderNote(poi, poiKey(code, 'note', index, poi))).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί ενδείξεις ακόμα — κάνε κλικ πάνω στη γραμμή του μονοπατιού για να προσθέσεις.</div>';
+    if (photos) photos.innerHTML = trail.photos.length ? `<div class="media-grid">${trail.photos.map((poi, index) => renderPhoto(poi, poiKey(code, 'photo', index, poi))).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί φωτογραφίες ακόμα — κάνε κλικ πάνω στη γραμμή για προσθήκη.</div>';
+    if (videos) videos.innerHTML = trail.videos.length ? `<div class="media-list">${trail.videos.map((poi, index) => renderVideo(poi, poiKey(code, 'video', index, poi))).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί βίντεο ακόμα — κάνε κλικ πάνω στη γραμμή για προσθήκη.</div>';
     document.querySelectorAll('.td-tab').forEach(el => el.classList.toggle('active', (el as HTMLElement).dataset.tab === 'info'));
     document.querySelectorAll<HTMLElement>('.td-panel').forEach(panel => { panel.hidden = panel.dataset.panel !== 'info'; });
   };
@@ -272,6 +330,7 @@ if (app) {
   const selectTrail = (code: string, fly = true, pulse = true) => {
     const trail = trails[code]; if (!trail) return;
     requestedCode = code;
+    if (selectedCode && selectedCode !== code) clearSelectedPoiMarkers();
     if (selectedCode) {
       setTrailStyle(selectedCode, false);
       const previousRow = document.getElementById(`row-${selectedCode}`);
@@ -292,17 +351,13 @@ if (app) {
   };
 
   const renderPoiMarkers = () => {
-    poiLayer.clearLayers();
+    clearSelectedPoiMarkers();
+    poiRegistry.clear();
     codes.forEach(code => {
       const trail = trails[code];
-      const pois = [...trail.notes, ...trail.photos, ...trail.videos];
-      pois.forEach(poi => {
-        if (typeof poi.lat !== 'number' || typeof poi.lng !== 'number') return;
-        const icon = L.divIcon({ className: 'trail-poi-marker-wrap', html: `<div class="trail-poi-marker" title="${escapeHtml(poiLabel(poi.category))}">${poiEmoji(poi.category)}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] });
-        const marker = L.marker([poi.lat, poi.lng], { icon }).addTo(poiLayer);
-        marker.bindPopup(`<div class="poi-popup"><strong>${escapeHtml(poi.title ?? poiLabel(poi.category))}</strong><div>${escapeHtml(poiLabel(poi.category))} · ${escapeHtml(code)}</div>${poi.text ? `<p>${escapeHtml(poi.text)}</p>` : ''}</div>`);
-        marker.on('click', () => selectTrail(code, false));
-      });
+      trail.notes.forEach((poi, index) => poiRegistry.set(poiKey(code, 'note', index, poi), { code, poi }));
+      trail.photos.forEach((poi, index) => poiRegistry.set(poiKey(code, 'photo', index, poi), { code, poi }));
+      trail.videos.forEach((poi, index) => poiRegistry.set(poiKey(code, 'video', index, poi), { code, poi }));
     });
   };
 

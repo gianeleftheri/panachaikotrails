@@ -139,8 +139,8 @@ if (app) {
     selectionPulseTimers.forEach(timer => window.clearTimeout(timer));
     selectionPulseTimers = [];
 
-    // Επτά εναλλαγές ανά 200 ms: συνολικά περίπου 1,4 δευτερόλεπτα.
-    for (let step = 0; step < 7; step += 1) {
+    // Δεκαέξι βήματα ανά 200 ms: τελική σταθεροποίηση στα 3 δευτερόλεπτα.
+    for (let step = 0; step < 16; step += 1) {
       const timer = window.setTimeout(() => {
         if (selectedCode !== code) return;
         const dimmed = step % 2 === 0;
@@ -148,7 +148,7 @@ if (app) {
           opacity: dimmed ? .22 : 1,
           weight: dimmed ? 4 : 8
         }));
-        if (step === 6) setTrailStyle(code, true);
+        if (step === 15) setTrailStyle(code, true);
       }, step * 200);
       selectionPulseTimers.push(timer);
     }

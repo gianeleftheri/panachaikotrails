@@ -76,7 +76,7 @@ final class Panachaiko_Trails_Admin_UI {
         $confirm = (string) wp_unslash( $_POST['pt_password_confirm'] ?? '' );
         $consent = isset( $_POST['pt_terms'] );
 
-        if ( mb_strlen( $name ) < 3 || ! is_email( $email ) || strlen( $phone ) < 10 || strlen( $password ) < 10 || $password !== $confirm || ! $consent ) {
+        if ( strlen( $name ) < 3 || ! is_email( $email ) || strlen( $phone ) < 10 || strlen( $password ) < 10 || $password !== $confirm || ! $consent ) {
             wp_safe_redirect( self::submission_url( array( 'pt_status' => 'invalid' ) ) ); exit;
         }
         if ( email_exists( $email ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'email_exists' ) ) ); exit; }
@@ -155,7 +155,7 @@ final class Panachaiko_Trails_Admin_UI {
                 $ele_nodes = $point->xpath( './*[local-name()="ele"]' );
                 if ( is_array( $ele_nodes ) && isset( $ele_nodes[0] ) && is_numeric( (string) $ele_nodes[0] ) ) {
                     $ele = (float) $ele_nodes[0]; $min_ele = null === $min_ele ? $ele : min( $min_ele, $ele ); $max_ele = null === $max_ele ? $ele : max( $max_ele, $ele );
-                    if ( null !== $previous_ele ) { $delta = $ele - $previous_ele; $delta >= 0 ? $gain += $delta : $loss += abs( $delta ); }
+                    if ( null !== $previous_ele ) { $delta = $ele - $previous_ele; if ( $delta >= 0 ) { $gain += $delta; } else { $loss += abs( $delta ); } }
                     $previous_ele = $ele;
                 }
             }
@@ -180,7 +180,7 @@ final class Panachaiko_Trails_Admin_UI {
         $start_label = sanitize_text_field( wp_unslash( $_POST['pt_start_label'] ?? '' ) );
         $end_label = sanitize_text_field( wp_unslash( $_POST['pt_end_label'] ?? '' ) );
         $file = $_FILES['pt_gpx'] ?? null;
-        if ( mb_strlen( $title ) < 3 || mb_strlen( $description ) < 20 || ! is_array( $file ) || UPLOAD_ERR_OK !== (int) ( $file['error'] ?? UPLOAD_ERR_NO_FILE ) ) {
+        if ( strlen( $title ) < 3 || strlen( $description ) < 20 || ! is_array( $file ) || UPLOAD_ERR_OK !== (int) ( $file['error'] ?? UPLOAD_ERR_NO_FILE ) ) {
             wp_safe_redirect( self::submission_url( array( 'pt_status' => 'trail_invalid' ) ) ); exit;
         }
         if ( (int) ( $file['size'] ?? 0 ) > 5 * MB_IN_BYTES || 'gpx' !== strtolower( pathinfo( sanitize_file_name( (string) ( $file['name'] ?? '' ) ), PATHINFO_EXTENSION ) ) ) {

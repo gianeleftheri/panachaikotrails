@@ -1,0 +1,28 @@
+name: Package Panachaiko Admin UI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'wordpress/panachaiko-trails-admin-ui/**'
+      - '.github/workflows/package-admin-ui.yml'
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax check
+        run: php -l wordpress/panachaiko-trails-admin-ui/panachaiko-trails-admin-ui.php
+      - name: Build plugin ZIP
+        run: |
+          cd wordpress
+          zip -r ../panachaiko-trails-admin-ui.zip panachaiko-trails-admin-ui -x '*/README.md'
+      - name: Upload plugin ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: panachaiko-trails-admin-ui
+          path: panachaiko-trails-admin-ui.zip
+          if-no-files-found: error

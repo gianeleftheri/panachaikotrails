@@ -1,19 +1,16 @@
 <?php
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
- * Description: Branded CMS landing and WordPress dashboard without modifying WordPress core or the Panachaiko data plugin.
- * Version: 0.1.0
+ * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
+ * Version: 0.2.0
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
  */
-
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
-}
+if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.1.0';
+    private const VERSION = '0.2.0';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -22,88 +19,110 @@ final class Panachaiko_Trails_Admin_UI {
         add_action( 'login_enqueue_scripts', array( __CLASS__, 'login_assets' ) );
         add_action( 'template_redirect', array( __CLASS__, 'cms_home' ) );
     }
-
     private static function url( string $file ): string {
         return plugin_dir_url( __FILE__ ) . 'assets/' . $file;
     }
-
     private static function hero(): string {
         return self::url( file_exists( plugin_dir_path( __FILE__ ) . 'assets/hero-panachaiko.webp' ) ? 'hero-panachaiko.webp' : 'hero-panachaiko.svg' );
     }
-
     public static function register_menu(): void {
         add_menu_page( 'Panachaiko Trails', 'Panachaiko Trails', 'edit_posts', self::PAGE, array( __CLASS__, 'render_dashboard' ), 'dashicons-location-alt', 2 );
     }
-
     public static function admin_assets(): void {
         wp_enqueue_style( 'panachaiko-admin-ui', self::url( 'admin.css' ), array(), self::VERSION );
-        // Pass the hero URL through WordPress escaping, never through unsanitized input.
-        wp_add_inline_style( 'panachaiko-admin-ui', '.pt-hero,.pt-private-visual{background-image:url("' . esc_url( self::hero() ) . '")}' );
+        wp_add_inline_style( 'panachaiko-admin-ui', '.pt-hero{background-image:url("' . esc_url( self::hero() ) . '")}' );
     }
-
     public static function login_assets(): void {
         wp_enqueue_style( 'panachaiko-admin-ui-login', self::url( 'admin.css' ), array(), self::VERSION );
     }
 
+    /** Only published trail metadata. Never insert made-up elevation or demo statistics. */
+    private static function trail_metrics(): array {
+        $ids = post_type_exists( 'trail' ) ? get_posts( array(
+            'post_type' => 'trail', 'post_status' => 'publish', 'posts_per_page' => -1,
+            'fields' => 'ids', 'no_found_rows' => true,
+        ) ) : array();
+        $length = 0.0;
+        $gain = 0.0;
+        $highest = null;
+        $has_length = false;
+        $has_gain = false;
+        foreach ( $ids as $id ) {
+            $km = get_post_meta( $id, 'length_km', true );
+            $elevation = get_post_meta( $id, 'elev_max', true );
+            $climb = get_post_meta( $id, 'gain_m', true );
+            if ( is_numeric( $km ) && (float) $km >= 0 ) { $length += (float) $km; $has_length = true; }
+            if ( is_numeric( $elevation ) && (float) $elevation >= 0 ) {
+                $highest = null === $highest ? (float) $elevation : max( $highest, (float) $elevation );
+            }
+            if ( is_numeric( $climb ) && (float) $climb >= 0 ) { $gain += (float) $climb; $has_gain = true; }
+        }
+        return array( 'routes' => count( $ids ), 'length' => $has_length ? $length : null,
+            'highest' => $highest, 'gain' => $has_gain ? $gain : null );
+    }
+    private static function render_trail_metrics( array $data ): void {
+        $items = array(
+            array( 'ΔΗΜΟΣΙΕΥΜΕΝΕΣ ΔΙΑΔΡΟΜΕΣ', number_format_i18n( $data['routes'] ), 'μονοπάτια' ),
+            array( 'ΣΥΝΟΛΙΚΗ ΑΠΟΣΤΑΣΗ', null === $data['length'] ? '—' : number_format_i18n( $data['length'], 1 ), 'χλμ.' ),
+            array( 'ΜΕΓΙΣΤΟ ΥΨΟΜΕΤΡΟ ΔΙΑΔΡΟΜΩΝ', null === $data['highest'] ? '—' : number_format_i18n( $data['highest'] ), 'μ.' ),
+            array( 'ΣΥΝΟΛΙΚΗ ΑΝΑΒΑΣΗ', null === $data['gain'] ? '—' : number_format_i18n( $data['gain'] ), 'μ.' ),
+        );
+        ?>
+        <section class="pt-hero-metrics" aria-label="Στοιχεία δημοσιευμένων διαδρομών">
+          <?php foreach ( $items as $item ) : ?>
+            <div class="pt-hero-metric">
+              <span class="pt-hero-metric-label"><?php echo esc_html( $item[0] ); ?></span>
+              <div class="pt-hero-metric-line"><strong><?php echo esc_html( $item[1] ); ?></strong><span><?php echo esc_html( $item[2] ); ?></span></div>
+            </div>
+          <?php endforeach; ?>
+        </section>
+        <?php
+    }
+
     public static function cms_home(): void {
-        // Only the CMS subdomain is affected; the public Astro website remains untouched.
-        if ( 'cms.panachaikotrails.gr' !== strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) ) || ! is_front_page() || is_admin() ) {
-            return;
-        }
+        // Restricted to the CMS host; the public Astro website and WP REST routes are untouched.
+        if ( 'cms.panachaikotrails.gr' !== strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) ) || ! is_front_page() || is_admin() ) { return; }
         if ( is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
-            wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE ) );
-            exit;
+            wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE ) ); exit;
         }
-        if ( is_user_logged_in() ) {
-            return;
-        }
-        status_header( 200 );
-        nocache_headers();
+        if ( is_user_logged_in() ) { return; }
+        status_header( 200 ); nocache_headers();
         $login = wp_login_url( admin_url( 'admin.php?page=' . self::PAGE ) );
         $public = 'https://panachaikotrails.gr/';
         $hero = self::hero();
+        $metrics = self::trail_metrics();
         ?>
-        <!doctype html>
-        <html <?php language_attributes(); ?>>
-        <head>
-            <meta charset="<?php bloginfo( 'charset' ); ?>">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <meta name="robots" content="noindex,nofollow">
-            <title><?php echo esc_html( 'Panachaiko Trails — Ιδιωτικό CMS' ); ?></title>
-            <?php wp_head(); ?>
-            <link rel="stylesheet" href="<?php echo esc_url( self::url( 'admin.css' ) ); ?>">
-        </head>
-        <body class="pt-private">
+        <!doctype html><html <?php language_attributes(); ?>><head>
+          <meta charset="<?php bloginfo( 'charset' ); ?>"><meta name="viewport" content="width=device-width, initial-scale=1">
+          <meta name="robots" content="noindex,nofollow"><title>Panachaiko Trails — Ιδιωτικό CMS</title>
+          <?php wp_head(); ?><link rel="stylesheet" href="<?php echo esc_url( self::url( 'admin.css' ) ); ?>">
+        </head><body class="pt-private">
           <main class="pt-private-card">
-            <div class="pt-private-visual" style="background-image:url('<?php echo esc_url( $hero ); ?>')"></div>
+            <div class="pt-private-visual" style="background-image:url('<?php echo esc_url( $hero ); ?>')" aria-hidden="true"></div>
             <div class="pt-private-body">
-              <span class="pt-eyebrow">PANACHAIKO TRAILS · CONTENT MANAGEMENT</span>
-              <h1>Μονοπάτια Παναχαϊκού</h1>
-              <p>Ιδιωτικό περιβάλλον διαχείρισης διαδρομών, ιστοριών και υλικού.</p>
+              <span class="pt-eyebrow">PANACHAIKO TRAILS / CONTENT MANAGEMENT</span>
+              <h1><span>ΠΑΝΑΧΑΪΚΟ</span><em>TRAILS</em></h1>
+              <p>Το βουνό, οι διαδρομές και οι ιστορίες του. Ιδιωτικό περιβάλλον διαχείρισης.</p>
               <div class="pt-private-actions">
                 <a class="pt-button" href="<?php echo esc_url( $login ); ?>">Είσοδος στη διαχείριση →</a>
                 <a class="pt-link" href="<?php echo esc_url( $public ); ?>">Κύρια ιστοσελίδα ↗</a>
               </div>
             </div>
-          </main>
-          <?php wp_footer(); ?>
-        </body>
-        </html>
+            <?php self::render_trail_metrics( $metrics ); ?>
+          </main><?php wp_footer(); ?>
+        </body></html>
         <?php
         exit;
     }
-
     private static function count( string $type, string $status ): int {
         $counts = wp_count_posts( $type );
         return isset( $counts->$status ) ? (int) $counts->$status : 0;
     }
-
     public static function render_dashboard(): void {
-        if ( ! current_user_can( 'edit_posts' ) ) {
-            wp_die( esc_html__( 'Δεν έχετε δικαίωμα πρόσβασης.' ) );
-        }
+        if ( ! current_user_can( 'edit_posts' ) ) { wp_die( esc_html__( 'Δεν έχετε δικαίωμα πρόσβασης.' ) ); }
         $recent = get_posts( array( 'post_type' => 'post', 'post_status' => array( 'publish', 'draft' ), 'numberposts' => 4, 'orderby' => 'modified', 'order' => 'DESC' ) );
         $routes = get_posts( array( 'post_type' => 'trail', 'post_status' => array( 'publish', 'draft' ), 'numberposts' => 3, 'orderby' => 'modified', 'order' => 'DESC' ) );
+        $metrics = self::trail_metrics();
         $cards = array(
             array( 'Δημοσιευμένα άρθρα', self::count( 'post', 'publish' ), 'dashicons-media-document' ),
             array( 'Διαδρομές', self::count( 'trail', 'publish' ) + self::count( 'trail', 'draft' ), 'dashicons-location-alt' ),
@@ -113,12 +132,18 @@ final class Panachaiko_Trails_Admin_UI {
         ?>
         <div class="wrap pt-dashboard">
           <header class="pt-hero" role="banner">
-            <div class="pt-hero-copy"><span class="pt-eyebrow">PANACHAIKO TRAILS · CMS</span><h1>Καλώς ήρθατε<br>στο Παναχαϊκό</h1><p>Βουνό. Διαδρομές. Άνθρωποι. Ιστορίες.</p><a class="pt-button" href="<?php echo esc_url( admin_url( 'post-new.php?post_type=trail' ) ); ?>">+ Νέα διαδρομή</a></div>
+            <div class="pt-hero-copy">
+              <span class="pt-eyebrow">PANACHAIKO TRAILS / CONTENT MANAGEMENT</span>
+              <h1><span>ΠΑΝΑΧΑΪΚΟ</span><em>TRAILS</em></h1>
+              <p>Βουνό. Διαδρομές. Άνθρωποι. Ιστορίες.</p>
+              <a class="pt-button" href="<?php echo esc_url( admin_url( 'post-new.php?post_type=trail' ) ); ?>">+ Νέα διαδρομή</a>
+            </div>
+            <?php self::render_trail_metrics( $metrics ); ?>
           </header>
           <section class="pt-stats" aria-label="Σύνοψη περιεχομένου">
-          <?php foreach ( $cards as $card ) : ?>
-            <div class="pt-stat"><span class="dashicons <?php echo esc_attr( $card[2] ); ?>" aria-hidden="true"></span><div><span class="pt-stat-title"><?php echo esc_html( $card[0] ); ?></span><strong><?php echo esc_html( number_format_i18n( $card[1] ) ); ?></strong></div></div>
-          <?php endforeach; ?>
+            <?php foreach ( $cards as $card ) : ?>
+              <div class="pt-stat"><span class="dashicons <?php echo esc_attr( $card[2] ); ?>" aria-hidden="true"></span><div><span class="pt-stat-title"><?php echo esc_html( $card[0] ); ?></span><strong><?php echo esc_html( number_format_i18n( $card[1] ) ); ?></strong></div></div>
+            <?php endforeach; ?>
           </section>
           <div class="pt-grid">
             <section class="pt-panel"><div class="pt-panel-head"><h2>Πρόσφατα άρθρα</h2><a href="<?php echo esc_url( admin_url( 'edit.php' ) ); ?>">Όλα τα άρθρα →</a></div>
@@ -132,11 +157,11 @@ final class Panachaiko_Trails_Admin_UI {
               <?php if ( current_user_can( 'manage_options' ) ) : ?><a href="<?php echo esc_url( admin_url( 'tools.php?page=panachaiko-trails-import' ) ); ?>"><span class="dashicons dashicons-upload"></span> Εισαγωγή διαδρομών <span>→</span></a><?php endif; ?>
             </nav></section>
             <section class="pt-panel pt-routes"><div class="pt-panel-head"><h2>Διαδρομές</h2><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=trail' ) ); ?>">Όλες οι διαδρομές →</a></div>
-              <?php if ( $routes ) : ?><div class="pt-route-list"><?php foreach ( $routes as $route ) : ?><a href="<?php echo esc_url( get_edit_post_link( $route->ID ) ); ?>"><span class="dashicons dashicons-location-alt"></span><span><?php echo esc_html( get_the_title( $route ) ?: '(Χωρίς τίτλο)' ); ?></span><small><?php echo esc_html( 'publish' === $route->post_status ? 'Δημοσιευμένη' : 'Προσχέδιο' ); ?></small></a><?php endforeach; ?></div>
+              <?php if ( $routes ) : ?><div class="pt-route-list"><?php foreach ( $routes as $route ) : ?><a href="<?php echo esc_url( get_edit_post_link( $route->ID ) ); ?>"><span class="dashicons dashicons-location-alt"></span><span><?php echo esc_html( get_the_title( $route ) ?: '(Χωρίς τίτλο)' ); ?></span><small><?php echo esc_html( 'publish' === $route->post_status ? 'Δημοσιευμένη' : 'Προσχέδιο' ); ?><?php $km = get_post_meta( $route->ID, 'length_km', true ); $elevation = get_post_meta( $route->ID, 'elev_max', true ); if ( is_numeric( $km ) ) : ?> · <?php echo esc_html( number_format_i18n( (float) $km, 1 ) ); ?> χλμ.<?php endif; ?><?php if ( is_numeric( $elevation ) ) : ?> · υψ. <?php echo esc_html( number_format_i18n( (float) $elevation ) ); ?> μ.<?php endif; ?></small></a><?php endforeach; ?></div>
               <?php else : ?><p class="pt-empty">Δεν έχουν προστεθεί ακόμη διαδρομές. <a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=trail' ) ); ?>">Προσθήκη διαδρομής</a></p><?php endif; ?>
             </section>
           </div>
-          <p class="pt-note">Τα στατιστικά προέρχονται από τις πραγματικές εγγραφές WordPress. Δεν εμφανίζονται πλασματικά δεδομένα επισκεψιμότητας.</p>
+          <p class="pt-note">Μήκος, υψόμετρο και ανάβαση προέρχονται από δημοσιευμένες διαδρομές WordPress. Το μέγιστο υψόμετρο διαδρομών δεν είναι κατ’ ανάγκην το υψόμετρο της κορυφής του βουνού.</p>
         </div>
         <?php
     }

@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - run: npm run build
       - name: Run Lighthouse against production build
         uses: treosh/lighthouse-ci-action@v12

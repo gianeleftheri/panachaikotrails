@@ -1,0 +1,68 @@
+name: 3D smoke test
+
+on:
+  push:
+    branches:
+      - perf/lazy-load-3d
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+      - name: Install browser test dependency
+        run: |
+          npm install --no-save playwright
+          npx playwright install chromium
+      - name: Serve production build
+        run: |
+          npx --yes serve dist -l 4173 > /tmp/panachaiko-serve.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/panachaiko-serve.log
+          exit 1
+      - name: Verify lazy-loaded 3D opens
+        run: |
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright';
+
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+          const errors = [];
+          page.on('pageerror', error => errors.push(String(error)));
+          page.on('console', msg => {
+            if (msg.type() === 'error') errors.push(msg.text());
+          });
+
+          await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
+          const button = page.locator('#view3dBtn');
+          await button.waitFor({ state: 'visible' });
+          await button.click();
+
+          await page.locator('#view3dOverlay.open').waitFor({ state: 'visible', timeout: 10000 });
+          await page.locator('#map3d canvas.maplibregl-canvas').waitFor({ state: 'attached', timeout: 15000 });
+          await page.waitForFunction(() => document.getElementById('map3d')?.getAttribute('data-terrain-state') === 'ready', null, { timeout: 20000 });
+
+          const state = await page.locator('#map3d').getAttribute('data-terrain-state');
+          const canvasCount = await page.locator('#map3d canvas.maplibregl-canvas').count();
+          console.log(JSON.stringify({ state, canvasCount, pageErrors: errors }));
+
+          if (state !== 'ready' || canvasCount < 1) {
+            throw new Error('3D did not reach ready state');
+          }
+
+          await browser.close();
+          NODE

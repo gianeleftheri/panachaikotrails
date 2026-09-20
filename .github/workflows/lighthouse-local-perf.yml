@@ -19,10 +19,22 @@ jobs:
           cache: npm
       - run: npm install --no-audit --no-fund
       - run: npm run build
+      - name: Serve production build
+        run: |
+          npx --yes serve dist -l 4173 > /tmp/panachaiko-serve.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/panachaiko-serve.log
+          exit 1
       - name: Run Lighthouse against production build
         uses: treosh/lighthouse-ci-action@v12
         with:
-          staticDistDir: ./dist
+          urls: |
+            http://127.0.0.1:4173/
           uploadArtifacts: true
           temporaryPublicStorage: true
           artifactName: lighthouse-local-perf

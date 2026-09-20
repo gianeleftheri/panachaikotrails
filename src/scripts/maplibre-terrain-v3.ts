@@ -1,0 +1,337 @@
+import './maplibre-worker';
+  import * as maplibregl from 'maplibre-gl';
+  import 'maplibre-gl/dist/maplibre-gl.css';
+  import { getTrailNavigationConfig } from '../data/trail-navigation';
+  import { decodeHtmlEntities } from './text-normalize';
+
+  type Coord = [number, number];
+  type RoutePoint = [number, number];
+  type NavigationPlan = {
+    code: string;
+    name: string;
+    mode: string;
+    points: RoutePoint[];
+    approachPointCount?: number;
+    totalDistanceM: number;
+    approachDistanceM: number;
+    trailDistanceM: number;
+    estimatedSeconds: number;
+  };
+  type TrailShape = {
+    name?: string;
+    color?: string;
+    segments?: Array<Array<[number, number, number?]>>;
+    navigation?: {
+      start: [number, number];
+      end: [number, number];
+      start_label?: string;
+      end_label?: string;
+      direction_verified?: boolean;
+    };
+  };
+  type TrailModule = { key: string; trail: TrailShape };
+  type Runtime = typeof window & { __panachaikoNavigationPlan?: NavigationPlan; __panachaikoTrails?: Record<string, TrailShape> };
+
+  const modules = import.meta.glob<TrailModule>('../data/trails/*.json', { eager: true, import: 'default' });
+  const bundledTrails = Object.values(modules).reduce<Record<string, TrailShape>>((acc, item) => {
+    if (item?.key && item?.trail) acc[item.key] = item.trail;
+    return acc;
+  }, {});
+
+  const runtime = window as Runtime;
+  const overlay = document.getElementById('view3dOverlay');
+  const container = document.getElementById('map3d');
+  const hint = document.getElementById('view3dHint');
+  const title = document.getElementById('view3dTitle');
+  const closeButton = document.getElementById('view3dClose');
+
+  let map: maplibregl.Map | null = null;
+  let styleReady = false;
+  let selectedCode = '';
+  let navigationActive = Boolean(runtime.__panachaikoNavigationPlan);
+  let gpsWatch: number | null = null;
+  let gpsMarker: maplibregl.Marker | null = null;
+  let startMarker: maplibregl.Marker | null = null;
+  let endMarker: maplibregl.Marker | null = null;
+  let lastGps: GeolocationPosition | null = null;
+  let lastPlanSignature = '';
+  let loadTimeout: number | null = null;
+
+  const showLoadError = (message: string) => {
+    if (loadTimeout !== null) window.clearTimeout(loadTimeout);
+    loadTimeout = null;
+    if (hint) hint.textContent = message;
+    container?.setAttribute('data-terrain-state', 'error');
+  };
+
+  const emptyMulti = () => ({type:'Feature' as const,properties:{},geometry:{type:'MultiLineString' as const,coordinates:[] as number[][][]}});
+  const emptyLine = () => ({type:'Feature' as const,properties:{},geometry:{type:'LineString' as const,coordinates:[] as number[][]}});
+
+  const style: maplibregl.StyleSpecification = {
+    version: 8,
+    sources: {
+      satellite: {
+        type:'raster',
+        tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+        tileSize:256,
+        maxzoom:19,
+        attribution:'Imagery © Esri, Maxar, Earthstar Geographics'
+      },
+      labels: {
+        type:'raster',
+        tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],
+        tileSize:256,
+        maxzoom:19,
+        attribution:'Labels © Esri'
+      },
+      terrainSource: {
+        type:'raster-dem',
+        tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+        tileSize:256,
+        maxzoom:15,
+        encoding:'terrarium',
+        attribution:'Elevation © Mapzen / AWS Terrain Tiles'
+      }
+    },
+    layers: [
+      {id:'bg',type:'background',paint:{'background-color':'#07100b'}},
+      {id:'satellite',type:'raster',source:'satellite',paint:{'raster-saturation':-.08,'raster-contrast':.1}},
+      {id:'labels',type:'raster',source:'labels',paint:{'raster-opacity':.78}}
+    ],
+    terrain:{source:'terrainSource',exaggeration:1.35}
+  };
+
+  const trailFor = (code: string): TrailShape | undefined => runtime.__panachaikoTrails?.[code] ?? bundledTrails[code];
+
+  const coordinatesFor = (trail?: TrailShape): Coord[][] => (trail?.segments ?? [])
+    .map(segment => segment
+      .map(([lng,lat]) => [Number(lng),Number(lat)] as Coord)
+      .filter(([lng,lat]) => Number.isFinite(lng) && Number.isFinite(lat)))
+    .filter(segment => segment.length > 1);
+
+  const activeCode = () => {
+    const plan = runtime.__panachaikoNavigationPlan;
+    if (plan?.code) return plan.code;
+    const routeSelect = (document.getElementById('rbTrailSelect') as HTMLSelectElement | null)?.value;
+    if (routeSelect) return routeSelect;
+    const activeRow = document.querySelector<HTMLElement>('.trail-row.active .trail-row-code');
+    if (activeRow?.textContent?.trim()) return activeRow.textContent.trim();
+    return selectedCode;
+  };
+
+  const ensureLayers = () => {
+    if (!map || !styleReady) return;
+    if (!map.getSource('trail3d')) {
+      map.addSource('trail3d',{type:'geojson',data:emptyMulti()});
+      map.addLayer({id:'trail3d-shadow',type:'line',source:'trail3d',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#07100b','line-width':13,'line-opacity':.92}});
+      map.addLayer({id:'trail3d-line',type:'line',source:'trail3d',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#ff6b35','line-width':7,'line-opacity':1}});
+    }
+    if (!map.getSource('route3d')) {
+      map.addSource('route3d',{type:'geojson',data:emptyLine()});
+      map.addLayer({id:'route3d-shadow',type:'line',source:'route3d',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#07100b','line-width':12,'line-opacity':.9}});
+      map.addLayer({id:'route3d-line',type:'line',source:'route3d',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#38bdf8','line-width':6,'line-opacity':1}});
+    }
+  };
+
+  const fit = (segments: Coord[][]) => {
+    if (!map || !segments.length) return;
+    const bounds = new maplibregl.LngLatBounds();
+    segments.flat().forEach(point => bounds.extend(point));
+    if (bounds.isEmpty()) return;
+    map.fitBounds(bounds,{padding:72,maxZoom:14.8,duration:650});
+    window.setTimeout(() => map?.easeTo({pitch:67,bearing:-18,duration:500}),100);
+  };
+
+  const endpoint = (point: Coord, start: boolean) => {
+    const el = document.createElement('div');
+    el.className = `terrain-v3-endpoint ${start?'terrain-v3-start':'terrain-v3-end'}`;
+    el.textContent = start ? 'Α' : 'Τ';
+    return new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(point).addTo(map!);
+  };
+
+  const reportLineHealth = (code: string) => {
+    if (!map || !styleReady || !hint) return;
+    window.setTimeout(() => {
+      if (!map) return;
+      let loaded = false;
+      let rendered = 0;
+      try { loaded = map.isSourceLoaded('trail3d'); } catch {}
+      try { rendered = map.queryRenderedFeatures(undefined,{layers:['trail3d-line']}).length; } catch {}
+      const suffix = loaded && rendered > 0 ? 'γραμμή OK' : 'η γραμμή δεν αποδόθηκε';
+      if (!runtime.__panachaikoNavigationPlan) hint.textContent = `${code} · Α=αρχή · Τ=τέλος · ${suffix}`;
+    },1800);
+  };
+
+  const renderTrail = (code: string, doFit = false) => {
+    if (!map || !styleReady || !code) return;
+    const trail = trailFor(code);
+    const segments = coordinatesFor(trail);
+    const color = trail?.color || '#ff6b35';
+    ensureLayers();
+    (map.getSource('trail3d') as maplibregl.GeoJSONSource | undefined)?.setData({type:'Feature',properties:{},geometry:{type:'MultiLineString',coordinates:segments}});
+    if (map.getLayer('trail3d-line')) map.setPaintProperty('trail3d-line','line-color',color);
+    startMarker?.remove(); endMarker?.remove(); startMarker=null; endMarker=null;
+    const storedNavigation = trail?.navigation;
+    const fallbackConfig = getTrailNavigationConfig(code);
+    const first: Coord | undefined = storedNavigation
+      ? [storedNavigation.start[1], storedNavigation.start[0]]
+      : fallbackConfig ? [fallbackConfig.start[1], fallbackConfig.start[0]] : segments[0]?.[0];
+    const last: Coord | undefined = storedNavigation
+      ? [storedNavigation.end[1], storedNavigation.end[0]]
+      : fallbackConfig ? [fallbackConfig.end[1], fallbackConfig.end[0]] : segments.at(-1)?.at(-1);
+    if (first) startMarker = endpoint(first,true);
+    if (last) endMarker = endpoint(last,false);
+    selectedCode = code;
+    if (title) title.textContent = `3D · ${code}${trail?.name ? ` — ${decodeHtmlEntities(trail.name)}` : ''}`;
+    if (doFit) fit(segments);
+    if (hint) hint.textContent = segments.length ? `${code} · φόρτωση 3D πορείας…` : `Δεν βρέθηκε γεωμετρία για ${code}`;
+    reportLineHealth(code);
+  };
+
+  const routeCoords = (): Coord[] => (runtime.__panachaikoNavigationPlan?.points ?? [])
+    .map(([lat,lng]) => [Number(lng),Number(lat)] as Coord)
+    .filter(([lng,lat]) => Number.isFinite(lng) && Number.isFinite(lat));
+
+  const renderNavigation = (doFit = false) => {
+    if (!map || !styleReady) return;
+    ensureLayers();
+    const plan = runtime.__panachaikoNavigationPlan;
+    const coords = routeCoords();
+    (map.getSource('route3d') as maplibregl.GeoJSONSource | undefined)?.setData({type:'Feature',properties:{},geometry:{type:'LineString',coordinates:coords}});
+    const visible = coords.length > 1 ? 'visible' : 'none';
+    if (map.getLayer('route3d-line')) map.setLayoutProperty('route3d-line','visibility',visible);
+    if (map.getLayer('route3d-shadow')) map.setLayoutProperty('route3d-shadow','visibility',visible);
+
+    // During route preview/live navigation, A and T belong to the computed plan,
+    // not to the arbitrary storage direction of the raw trail MultiLineString.
+    if (plan && coords.length > 1) {
+      const splitIndex = Math.max(0, Math.min(coords.length - 1, (plan.approachPointCount ?? 1) - 1));
+      startMarker?.remove();
+      endMarker?.remove();
+      startMarker = endpoint(coords[splitIndex],true);
+      endMarker = endpoint(coords.at(-1)!,false);
+    }
+
+    if (doFit && coords.length > 1) fit([coords]);
+    if (hint && plan) hint.textContent = `${navigationActive?'LIVE':'Προεπισκόπηση'} · ${plan.code} · μπλε=ολόκληρη πορεία`;
+  };
+
+  const sync = (doFit = false) => {
+    if (!map || !styleReady) return;
+    const code = activeCode();
+    if (code) renderTrail(code,doFit && !runtime.__panachaikoNavigationPlan);
+    renderNavigation(Boolean(doFit && runtime.__panachaikoNavigationPlan));
+    if (lastGps) updateGps(lastGps,false);
+  };
+
+  const initialize = () => {
+    if (!container) return null;
+    if (map) { window.setTimeout(() => map?.resize(),0); return map; }
+
+    if (typeof maplibregl.supported === 'function' && !maplibregl.supported()) {
+      showLoadError('Η συσκευή ή ο browser δεν υποστηρίζει WebGL2. Συνέχισε με τον 2D χάρτη.');
+      return null;
+    }
+
+    container.setAttribute('data-terrain-state', 'loading');
+    if (hint) hint.textContent = 'Φόρτωση MapLibre terrain…';
+    loadTimeout = window.setTimeout(() => {
+      if (!styleReady) showLoadError('Το 3D δεν φορτώθηκε εγκαίρως. Έλεγξε τη σύνδεση ή συνέχισε με τον 2D χάρτη.');
+    }, 12000);
+
+    try {
+      map = new maplibregl.Map({
+        container,
+        style,
+        center:[21.835,38.2],
+        zoom:12,
+        pitch:64,
+        bearing:-20,
+        minZoom:8,
+        maxZoom:18,
+        maxPitch:85,
+        renderWorldCopies:false,
+        canvasContextAttributes:{antialias:true}
+      });
+    } catch (error) {
+      console.warn('MapLibre 3D initialization',error);
+      map = null;
+      showLoadError('Δεν ήταν δυνατή η εκκίνηση του 3D. Συνέχισε με τον 2D χάρτη.');
+      return null;
+    }
+
+    map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-right');
+    map.addControl(new maplibregl.ScaleControl({unit:'metric',maxWidth:110}),'bottom-left');
+    map.on('style.load',()=>{
+      styleReady=true;
+      if (loadTimeout !== null) window.clearTimeout(loadTimeout);
+      loadTimeout=null;
+      container.setAttribute('data-terrain-state', 'ready');
+      ensureLayers();
+      sync(true);
+    });
+    map.on('error',event=>{
+      console.warn('MapLibre 3D',event.error);
+      if (!styleReady) showLoadError('3D: σφάλμα φόρτωσης χάρτη. Συνέχισε με τον 2D χάρτη.');
+    });
+    return map;
+  };
+
+  const updateGps = (position: GeolocationPosition, follow = true) => {
+    lastGps=position;
+    if (!map) return;
+    const point: Coord=[position.coords.longitude,position.coords.latitude];
+    if (!gpsMarker) {
+      const el=document.createElement('div');
+      el.className='terrain-v3-gps';
+      gpsMarker=new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(point).addTo(map);
+    } else gpsMarker.setLngLat(point);
+    if (follow && navigationActive && runtime.__panachaikoNavigationPlan && overlay?.classList.contains('open')) {
+      const heading=Number.isFinite(position.coords.heading ?? NaN) ? Number(position.coords.heading) : map.getBearing();
+      map.easeTo({center:point,zoom:Math.max(map.getZoom(),16),pitch:72,bearing:heading,duration:550});
+    }
+  };
+
+  const startGps = () => {
+    if (gpsWatch !== null || !navigator.geolocation) return;
+    gpsWatch=navigator.geolocation.watchPosition(p=>updateGps(p,true),()=>{}, {enableHighAccuracy:true,maximumAge:3000,timeout:20000});
+  };
+  const stopGps = () => { if (gpsWatch !== null) navigator.geolocation.clearWatch(gpsWatch); gpsWatch=null; };
+
+  export const open3d = () => {
+    overlay?.classList.add('open');
+    initialize();
+    window.setTimeout(()=>{map?.resize();sync(true);startGps();},120);
+    window.setTimeout(()=>{map?.resize();sync(true);},700);
+  };
+
+  closeButton?.addEventListener('click',stopGps);
+  document.getElementById('nav2dBtn')?.addEventListener('click',stopGps);
+
+  document.addEventListener('panachaiko:trails-updated',()=>{ if (styleReady && overlay?.classList.contains('open')) sync(false); });
+
+  document.addEventListener('panachaiko:navigation-start',event=>{
+    navigationActive=true;
+    runtime.__panachaikoNavigationPlan=(event as CustomEvent<NavigationPlan>).detail;
+    if (styleReady) sync(overlay?.classList.contains('open') ?? false);
+  });
+  document.addEventListener('panachaiko:navigation-exit',()=>{
+    navigationActive=false;
+    if (styleReady) sync(false);
+  });
+
+  window.setInterval(()=>{
+    if (!styleReady || !overlay?.classList.contains('open')) return;
+    const plan=runtime.__panachaikoNavigationPlan;
+    const first=plan?.points?.[0];
+    const last=plan?.points?.at(-1);
+    const signature=plan?`${plan.code}|${plan.points.length}|${first?.join(',')}|${last?.join(',')}`:'';
+    if (signature!==lastPlanSignature) {
+      lastPlanSignature=signature;
+      sync(Boolean(plan));
+    }
+  },600);
+
+  document.addEventListener('visibilitychange',()=>{
+    if (document.hidden) stopGps(); else if (overlay?.classList.contains('open')) startGps();
+  });

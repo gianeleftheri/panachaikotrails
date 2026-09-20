@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.3.0
+ * Version: 0.4.0
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,13 +10,14 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.3.0';
+    private const VERSION = '0.4.0';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
         add_action( 'admin_menu', array( __CLASS__, 'register_menu' ) );
         add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_assets' ) );
         add_action( 'login_enqueue_scripts', array( __CLASS__, 'login_assets' ) );
+        add_action( 'admin_post_pt_submit_trail', array( __CLASS__, 'submit_trail' ) );
         add_action( 'admin_post_nopriv_pt_register_account', array( __CLASS__, 'register_account' ) );
         add_action( 'admin_post_nopriv_pt_verify_email', array( __CLASS__, 'verify_email' ) );
         add_action( 'admin_post_pt_verify_email', array( __CLASS__, 'verify_email' ) );
@@ -120,6 +121,96 @@ final class Panachaiko_Trails_Admin_UI {
         exit;
     }
 
+    private static function haversine_km( array $a, array $b ): float {
+        $earth = 6371.0;
+        $lat1 = deg2rad( (float) $a[1] ); $lat2 = deg2rad( (float) $b[1] );
+        $dlat = $lat2 - $lat1; $dlng = deg2rad( (float) $b[0] - (float) $a[0] );
+        $value = sin( $dlat / 2 ) ** 2 + cos( $lat1 ) * cos( $lat2 ) * sin( $dlng / 2 ) ** 2;
+        return 2 * $earth * asin( min( 1.0, sqrt( $value ) ) );
+    }
+
+    private static function parse_gpx( string $path ) {
+        if ( ! function_exists( 'simplexml_load_file' ) ) return new WP_Error( 'pt_gpx_xml', 'Ο διακομιστής δεν υποστηρίζει ανάγνωση GPX.' );
+        libxml_use_internal_errors( true );
+        $xml = simplexml_load_file( $path, 'SimpleXMLElement', LIBXML_NONET );
+        libxml_clear_errors();
+        if ( false === $xml ) return new WP_Error( 'pt_gpx_invalid', 'Το αρχείο GPX δεν είναι έγκυρο.' );
+        $segment_nodes = $xml->xpath( '//*[local-name()="trkseg"]' );
+        if ( ! is_array( $segment_nodes ) || ! $segment_nodes ) return new WP_Error( 'pt_gpx_empty', 'Δεν βρέθηκε καταγεγραμμένη διαδρομή στο GPX.' );
+
+        $segments = array(); $length = 0.0; $min_ele = null; $max_ele = null; $gain = 0.0; $loss = 0.0; $point_count = 0;
+        foreach ( $segment_nodes as $segment_node ) {
+            $point_nodes = $segment_node->xpath( './*[local-name()="trkpt"]' );
+            if ( ! is_array( $point_nodes ) ) continue;
+            $segment = array(); $previous = null; $previous_ele = null;
+            foreach ( $point_nodes as $point ) {
+                if ( ++$point_count > 50000 ) return new WP_Error( 'pt_gpx_points', 'Το GPX περιέχει περισσότερα από 50.000 σημεία.' );
+                $attributes = $point->attributes();
+                $lat = isset( $attributes['lat'] ) ? (float) $attributes['lat'] : 999.0;
+                $lng = isset( $attributes['lon'] ) ? (float) $attributes['lon'] : 999.0;
+                if ( $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180 ) continue;
+                $coordinate = array( round( $lng, 7 ), round( $lat, 7 ) );
+                if ( null !== $previous ) $length += self::haversine_km( $previous, $coordinate );
+                $segment[] = $coordinate; $previous = $coordinate;
+                $ele_nodes = $point->xpath( './*[local-name()="ele"]' );
+                if ( is_array( $ele_nodes ) && isset( $ele_nodes[0] ) && is_numeric( (string) $ele_nodes[0] ) ) {
+                    $ele = (float) $ele_nodes[0]; $min_ele = null === $min_ele ? $ele : min( $min_ele, $ele ); $max_ele = null === $max_ele ? $ele : max( $max_ele, $ele );
+                    if ( null !== $previous_ele ) { $delta = $ele - $previous_ele; $delta >= 0 ? $gain += $delta : $loss += abs( $delta ); }
+                    $previous_ele = $ele;
+                }
+            }
+            if ( count( $segment ) >= 2 ) $segments[] = $segment;
+        }
+        if ( ! $segments ) return new WP_Error( 'pt_gpx_empty', 'Το GPX δεν περιέχει αρκετά έγκυρα σημεία.' );
+        $first = $segments[0][0]; $last_segment = $segments[ count( $segments ) - 1 ]; $last = $last_segment[ count( $last_segment ) - 1 ];
+        return array( 'geometry' => array( 'type' => 'MultiLineString', 'coordinates' => $segments ), 'length' => $length, 'min_ele' => $min_ele, 'max_ele' => $max_ele, 'gain' => $gain, 'loss' => $loss, 'start' => $first, 'end' => $last );
+    }
+
+    public static function submit_trail(): void {
+        if ( ! is_user_logged_in() || ! current_user_can( 'read' ) ) { auth_redirect(); }
+        check_admin_referer( 'pt_submit_trail' );
+        $user_id = get_current_user_id();
+        if ( ! current_user_can( 'edit_posts' ) && '1' !== (string) get_user_meta( $user_id, 'pt_email_verified', true ) ) {
+            wp_safe_redirect( self::submission_url( array( 'pt_status' => 'email_required' ) ) ); exit;
+        }
+        $rate_key = 'pt_trail_submit_' . $user_id;
+        if ( get_transient( $rate_key ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'trail_rate_limited' ) ) ); exit; }
+        $title = sanitize_text_field( wp_unslash( $_POST['pt_trail_title'] ?? '' ) );
+        $description = sanitize_textarea_field( wp_unslash( $_POST['pt_trail_description'] ?? '' ) );
+        $start_label = sanitize_text_field( wp_unslash( $_POST['pt_start_label'] ?? '' ) );
+        $end_label = sanitize_text_field( wp_unslash( $_POST['pt_end_label'] ?? '' ) );
+        $file = $_FILES['pt_gpx'] ?? null;
+        if ( mb_strlen( $title ) < 3 || mb_strlen( $description ) < 20 || ! is_array( $file ) || UPLOAD_ERR_OK !== (int) ( $file['error'] ?? UPLOAD_ERR_NO_FILE ) ) {
+            wp_safe_redirect( self::submission_url( array( 'pt_status' => 'trail_invalid' ) ) ); exit;
+        }
+        if ( (int) ( $file['size'] ?? 0 ) > 5 * MB_IN_BYTES || 'gpx' !== strtolower( pathinfo( sanitize_file_name( (string) ( $file['name'] ?? '' ) ), PATHINFO_EXTENSION ) ) ) {
+            wp_safe_redirect( self::submission_url( array( 'pt_status' => 'gpx_invalid' ) ) ); exit;
+        }
+        $parsed = self::parse_gpx( (string) $file['tmp_name'] );
+        if ( is_wp_error( $parsed ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'gpx_invalid' ) ) ); exit; }
+
+        $post_id = wp_insert_post( array( 'post_type' => 'trail', 'post_status' => 'pending', 'post_title' => $title, 'post_content' => $description, 'post_author' => $user_id ), true );
+        if ( is_wp_error( $post_id ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'trail_failed' ) ) ); exit; }
+        update_post_meta( $post_id, 'trail_stage', 'investigation' );
+        update_post_meta( $post_id, 'trail_color', '#9c917c' );
+        update_post_meta( $post_id, 'geometry_json', wp_json_encode( $parsed['geometry'], JSON_UNESCAPED_SLASHES ) );
+        update_post_meta( $post_id, 'length_km', round( $parsed['length'], 2 ) );
+        if ( null !== $parsed['min_ele'] ) update_post_meta( $post_id, 'elev_min', round( $parsed['min_ele'] ) );
+        if ( null !== $parsed['max_ele'] ) update_post_meta( $post_id, 'elev_max', round( $parsed['max_ele'] ) );
+        update_post_meta( $post_id, 'gain_m', round( $parsed['gain'] ) );
+        update_post_meta( $post_id, 'loss_m', round( $parsed['loss'] ) );
+        update_post_meta( $post_id, 'start_lat', $parsed['start'][1] ); update_post_meta( $post_id, 'start_lng', $parsed['start'][0] );
+        update_post_meta( $post_id, 'end_lat', $parsed['end'][1] ); update_post_meta( $post_id, 'end_lng', $parsed['end'][0] );
+        update_post_meta( $post_id, 'start_label', $start_label ); update_post_meta( $post_id, 'end_label', $end_label );
+        update_post_meta( $post_id, 'direction_verified', 0 );
+        update_post_meta( $post_id, 'data_source', 'Υποβολή χρήστη (GPX)' );
+        update_post_meta( $post_id, 'submission_source', 'user_trail' );
+        update_post_meta( $post_id, 'submitted_at', current_time( 'mysql', true ) );
+        set_transient( $rate_key, 1, 5 * MINUTE_IN_SECONDS );
+        wp_safe_redirect( self::submission_url( array( 'pt_status' => 'trail_submitted' ) ) );
+        exit;
+    }
+
     private static function render_submission_portal(): void {
         $status = sanitize_key( wp_unslash( $_GET['pt_status'] ?? '' ) );
         $messages = array(
@@ -132,6 +223,12 @@ final class Panachaiko_Trails_Admin_UI {
             'mail_failed' => array( 'warn', 'Ο λογαριασμός δημιουργήθηκε, αλλά δεν στάλθηκε email. Επικοινωνήστε με τον διαχειριστή.' ),
             'verification_invalid' => array( 'warn', 'Ο σύνδεσμος επιβεβαίωσης δεν είναι έγκυρος ή έχει λήξει.' ),
             'failed' => array( 'warn', 'Η εγγραφή δεν ολοκληρώθηκε. Δοκιμάστε ξανά.' ),
+            'email_required' => array( 'warn', 'Επιβεβαιώστε πρώτα το email σας για να υποβάλετε μονοπάτι.' ),
+            'trail_invalid' => array( 'warn', 'Συμπληρώστε τίτλο, περιγραφή τουλάχιστον 20 χαρακτήρων και επιλέξτε GPX.' ),
+            'gpx_invalid' => array( 'warn', 'Το αρχείο GPX δεν είναι έγκυρο ή είναι μεγαλύτερο από 5 MB.' ),
+            'trail_failed' => array( 'warn', 'Η διαδρομή δεν αποθηκεύτηκε. Δοκιμάστε ξανά.' ),
+            'trail_rate_limited' => array( 'warn', 'Περιμένετε πέντε λεπτά πριν από νέα υποβολή.' ),
+            'trail_submitted' => array( 'ok', 'Η διαδρομή υποβλήθηκε και περιμένει έλεγχο από τον διαχειριστή.' ),
         );
         $login = wp_login_url( self::submission_url( array( 'pt_status' => 'signed_in' ) ) );
         $hero = self::hero();
@@ -148,8 +245,21 @@ final class Panachaiko_Trails_Admin_UI {
               <a class="pt-account-back" href="https://panachaikotrails.gr/">← Επιστροφή στον χάρτη</a>
               <span class="pt-eyebrow">PANACHAIKO TRAILS</span><h1>Πρόσθεσε μονοπάτι</h1><p>Μοιράσου τη διαδρομή σου.</p>
               <?php if ( isset( $messages[ $status ] ) ) : ?><div class="pt-account-message pt-account-<?php echo esc_attr( $messages[ $status ][0] ); ?>"><?php echo esc_html( $messages[ $status ][1] ); ?></div><?php endif; ?>
-              <?php if ( is_user_logged_in() ) : ?>
-                <div class="pt-signed-in"><strong>Ο λογαριασμός σας είναι συνδεδεμένος.</strong><p>Στο επόμενο βήμα θα προστεθεί η φόρμα καταχώρισης της διαδρομής.</p></div>
+              <?php if ( is_user_logged_in() ) : $current_user = wp_get_current_user(); $can_submit = current_user_can( 'edit_posts' ) || '1' === (string) get_user_meta( $current_user->ID, 'pt_email_verified', true ); ?>
+                <div class="pt-signed-in"><strong>Συνδεδεμένος ως <?php echo esc_html( $current_user->display_name ); ?></strong><p>Η διαδρομή σας θα δημοσιευτεί μόνο μετά τον έλεγχο του διαχειριστή.</p></div>
+                <?php if ( $can_submit ) : ?>
+                  <form class="pt-register-form pt-trail-form" method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+                    <input type="hidden" name="action" value="pt_submit_trail"><?php wp_nonce_field( 'pt_submit_trail' ); ?>
+                    <label>Όνομα μονοπατιού<input type="text" name="pt_trail_title" minlength="3" maxlength="120" required></label>
+                    <label>Σύντομη περιγραφή<textarea name="pt_trail_description" minlength="20" maxlength="3000" rows="5" placeholder="Περιγράψτε πού βρίσκεται, τη δυσκολία και ό,τι πρέπει να γνωρίζει ο πεζοπόρος." required></textarea></label>
+                    <div class="pt-register-row"><label>Αφετηρία<input type="text" name="pt_start_label" maxlength="100" placeholder="π.χ. Άνω Καστρίτσι"></label><label>Τερματισμός<input type="text" name="pt_end_label" maxlength="100" placeholder="π.χ. Καταφύγιο"></label></div>
+                    <label class="pt-gpx-upload">Αρχείο διαδρομής GPX<input type="file" name="pt_gpx" accept=".gpx,application/gpx+xml" required><small>Ανεβάστε το αρχείο από το κινητό ή το GPS σας. Μέγιστο μέγεθος 5 MB.</small></label>
+                    <div class="pt-calculation-note">Μήκος, υψόμετρα, ανάβαση, κατάβαση και σημεία Α→Τ θα υπολογιστούν αυτόματα από το GPX.</div>
+                    <button class="pt-button" type="submit">Αποστολή για έλεγχο</button>
+                  </form>
+                  <?php $my_trails = get_posts( array( 'post_type' => 'trail', 'post_status' => array( 'pending','draft','publish','trash' ), 'author' => $current_user->ID, 'posts_per_page' => 20, 'meta_key' => 'submission_source', 'meta_value' => 'user_trail', 'orderby' => 'date', 'order' => 'DESC' ) ); ?>
+                  <?php if ( $my_trails ) : ?><section class="pt-my-trails"><h2>Οι υποβολές μου</h2><?php foreach ( $my_trails as $my_trail ) : $status_labels = array( 'pending'=>'Υπό έλεγχο','draft'=>'Χρειάζεται επεξεργασία','publish'=>'Εγκρίθηκε','trash'=>'Απορρίφθηκε' ); ?><div><strong><?php echo esc_html( get_the_title( $my_trail ) ); ?></strong><span class="pt-trail-status pt-status-<?php echo esc_attr( $my_trail->post_status ); ?>"><?php echo esc_html( $status_labels[ $my_trail->post_status ] ?? $my_trail->post_status ); ?></span></div><?php endforeach; ?></section><?php endif; ?>
+                <?php else : ?><div class="pt-account-message pt-account-warn">Επιβεβαιώστε το email σας πριν από την πρώτη υποβολή.</div><?php endif; ?>
               <?php else : ?>
                 <div class="pt-auth-choice"><a class="pt-button" href="<?php echo esc_url( $login ); ?>">Σύνδεση</a><span>ή δημιουργήστε λογαριασμό</span></div>
                 <form class="pt-register-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">

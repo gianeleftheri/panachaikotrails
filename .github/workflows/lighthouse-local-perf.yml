@@ -1,0 +1,28 @@
+name: Lighthouse local performance audit
+
+on:
+  push:
+    branches:
+      - perf/lazy-load-3d
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Run Lighthouse against production build
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          staticDistDir: ./dist
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          artifactName: lighthouse-local-perf

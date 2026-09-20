@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.4.0
+ * Version: 0.5.0
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.4.0';
+    private const VERSION = '0.5.0';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -166,6 +166,32 @@ final class Panachaiko_Trails_Admin_UI {
         return array( 'geometry' => array( 'type' => 'MultiLineString', 'coordinates' => $segments ), 'length' => $length, 'min_ele' => $min_ele, 'max_ele' => $max_ele, 'gain' => $gain, 'loss' => $loss, 'start' => $first, 'end' => $last );
     }
 
+    private static function parse_drawn_geometry( string $json ) {
+        if ( '' === $json || strlen( $json ) > 500000 ) return new WP_Error( 'pt_draw_invalid', 'Η σχεδιασμένη διαδρομή δεν είναι έγκυρη.' );
+        $decoded = json_decode( $json, true );
+        if ( ! is_array( $decoded ) || 'MultiLineString' !== ( $decoded['type'] ?? '' ) || ! is_array( $decoded['coordinates'] ?? null ) ) {
+            return new WP_Error( 'pt_draw_invalid', 'Η σχεδιασμένη διαδρομή δεν είναι έγκυρη.' );
+        }
+        $segments = array(); $length = 0.0; $point_count = 0;
+        foreach ( $decoded['coordinates'] as $raw_segment ) {
+            if ( ! is_array( $raw_segment ) ) continue;
+            $segment = array(); $previous = null;
+            foreach ( $raw_segment as $raw_point ) {
+                if ( ++$point_count > 5000 ) return new WP_Error( 'pt_draw_points', 'Η σχεδιασμένη διαδρομή έχει υπερβολικά πολλά σημεία.' );
+                if ( ! is_array( $raw_point ) || count( $raw_point ) < 2 || ! is_numeric( $raw_point[0] ) || ! is_numeric( $raw_point[1] ) ) continue;
+                $lng = (float) $raw_point[0]; $lat = (float) $raw_point[1];
+                if ( $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180 ) continue;
+                $coordinate = array( round( $lng, 7 ), round( $lat, 7 ) );
+                if ( null !== $previous ) $length += self::haversine_km( $previous, $coordinate );
+                $segment[] = $coordinate; $previous = $coordinate;
+            }
+            if ( count( $segment ) >= 2 ) $segments[] = $segment;
+        }
+        if ( ! $segments || $length <= 0 ) return new WP_Error( 'pt_draw_empty', 'Τοποθετήστε τουλάχιστον δύο διαφορετικά σημεία στον χάρτη.' );
+        $first = $segments[0][0]; $last_segment = $segments[ count( $segments ) - 1 ]; $last = $last_segment[ count( $last_segment ) - 1 ];
+        return array( 'geometry' => array( 'type' => 'MultiLineString', 'coordinates' => $segments ), 'length' => $length, 'min_ele' => null, 'max_ele' => null, 'gain' => 0.0, 'loss' => 0.0, 'start' => $first, 'end' => $last );
+    }
+
     public static function submit_trail(): void {
         if ( ! is_user_logged_in() || ! current_user_can( 'read' ) ) { auth_redirect(); }
         check_admin_referer( 'pt_submit_trail' );
@@ -179,15 +205,22 @@ final class Panachaiko_Trails_Admin_UI {
         $description = sanitize_textarea_field( wp_unslash( $_POST['pt_trail_description'] ?? '' ) );
         $start_label = sanitize_text_field( wp_unslash( $_POST['pt_start_label'] ?? '' ) );
         $end_label = sanitize_text_field( wp_unslash( $_POST['pt_end_label'] ?? '' ) );
-        $file = $_FILES['pt_gpx'] ?? null;
-        if ( strlen( $title ) < 3 || strlen( $description ) < 20 || ! is_array( $file ) || UPLOAD_ERR_OK !== (int) ( $file['error'] ?? UPLOAD_ERR_NO_FILE ) ) {
+        $method = sanitize_key( wp_unslash( $_POST['pt_route_method'] ?? 'gpx' ) );
+        if ( ! in_array( $method, array( 'gpx', 'draw' ), true ) ) $method = 'gpx';
+        if ( strlen( $title ) < 3 || strlen( $description ) < 20 ) {
             wp_safe_redirect( self::submission_url( array( 'pt_status' => 'trail_invalid' ) ) ); exit;
         }
-        if ( (int) ( $file['size'] ?? 0 ) > 5 * MB_IN_BYTES || 'gpx' !== strtolower( pathinfo( sanitize_file_name( (string) ( $file['name'] ?? '' ) ), PATHINFO_EXTENSION ) ) ) {
-            wp_safe_redirect( self::submission_url( array( 'pt_status' => 'gpx_invalid' ) ) ); exit;
+        if ( 'draw' === $method ) {
+            $parsed = self::parse_drawn_geometry( (string) wp_unslash( $_POST['pt_geometry'] ?? '' ) );
+            if ( is_wp_error( $parsed ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'draw_invalid' ) ) ); exit; }
+        } else {
+            $file = $_FILES['pt_gpx'] ?? null;
+            if ( ! is_array( $file ) || UPLOAD_ERR_OK !== (int) ( $file['error'] ?? UPLOAD_ERR_NO_FILE ) || (int) ( $file['size'] ?? 0 ) > 5 * MB_IN_BYTES || 'gpx' !== strtolower( pathinfo( sanitize_file_name( (string) ( $file['name'] ?? '' ) ), PATHINFO_EXTENSION ) ) ) {
+                wp_safe_redirect( self::submission_url( array( 'pt_status' => 'gpx_invalid' ) ) ); exit;
+            }
+            $parsed = self::parse_gpx( (string) $file['tmp_name'] );
+            if ( is_wp_error( $parsed ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'gpx_invalid' ) ) ); exit; }
         }
-        $parsed = self::parse_gpx( (string) $file['tmp_name'] );
-        if ( is_wp_error( $parsed ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'gpx_invalid' ) ) ); exit; }
 
         $post_id = wp_insert_post( array( 'post_type' => 'trail', 'post_status' => 'pending', 'post_title' => $title, 'post_content' => $description, 'post_author' => $user_id ), true );
         if ( is_wp_error( $post_id ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'trail_failed' ) ) ); exit; }
@@ -203,7 +236,7 @@ final class Panachaiko_Trails_Admin_UI {
         update_post_meta( $post_id, 'end_lat', $parsed['end'][1] ); update_post_meta( $post_id, 'end_lng', $parsed['end'][0] );
         update_post_meta( $post_id, 'start_label', $start_label ); update_post_meta( $post_id, 'end_label', $end_label );
         update_post_meta( $post_id, 'direction_verified', 0 );
-        update_post_meta( $post_id, 'data_source', 'Υποβολή χρήστη (GPX)' );
+        update_post_meta( $post_id, 'data_source', 'Υποβολή χρήστη (' . ( 'draw' === $method ? 'σχεδίαση χάρτη' : 'GPX' ) . ')' );
         update_post_meta( $post_id, 'submission_source', 'user_trail' );
         update_post_meta( $post_id, 'submitted_at', current_time( 'mysql', true ) );
         set_transient( $rate_key, 1, 5 * MINUTE_IN_SECONDS );
@@ -226,6 +259,7 @@ final class Panachaiko_Trails_Admin_UI {
             'email_required' => array( 'warn', 'Επιβεβαιώστε πρώτα το email σας για να υποβάλετε μονοπάτι.' ),
             'trail_invalid' => array( 'warn', 'Συμπληρώστε τίτλο, περιγραφή τουλάχιστον 20 χαρακτήρων και επιλέξτε GPX.' ),
             'gpx_invalid' => array( 'warn', 'Το αρχείο GPX δεν είναι έγκυρο ή είναι μεγαλύτερο από 5 MB.' ),
+            'draw_invalid' => array( 'warn', 'Σχεδιάστε τη διαδρομή τοποθετώντας τουλάχιστον δύο διαφορετικά σημεία.' ),
             'trail_failed' => array( 'warn', 'Η διαδρομή δεν αποθηκεύτηκε. Δοκιμάστε ξανά.' ),
             'trail_rate_limited' => array( 'warn', 'Περιμένετε πέντε λεπτά πριν από νέα υποβολή.' ),
             'trail_submitted' => array( 'ok', 'Η διαδρομή υποβλήθηκε και περιμένει έλεγχο από τον διαχειριστή.' ),
@@ -238,6 +272,7 @@ final class Panachaiko_Trails_Admin_UI {
           <meta charset="<?php bloginfo( 'charset' ); ?>"><meta name="viewport" content="width=device-width,initial-scale=1">
           <meta name="robots" content="noindex,nofollow"><title>Πρόσθεσε μονοπάτι — Panachaiko Trails</title>
           <?php wp_head(); ?><link rel="stylesheet" href="<?php echo esc_url( self::url( 'admin.css' ) ); ?>">
+          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynXoEoWqBq7HnK9hZ5QwMZQ2MZQ8=" crossorigin="">
         </head><body class="pt-private pt-account">
           <main class="pt-account-shell">
             <div class="pt-account-visual" style="background-image:url('<?php echo esc_url( $hero ); ?>')" aria-hidden="true"></div>
@@ -253,8 +288,10 @@ final class Panachaiko_Trails_Admin_UI {
                     <label>Όνομα μονοπατιού<input type="text" name="pt_trail_title" minlength="3" maxlength="120" required></label>
                     <label>Σύντομη περιγραφή<textarea name="pt_trail_description" minlength="20" maxlength="3000" rows="5" placeholder="Περιγράψτε πού βρίσκεται, τη δυσκολία και ό,τι πρέπει να γνωρίζει ο πεζοπόρος." required></textarea></label>
                     <div class="pt-register-row"><label>Αφετηρία<input type="text" name="pt_start_label" maxlength="100" placeholder="π.χ. Άνω Καστρίτσι"></label><label>Τερματισμός<input type="text" name="pt_end_label" maxlength="100" placeholder="π.χ. Καταφύγιο"></label></div>
-                    <label class="pt-gpx-upload">Αρχείο διαδρομής GPX<input type="file" name="pt_gpx" accept=".gpx,application/gpx+xml" required><small>Ανεβάστε το αρχείο από το κινητό ή το GPS σας. Μέγιστο μέγεθος 5 MB.</small></label>
-                    <div class="pt-calculation-note">Μήκος, υψόμετρα, ανάβαση, κατάβαση και σημεία Α→Τ θα υπολογιστούν αυτόματα από το GPX.</div>
+                    <fieldset class="pt-method-picker"><legend>Πώς θέλετε να προσθέσετε τη διαδρομή;</legend><label><input type="radio" name="pt_route_method" value="gpx" checked><span><strong>Ανέβασμα GPX</strong><small>Από κινητό ή συσκευή GPS</small></span></label><label><input type="radio" name="pt_route_method" value="draw"><span><strong>Σχεδίαση στον χάρτη</strong><small>Τοποθετήστε σημεία με ένα πάτημα</small></span></label></fieldset>
+                    <label class="pt-gpx-upload">Αρχείο διαδρομής GPX<input id="ptGpx" type="file" name="pt_gpx" accept=".gpx,application/gpx+xml" required><small>Μέγιστο μέγεθος 5 MB.</small></label>
+                    <section class="pt-draw-panel" id="ptDrawPanel" hidden><div id="ptTrailDrawMap" class="pt-draw-map" aria-label="Χάρτης σχεδίασης διαδρομής"></div><div class="pt-draw-actions"><button id="ptDrawLocate" type="button">◎ Η θέση μου</button><button id="ptDrawUndo" type="button" disabled>↶ Αναίρεση</button><button id="ptDrawClear" type="button" disabled>Καθαρισμός</button></div><p id="ptDrawStatus">Πατήστε τουλάχιστον δύο σημεία στον χάρτη.</p><input id="ptGeometry" type="hidden" name="pt_geometry" value=""></section>
+                    <div class="pt-calculation-note">Οι συντεταγμένες και το μήκος υπολογίζονται αυτόματα. Υψομετρικά στοιχεία υπολογίζονται όταν υπάρχουν μέσα στο GPX.</div>
                     <button class="pt-button" type="submit">Αποστολή για έλεγχο</button>
                   </form>
                   <?php $my_trails = get_posts( array( 'post_type' => 'trail', 'post_status' => array( 'pending','draft','publish','trash' ), 'author' => $current_user->ID, 'posts_per_page' => 20, 'meta_key' => 'submission_source', 'meta_value' => 'user_trail', 'orderby' => 'date', 'order' => 'DESC' ) ); ?>
@@ -274,7 +311,7 @@ final class Panachaiko_Trails_Admin_UI {
                 </form>
               <?php endif; ?>
             </section>
-          </main><?php wp_footer(); ?>
+          </main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script src="<?php echo esc_url( self::url( 'trail-draw.js' ) ); ?>?ver=<?php echo esc_attr( self::VERSION ); ?>"></script><?php wp_footer(); ?>
         </body></html>
         <?php
         exit;

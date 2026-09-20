@@ -43,8 +43,19 @@ if (app) {
   if (!mapElement || !trailList || !trailPanel || !trailDrawer || !tdTabs || !tdTitleBlock || !tdCardBar) throw new Error('Missing trail explorer elements.');
 
   const map = L.map(mapElement, { zoomControl: false }).setView([38.2, 21.835], 12);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Tiles © Esri, Maxar, Earthstar Geographics | Μονοπάτια: ΟΦΥΠΕΚΑ' }).addTo(map);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, opacity: .85 }).addTo(map);
+  const imageryLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Tiles © Esri, Maxar, Earthstar Geographics | Μονοπάτια: ΟΦΥΠΕΚΑ' });
+  // Let imagery finish before labels compete for network and rendering time.
+  imageryLayer.once('load', () => {
+    const addLabels = () => {
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, opacity: .85 }).addTo(map);
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(addLabels, { timeout: 1200 });
+    } else {
+      window.setTimeout(addLabels, 1800);
+    }
+  });
+  imageryLayer.addTo(map);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
 

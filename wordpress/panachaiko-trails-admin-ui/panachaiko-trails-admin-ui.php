@@ -272,7 +272,7 @@ final class Panachaiko_Trails_Admin_UI {
           <meta charset="<?php bloginfo( 'charset' ); ?>"><meta name="viewport" content="width=device-width,initial-scale=1">
           <meta name="robots" content="noindex,nofollow"><title>Πρόσθεσε μονοπάτι — Panachaiko Trails</title>
           <?php wp_head(); ?><link rel="stylesheet" href="<?php echo esc_url( self::url( 'admin.css' ) ); ?>">
-          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynXoEoWqBq7HnK9hZ5QwMZQ2MZQ8=" crossorigin="">
+          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
         </head><body class="pt-private pt-account">
           <main class="pt-account-shell">
             <div class="pt-account-visual" style="background-image:url('<?php echo esc_url( $hero ); ?>')" aria-hidden="true"></div>
@@ -289,7 +289,7 @@ final class Panachaiko_Trails_Admin_UI {
                     <label>Σύντομη περιγραφή<textarea name="pt_trail_description" minlength="20" maxlength="3000" rows="5" placeholder="Περιγράψτε πού βρίσκεται, τη δυσκολία και ό,τι πρέπει να γνωρίζει ο πεζοπόρος." required></textarea></label>
                     <div class="pt-register-row"><label>Αφετηρία<input type="text" name="pt_start_label" maxlength="100" placeholder="π.χ. Άνω Καστρίτσι"></label><label>Τερματισμός<input type="text" name="pt_end_label" maxlength="100" placeholder="π.χ. Καταφύγιο"></label></div>
                     <fieldset class="pt-method-picker"><legend>Πώς θέλετε να προσθέσετε τη διαδρομή;</legend><label><input type="radio" name="pt_route_method" value="gpx" checked><span><strong>Ανέβασμα GPX</strong><small>Από κινητό ή συσκευή GPS</small></span></label><label><input type="radio" name="pt_route_method" value="draw"><span><strong>Σχεδίαση στον χάρτη</strong><small>Τοποθετήστε σημεία με ένα πάτημα</small></span></label></fieldset>
-                    <label class="pt-gpx-upload">Αρχείο διαδρομής GPX<input id="ptGpx" type="file" name="pt_gpx" accept=".gpx,application/gpx+xml" required><small>Μέγιστο μέγεθος 5 MB.</small></label>
+                    <label class="pt-gpx-upload" id="ptGpxPanel">Αρχείο διαδρομής GPX<input id="ptGpx" type="file" name="pt_gpx" accept=".gpx,application/gpx+xml" required><small>Μέγιστο μέγεθος 5 MB.</small></label>
                     <section class="pt-draw-panel" id="ptDrawPanel" hidden><div id="ptTrailDrawMap" class="pt-draw-map" aria-label="Χάρτης σχεδίασης διαδρομής"></div><div class="pt-draw-actions"><button id="ptDrawLocate" type="button">◎ Η θέση μου</button><button id="ptDrawUndo" type="button" disabled>↶ Αναίρεση</button><button id="ptDrawClear" type="button" disabled>Καθαρισμός</button></div><p id="ptDrawStatus">Πατήστε τουλάχιστον δύο σημεία στον χάρτη.</p><input id="ptGeometry" type="hidden" name="pt_geometry" value=""></section>
                     <div class="pt-calculation-note">Οι συντεταγμένες και το μήκος υπολογίζονται αυτόματα. Υψομετρικά στοιχεία υπολογίζονται όταν υπάρχουν μέσα στο GPX.</div>
                     <button class="pt-button" type="submit">Αποστολή για έλεγχο</button>

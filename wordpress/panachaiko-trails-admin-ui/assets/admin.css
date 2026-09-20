@@ -1,0 +1,54 @@
+:root{--pt-blue:#0758de;--pt-navy:#172b45;--pt-orange:#ff601f;--pt-lime:#c0d936;--pt-cream:#fffdfa;--pt-line:#e1e8f4}
+/* Global WordPress chrome: styling only, no replacement of core menus. */
+body.wp-admin #adminmenuback,body.wp-admin #adminmenuwrap,body.wp-admin #adminmenu{background:var(--pt-navy)}
+body.wp-admin #wpadminbar{background:#15283f}
+body.wp-admin #adminmenu .wp-has-current-submenu .wp-submenu,body.wp-admin #adminmenu .wp-submenu{background:#10233b}
+body.wp-admin #adminmenu li.current a.menu-top,body.wp-admin #adminmenu li.wp-has-current-submenu a.wp-has-current-submenu,body.wp-admin #adminmenu li.menu-top:hover,body.wp-admin #adminmenu li.opensub>a.menu-top{background:var(--pt-blue)}
+body.wp-admin #adminmenu .wp-menu-image:before{color:#b4c8e2}
+body.wp-admin #adminmenu li.current .wp-menu-image:before{color:#fff}
+body.wp-admin #adminmenu a:focus,body.wp-admin #adminmenu a:hover{color:#fff}
+.pt-dashboard{font-family:inherit;color:var(--pt-navy);max-width:1700px;margin:18px 20px 24px 0}
+.pt-dashboard *{box-sizing:border-box}
+.pt-hero{background-color:var(--pt-blue);background-position:center center;background-size:cover;border-radius:19px;overflow:hidden;min-height:305px;display:flex;align-items:center;position:relative;isolation:isolate}
+.pt-hero:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,37,110,.86),rgba(5,60,169,.53) 37%,transparent 74%);z-index:-1}
+.pt-hero-copy{padding:36px 42px;max-width:510px;color:#fff;position:relative}
+.pt-eyebrow{display:block;font-size:11px;letter-spacing:.25em;font-weight:800;text-transform:uppercase}
+.pt-hero h1{font-size:clamp(29px,3.1vw,47px);line-height:1.08;letter-spacing:-.035em;color:#fff;margin:12px 0 14px;padding:0;font-weight:800}
+.pt-hero p{color:#fff;font-size:16px;margin:0 0 22px}
+.pt-button{display:inline-flex;align-items:center;justify-content:center;background:var(--pt-orange);border-radius:8px;padding:12px 18px;color:#fff!important;text-decoration:none;font-weight:700;box-shadow:0 7px 18px rgba(12,35,83,.17)}
+.pt-button:hover,.pt-button:focus{background:#e74d0c;color:#fff}
+.pt-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:17px 0}
+.pt-stat{background:white;border:1px solid var(--pt-line);box-shadow:0 2px 11px rgba(27,54,94,.05);border-radius:13px;padding:18px;display:flex;gap:12px;align-items:center;min-width:0}
+.pt-stat>.dashicons{color:var(--pt-blue);font-size:29px;width:34px;height:34px}
+.pt-stat-title{display:block;font-size:13px;line-height:1.4}
+.pt-stat strong{display:block;font-size:27px;line-height:1.2;margin-top:4px}
+.pt-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr);gap:14px;align-items:start}
+.pt-panel{background:#fff;border:1px solid var(--pt-line);border-radius:13px;padding:20px;min-width:0}
+.pt-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--pt-line);padding-bottom:14px}
+.pt-panel h2{margin:0;padding:0;font-size:18px;font-weight:700}
+.pt-panel-head a{color:var(--pt-blue);text-decoration:none;white-space:nowrap;font-weight:600}
+.pt-records{margin:0}.pt-records li{margin:0;padding:13px 0;border-bottom:1px solid var(--pt-line)}.pt-records li:last-child{border-bottom:0}
+.pt-records a{display:block;font-weight:700;text-decoration:none;color:var(--pt-navy);font-size:14px}
+.pt-records small,.pt-route-list small{display:block;color:#627489;margin-top:4px}
+.pt-actions{display:grid;gap:9px;padding-top:13px}.pt-actions a{border:1px solid var(--pt-line);padding:12px;border-radius:9px;text-decoration:none;color:var(--pt-navy);display:flex;align-items:center;gap:10px;font-weight:600}
+.pt-actions a:hover,.pt-route-list a:hover{background:#edf5ff;border-color:#a0c5fe}
+.pt-actions .dashicons{color:var(--pt-blue)}.pt-actions a span:last-child{margin-left:auto}
+.pt-routes{grid-column:1/-1}.pt-route-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:15px}
+.pt-route-list a{border:1px solid var(--pt-line);text-decoration:none;border-radius:10px;padding:15px;color:var(--pt-navy);font-weight:700;min-width:0}
+.pt-route-list .dashicons{display:block;color:var(--pt-orange);margin-bottom:9px}
+.pt-empty{color:#63728a}.pt-note{font-size:12px;color:#61758c;margin:12px 0}
+/* Private CMS landing page – visible only on the CMS root to visitors. */
+body.pt-private{margin:0;min-height:100vh;background:#102945;color:var(--pt-navy);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:grid;place-items:center;padding:25px}
+.pt-private-card{background:var(--pt-cream);border-radius:21px;max-width:1060px;width:100%;overflow:hidden;box-shadow:0 25px 80px rgba(0,0,0,.25)}
+.pt-private-visual{background-color:var(--pt-blue);background-size:cover;background-position:center;min-height:390px}
+.pt-private-body{padding:27px 37px 35px}.pt-private-body .pt-eyebrow{color:#47719b}.pt-private-body h1{font-size:clamp(28px,4vw,44px);line-height:1.15;margin:12px 0}.pt-private-body p{font-size:17px;color:#405a75;margin-bottom:25px}
+.pt-private-actions{display:flex;gap:25px;align-items:center;flex-wrap:wrap}.pt-link{font-weight:700;color:var(--pt-blue);text-decoration:none}
+body.login{background:#102945}
+body.login #login h1 a{background-image:none!important;width:auto!important;height:auto!important;text-indent:0!important;font-size:19px;font-weight:800;color:#fff;display:flex;justify-content:center;align-items:center}
+body.login #login h1 a:after{content:'PANACHAIKO TRAILS'}
+body.login #loginform{border-radius:14px;border:0;box-shadow:0 15px 35px rgba(0,0,0,.22)}
+body.login #nav a,body.login #backtoblog a{color:#fff}
+body.login .button-primary{background:var(--pt-blue);border-color:var(--pt-blue)}
+@media(max-width:1050px){.pt-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.pt-grid{grid-template-columns:1fr}}
+@media(max-width:640px){.pt-dashboard{margin-right:10px}.pt-hero{min-height:260px;background-position:59% center}.pt-hero:before{background:linear-gradient(90deg,rgba(4,37,110,.92),rgba(5,60,169,.25))}.pt-hero-copy{padding:25px}.pt-stats{grid-template-columns:1fr 1fr;gap:8px}.pt-stat{padding:12px}.pt-stat strong{font-size:23px}.pt-route-list{grid-template-columns:1fr}.pt-panel{padding:15px}.pt-private-visual{min-height:235px}.pt-private-body{padding:24px}}
+@media(max-width:420px){.pt-stats{grid-template-columns:1fr}}

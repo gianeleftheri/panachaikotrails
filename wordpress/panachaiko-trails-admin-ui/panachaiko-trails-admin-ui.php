@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.5.0
+ * Version: 0.6.0
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.5.0';
+    private const VERSION = '0.6.0';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -206,11 +206,11 @@ final class Panachaiko_Trails_Admin_UI {
         $start_label = sanitize_text_field( wp_unslash( $_POST['pt_start_label'] ?? '' ) );
         $end_label = sanitize_text_field( wp_unslash( $_POST['pt_end_label'] ?? '' ) );
         $method = sanitize_key( wp_unslash( $_POST['pt_route_method'] ?? 'gpx' ) );
-        if ( ! in_array( $method, array( 'gpx', 'draw' ), true ) ) $method = 'gpx';
+        if ( ! in_array( $method, array( 'gpx', 'draw', 'record' ), true ) ) $method = 'gpx';
         if ( strlen( $title ) < 3 || strlen( $description ) < 20 ) {
             wp_safe_redirect( self::submission_url( array( 'pt_status' => 'trail_invalid' ) ) ); exit;
         }
-        if ( 'draw' === $method ) {
+        if ( in_array( $method, array( 'draw', 'record' ), true ) ) {
             $parsed = self::parse_drawn_geometry( (string) wp_unslash( $_POST['pt_geometry'] ?? '' ) );
             if ( is_wp_error( $parsed ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'draw_invalid' ) ) ); exit; }
         } else {
@@ -236,7 +236,7 @@ final class Panachaiko_Trails_Admin_UI {
         update_post_meta( $post_id, 'end_lat', $parsed['end'][1] ); update_post_meta( $post_id, 'end_lng', $parsed['end'][0] );
         update_post_meta( $post_id, 'start_label', $start_label ); update_post_meta( $post_id, 'end_label', $end_label );
         update_post_meta( $post_id, 'direction_verified', 0 );
-        update_post_meta( $post_id, 'data_source', 'Υποβολή χρήστη (' . ( 'draw' === $method ? 'σχεδίαση χάρτη' : 'GPX' ) . ')' );
+        update_post_meta( $post_id, 'data_source', 'Υποβολή χρήστη (' . ( 'record' === $method ? 'καταγραφή GPS' : ( 'draw' === $method ? 'σχεδίαση χάρτη' : 'GPX' ) ) . ')' );
         update_post_meta( $post_id, 'submission_source', 'user_trail' );
         update_post_meta( $post_id, 'submitted_at', current_time( 'mysql', true ) );
         set_transient( $rate_key, 1, 5 * MINUTE_IN_SECONDS );
@@ -288,9 +288,9 @@ final class Panachaiko_Trails_Admin_UI {
                     <label>Όνομα μονοπατιού<input type="text" name="pt_trail_title" minlength="3" maxlength="120" required></label>
                     <label>Σύντομη περιγραφή<textarea name="pt_trail_description" minlength="20" maxlength="3000" rows="5" placeholder="Περιγράψτε πού βρίσκεται, τη δυσκολία και ό,τι πρέπει να γνωρίζει ο πεζοπόρος." required></textarea></label>
                     <div class="pt-register-row"><label>Αφετηρία<input type="text" name="pt_start_label" maxlength="100" placeholder="π.χ. Άνω Καστρίτσι"></label><label>Τερματισμός<input type="text" name="pt_end_label" maxlength="100" placeholder="π.χ. Καταφύγιο"></label></div>
-                    <fieldset class="pt-method-picker"><legend>Πώς θέλετε να προσθέσετε τη διαδρομή;</legend><label><input type="radio" name="pt_route_method" value="gpx" checked><span><strong>Ανέβασμα GPX</strong><small>Από κινητό ή συσκευή GPS</small></span></label><label><input type="radio" name="pt_route_method" value="draw"><span><strong>Σχεδίαση στον χάρτη</strong><small>Τοποθετήστε σημεία με ένα πάτημα</small></span></label></fieldset>
+                    <fieldset class="pt-method-picker"><legend>Πώς θέλετε να προσθέσετε τη διαδρομή;</legend><label><input type="radio" name="pt_route_method" value="gpx" checked><span><strong>Ανέβασμα GPX</strong><small>Από κινητό ή συσκευή GPS</small></span></label><label><input type="radio" name="pt_route_method" value="draw"><span><strong>Σχεδίαση στον χάρτη</strong><small>Τοποθετήστε σημεία με ένα πάτημα</small></span></label><label><input type="radio" name="pt_route_method" value="record"><span><strong>Καταγραφή με GPS</strong><small>Περπατήστε με το κινητό σας</small></span></label></fieldset>
                     <label class="pt-gpx-upload" id="ptGpxPanel">Αρχείο διαδρομής GPX<input id="ptGpx" type="file" name="pt_gpx" accept=".gpx,application/gpx+xml" required><small>Μέγιστο μέγεθος 5 MB.</small></label>
-                    <section class="pt-draw-panel" id="ptDrawPanel" hidden><div id="ptTrailDrawMap" class="pt-draw-map" aria-label="Χάρτης σχεδίασης διαδρομής"></div><div class="pt-draw-actions"><button id="ptDrawLocate" type="button">◎ Η θέση μου</button><button id="ptDrawUndo" type="button" disabled>↶ Αναίρεση</button><button id="ptDrawClear" type="button" disabled>Καθαρισμός</button></div><p id="ptDrawStatus">Πατήστε τουλάχιστον δύο σημεία στον χάρτη.</p><input id="ptGeometry" type="hidden" name="pt_geometry" value=""></section>
+                    <section class="pt-draw-panel" id="ptDrawPanel" hidden><div id="ptTrailDrawMap" class="pt-draw-map" aria-label="Χάρτης διαδρομής"></div><div class="pt-draw-actions" id="ptDrawControls"><button id="ptDrawLocate" type="button">◎ Η θέση μου</button><button id="ptDrawUndo" type="button" disabled>↶ Αναίρεση</button><button id="ptDrawClear" type="button" disabled>Καθαρισμός</button></div><div class="pt-record-controls" id="ptRecordControls" hidden><button class="pt-record-start" id="ptRecordStart" type="button">● Έναρξη καταγραφής</button><button id="ptRecordPause" type="button" disabled>Παύση</button><button id="ptRecordStop" type="button" disabled>Τερματισμός</button><button id="ptRecordReset" type="button" disabled>Νέα καταγραφή</button><small>Η καταγραφή λειτουργεί όσο η σελίδα παραμένει ανοικτή. Κρατήστε την οθόνη ενεργή.</small></div><p id="ptDrawStatus">Χρειάζονται τουλάχιστον δύο σημεία.</p><input id="ptGeometry" type="hidden" name="pt_geometry" value=""></section>
                     <div class="pt-calculation-note">Οι συντεταγμένες και το μήκος υπολογίζονται αυτόματα. Υψομετρικά στοιχεία υπολογίζονται όταν υπάρχουν μέσα στο GPX.</div>
                     <button class="pt-button" type="submit">Αποστολή για έλεγχο</button>
                   </form>

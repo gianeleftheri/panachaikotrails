@@ -4,13 +4,14 @@
   var mapElement = document.getElementById('ptTrailDrawMap');
   var geometryInput = document.getElementById('ptGeometry');
   var gpxInput = document.getElementById('ptGpx');
+  var gpxPanel = document.getElementById('ptGpxPanel');
   var mapPanel = document.getElementById('ptDrawPanel');
   var status = document.getElementById('ptDrawStatus');
   var undoButton = document.getElementById('ptDrawUndo');
   var clearButton = document.getElementById('ptDrawClear');
   var locateButton = document.getElementById('ptDrawLocate');
   var methodInputs = document.querySelectorAll('input[name="pt_route_method"]');
-  if (!mapElement || !geometryInput || !gpxInput || !mapPanel || !window.L) return;
+  if (!mapElement || !geometryInput || !gpxInput || !gpxPanel || !mapPanel || !window.L) return;
 
   var map;
   var line;
@@ -71,6 +72,7 @@
   function selectMethod(value) {
     var drawing = value === 'draw';
     mapPanel.hidden = !drawing;
+    gpxPanel.hidden = drawing;
     gpxInput.required = !drawing;
     if (drawing) ensureMap();
   }

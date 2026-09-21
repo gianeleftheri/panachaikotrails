@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.6.2
+ * Version: 0.6.3
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.6.0';
+    private const VERSION = '0.6.3';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -67,8 +67,6 @@ final class Panachaiko_Trails_Admin_UI {
         $remote = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? 'unknown' ) );
         $rate_key = 'pt_reg_' . md5( $remote );
         if ( get_transient( $rate_key ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'rate_limited' ) ) ); exit; }
-        set_transient( $rate_key, 1, MINUTE_IN_SECONDS );
-
         $name = sanitize_text_field( wp_unslash( $_POST['pt_name'] ?? '' ) );
         $email = sanitize_email( wp_unslash( $_POST['pt_email'] ?? '' ) );
         $phone = preg_replace( '/[^0-9+]/', '', sanitize_text_field( wp_unslash( $_POST['pt_phone'] ?? '' ) ) );
@@ -76,11 +74,32 @@ final class Panachaiko_Trails_Admin_UI {
         $confirm = (string) wp_unslash( $_POST['pt_password_confirm'] ?? '' );
         $consent = isset( $_POST['pt_terms'] );
 
-        $special_count = preg_match_all( '/[!@#$%^&*()_+\-=?.,]/', $password );
-        $has_invalid_password_character = (bool) preg_match( '/[^A-Za-z0-9!@#$%^&*()_+\-=?.,]/', $password );
-        if ( strlen( $name ) < 3 || ! is_email( $email ) || ( '' !== $phone && strlen( $phone ) < 10 ) || strlen( $password ) < 8 || ! preg_match( '/[0-9]/', $password ) || false === $special_count || $special_count < 2 || $has_invalid_password_character || $password !== $confirm || ! $consent ) {
-            wp_safe_redirect( self::submission_url( array( 'pt_status' => 'invalid' ) ) ); exit;
+        $special_count = preg_match_all( '/[!@#$%^&*()_+\\-=?.,]/', $password );
+        $has_invalid_password_character = (bool) preg_match( '/[^A-Za-z0-9!@#$%^&*()_+\\-=?.,]/', $password );
+        $validation_status = '';
+        if ( strlen( $name ) < 3 ) {
+            $validation_status = 'invalid_name';
+        } elseif ( ! is_email( $email ) ) {
+            $validation_status = 'invalid_email';
+        } elseif ( '' !== $phone && strlen( $phone ) < 10 ) {
+            $validation_status = 'invalid_phone';
+        } elseif ( strlen( $password ) < 8 ) {
+            $validation_status = 'invalid_password_length';
+        } elseif ( ! preg_match( '/[0-9]/', $password ) ) {
+            $validation_status = 'invalid_password_number';
+        } elseif ( false === $special_count || $special_count < 2 ) {
+            $validation_status = 'invalid_password_special';
+        } elseif ( $has_invalid_password_character ) {
+            $validation_status = 'invalid_password_character';
+        } elseif ( $password !== $confirm ) {
+            $validation_status = 'password_mismatch';
+        } elseif ( ! $consent ) {
+            $validation_status = 'consent_required';
         }
+        if ( '' !== $validation_status ) {
+            wp_safe_redirect( self::submission_url( array( 'pt_status' => $validation_status ) ) ); exit;
+        }
+        set_transient( $rate_key, 1, MINUTE_IN_SECONDS );
         if ( email_exists( $email ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'email_exists' ) ) ); exit; }
 
         $base = sanitize_user( strstr( $email, '@', true ), true );
@@ -253,7 +272,16 @@ final class Panachaiko_Trails_Admin_UI {
             'verified' => array( 'ok', 'Το email επιβεβαιώθηκε. Μπορείτε τώρα να συνδεθείτε.' ),
             'signed_in' => array( 'ok', 'Είστε ήδη συνδεδεμένος.' ),
             'email_exists' => array( 'warn', 'Υπάρχει ήδη λογαριασμός με αυτό το email. Επιλέξτε Σύνδεση.' ),
-            'invalid' => array( 'warn', 'Ελέγξτε τα πεδία. Ο κωδικός χρειάζεται τουλάχιστον 8 χαρακτήρες, 1 αριθμό και 2 ειδικούς χαρακτήρες.' ),
+            'invalid' => array( 'warn', 'Ελέγξτε τα στοιχεία της φόρμας και δοκιμάστε ξανά.' ),
+            'invalid_name' => array( 'warn', 'Το ονοματεπώνυμο πρέπει να έχει τουλάχιστον 3 χαρακτήρες.' ),
+            'invalid_email' => array( 'warn', 'Η διεύθυνση email δεν είναι έγκυρη.' ),
+            'invalid_phone' => array( 'warn', 'Το κινητό είναι προαιρετικό. Αφήστε το κενό ή γράψτε τουλάχιστον 10 ψηφία.' ),
+            'invalid_password_length' => array( 'warn', 'Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες.' ),
+            'invalid_password_number' => array( 'warn', 'Ο κωδικός πρέπει να περιέχει τουλάχιστον 1 αριθμό.' ),
+            'invalid_password_special' => array( 'warn', 'Ο κωδικός πρέπει να περιέχει τουλάχιστον 2 ειδικούς χαρακτήρες.' ),
+            'invalid_password_character' => array( 'warn', 'Ο κωδικός περιέχει χαρακτήρα που δεν επιτρέπεται. Χρησιμοποιήστε λατινικά γράμματα, αριθμούς και: ! @ # $ % ^ & * ( ) _ - + = ? . ,' ),
+            'password_mismatch' => array( 'warn', 'Οι δύο κωδικοί δεν είναι ίδιοι. Πληκτρολογήστε ακριβώς τον ίδιο κωδικό και στα δύο πεδία.' ),
+            'consent_required' => array( 'warn', 'Πρέπει να επιλέξετε το κουτάκι συγκατάθεσης για να δημιουργηθεί ο λογαριασμός.' ),
             'rate_limited' => array( 'warn', 'Περιμένετε ένα λεπτό πριν δοκιμάσετε ξανά.' ),
             'mail_failed' => array( 'warn', 'Ο λογαριασμός δημιουργήθηκε, αλλά δεν στάλθηκε email. Επικοινωνήστε με τον διαχειριστή.' ),
             'verification_invalid' => array( 'warn', 'Ο σύνδεσμος επιβεβαίωσης δεν είναι έγκυρος ή έχει λήξει.' ),

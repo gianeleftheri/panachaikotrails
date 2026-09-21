@@ -7,6 +7,21 @@ body.wp-admin #adminmenu li.current a.menu-top,body.wp-admin #adminmenu li.wp-ha
 body.wp-admin #adminmenu .wp-menu-image:before{color:#b4c8e2}
 body.wp-admin #adminmenu li.current .wp-menu-image:before{color:#fff}
 body.wp-admin #adminmenu a:focus,body.wp-admin #adminmenu a:hover{color:#fff}
+/* Native WordPress tools stay hidden by default. Administrators can reveal them from the top bar. */
+body.pt-wordpress-tools-hidden:not(.pt-wordpress-tools-visible) #adminmenu #menu-dashboard,
+body.pt-wordpress-tools-hidden:not(.pt-wordpress-tools-visible) #adminmenu #menu-posts,
+body.pt-wordpress-tools-hidden:not(.pt-wordpress-tools-visible) #adminmenu #menu-media,
+body.pt-wordpress-tools-hidden:not(.pt-wordpress-tools-visible) #adminmenu #menu-pages,
+body.pt-wordpress-tools-hidden:not(.pt-wordpress-tools-visible) #adminmenu #menu-comments,
+body.pt-wordpress-tools-hidden:not(.pt-wordpress-tools-visible) #adminmenu #menu-appearance,
+body.pt-wordpress-tools-hidden:not(.pt-wordpress-tools-visible) #adminmenu #menu-plugins,
+body.pt-wordpress-tools-hidden:not(.pt-wordpress-tools-visible) #adminmenu #menu-users,
+body.pt-wordpress-tools-hidden:not(.pt-wordpress-tools-visible) #adminmenu #menu-tools,
+body.pt-wordpress-tools-hidden:not(.pt-wordpress-tools-visible) #adminmenu #menu-settings{display:none}
+#wpadminbar #wp-admin-bar-panachaiko-wp-tools>.ab-item{display:flex;align-items:center;gap:5px;background:#0758de;color:#fff;font-weight:700}
+#wpadminbar #wp-admin-bar-panachaiko-wp-tools>.ab-item:hover,#wpadminbar #wp-admin-bar-panachaiko-wp-tools>.ab-item:focus{background:#ff601f;color:#fff}
+#wpadminbar #wp-admin-bar-panachaiko-wp-tools .ab-icon:before{top:2px;color:#c0d936}
+body.pt-wordpress-tools-visible #wpadminbar #wp-admin-bar-panachaiko-wp-tools>.ab-item{background:#ff601f}
 /* Full width within the WordPress content area, not behind the admin sidebar. */
 body.toplevel_page_panachaiko-trails-home #wpcontent{padding-left:0}
 body.toplevel_page_panachaiko-trails-home #wpbody-content{padding-bottom:40px}

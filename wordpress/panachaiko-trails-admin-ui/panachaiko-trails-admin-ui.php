@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.6.3
+ * Version: 0.6.4
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.6.3';
+    private const VERSION = '0.6.4';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -62,8 +62,6 @@ final class Panachaiko_Trails_Admin_UI {
         if ( is_user_logged_in() ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'signed_in' ) ) ); exit; }
         if ( 'POST' !== strtoupper( (string) ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) { wp_die( 'Μη επιτρεπτό αίτημα.', '', array( 'response' => 405 ) ); }
         check_admin_referer( 'pt_register_account' );
-        if ( ! empty( $_POST['pt_company'] ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'invalid' ) ) ); exit; }
-
         $remote = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? 'unknown' ) );
         $rate_key = 'pt_reg_' . md5( $remote );
         if ( get_transient( $rate_key ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'rate_limited' ) ) ); exit; }
@@ -335,7 +333,6 @@ final class Panachaiko_Trails_Admin_UI {
                   <label>Email<input type="email" name="pt_email" autocomplete="email" required></label>
                   <label>Κινητό (προαιρετικό)<input type="tel" name="pt_phone" inputmode="tel" autocomplete="tel" placeholder="+3069XXXXXXXX"></label>
                   <div class="pt-register-row pt-password-grid"><label>Κωδικός<input type="password" name="pt_password" minlength="8" pattern="(?=.*[0-9])(?=(?:.*[!@#$%^&amp;*()_+\-=?.,]){2,})[A-Za-z0-9!@#$%^&amp;*()_+\-=?.,]{8,}" title="Τουλάχιστον 8 χαρακτήρες, 1 αριθμός και 2 ειδικοί χαρακτήρες" autocomplete="new-password" required></label><label>Επανάληψη κωδικού<input type="password" name="pt_password_confirm" minlength="8" autocomplete="new-password" required></label><p class="pt-password-help">Τουλάχιστον 8 χαρακτήρες, 1 αριθμός και 2 ειδικοί χαρακτήρες <span>(! @ # $ % ^ &amp; * ( ) _ - + = ? . ,)</span>.</p></div>
-                  <label class="pt-honeypot" aria-hidden="true">Εταιρεία<input type="text" name="pt_company" tabindex="-1" autocomplete="off"></label>
                   <label class="pt-register-consent"><input type="checkbox" name="pt_terms" value="1" required><span>Συμφωνώ με τη δημιουργία λογαριασμού και τη χρήση της τοποθεσίας μόνο όταν ξεκινώ καταγραφή ή ενεργοποιώ SOS.</span></label>
                   <button class="pt-button" type="submit">Δημιουργία λογαριασμού</button>
                 </form>

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.6.4
+ * Version: 0.6.5
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.6.4';
+    private const VERSION = '0.6.5';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -62,9 +62,6 @@ final class Panachaiko_Trails_Admin_UI {
         if ( is_user_logged_in() ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'signed_in' ) ) ); exit; }
         if ( 'POST' !== strtoupper( (string) ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) { wp_die( 'Μη επιτρεπτό αίτημα.', '', array( 'response' => 405 ) ); }
         check_admin_referer( 'pt_register_account' );
-        $remote = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? 'unknown' ) );
-        $rate_key = 'pt_reg_' . md5( $remote );
-        if ( get_transient( $rate_key ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'rate_limited' ) ) ); exit; }
         $name = sanitize_text_field( wp_unslash( $_POST['pt_name'] ?? '' ) );
         $email = sanitize_email( wp_unslash( $_POST['pt_email'] ?? '' ) );
         $phone = preg_replace( '/[^0-9+]/', '', sanitize_text_field( wp_unslash( $_POST['pt_phone'] ?? '' ) ) );
@@ -97,7 +94,6 @@ final class Panachaiko_Trails_Admin_UI {
         if ( '' !== $validation_status ) {
             wp_safe_redirect( self::submission_url( array( 'pt_status' => $validation_status ) ) ); exit;
         }
-        set_transient( $rate_key, 1, MINUTE_IN_SECONDS );
         if ( email_exists( $email ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'email_exists' ) ) ); exit; }
 
         $base = sanitize_user( strstr( $email, '@', true ), true );

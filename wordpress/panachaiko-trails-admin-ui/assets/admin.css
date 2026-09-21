@@ -91,4 +91,23 @@ body.login #nav a,body.login #backtoblog a{color:#fff}body.login .button-primary
 @media(max-width:782px){.pt-dashboard{padding:0 12px 22px}.pt-hero,.pt-private-card{min-height:100svh}.pt-hero{background-position:67% center;border-radius:0 0 16px 16px}.pt-hero:before{background:linear-gradient(90deg,rgba(3,27,89,.85),rgba(4,54,147,.25) 90%),linear-gradient(0deg,rgba(7,27,63,.65),transparent 55%)}.pt-hero-copy{width:100%;max-width:680px;padding:clamp(25px,5vw,42px)}.pt-hero h1{font-size:clamp(43px,8vw,75px)}.pt-hero-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.pt-hero-metric{padding:16px 19px;border-left:0;border-bottom:1px solid rgba(255,255,255,.14)}.pt-hero-metric:nth-child(even){border-left:1px solid rgba(255,255,255,.2)}.pt-hero-metric:nth-last-child(-n+2){border-bottom:0}.pt-hero-metric-line strong{font-size:clamp(32px,6.5vw,48px)}.pt-private-visual{background-position:70% center}.pt-private-card:before{background:linear-gradient(90deg,rgba(3,25,82,.81),rgba(3,43,114,.34)),linear-gradient(0deg,rgba(3,23,59,.65),transparent 55%)}.pt-private-body{width:100%;padding:clamp(25px,5vw,45px)}.pt-private-body h1{font-size:clamp(45px,9.2vw,80px)}}
 @media(max-width:560px){.pt-hero{min-height:calc(100svh - 60px)}.pt-hero-copy{padding:25px 21px}.pt-hero h1{font-size:clamp(37px,9vw,57px);letter-spacing:-.05em}.pt-hero p{font-size:16px;margin-bottom:19px}.pt-eyebrow{font-size:10px;letter-spacing:.16em}.pt-hero-metrics{margin-top:16px}.pt-hero-metric{padding:14px 11px}.pt-hero-metric-label{font-size:9px;min-height:30px;letter-spacing:.02em}.pt-hero-metric-line{gap:4px}.pt-hero-metric-line strong{font-size:clamp(28px,8vw,43px)}.pt-hero-metric-line span{font-size:12px}.pt-stats{gap:8px}.pt-stat{padding:12px}.pt-stat strong{font-size:22px}.pt-panel{padding:15px}.pt-panel-head{flex-wrap:wrap}.pt-route-list{grid-template-columns:1fr}.pt-private-body{padding:25px 21px}.pt-private-body h1{font-size:clamp(37px,9.5vw,60px)}.pt-private-body p{font-size:16px;margin-bottom:22px}.pt-private-actions{gap:15px}}
 @media(max-width:380px){.pt-stats{grid-template-columns:1fr}.pt-hero-metric-line strong{font-size:27px}}
+/* Compact editorial dashboard based on the approved concept artwork. */
+body.toplevel_page_panachaiko-trails-home #wpcontent{background:#f5f8fd}
+.pt-dashboard .pt-hero{min-height:330px;height:auto;justify-content:center;border-radius:0 0 18px 18px;background-size:cover;background-position:center}
+.pt-dashboard .pt-hero:before{background:linear-gradient(90deg,rgba(3,42,123,.62),rgba(3,42,123,.12) 68%,transparent)}
+.pt-dashboard .pt-hero-copy{width:min(75%,680px);padding:28px clamp(22px,3.5vw,52px)}
+.pt-brand-logo{display:block;width:145px;height:auto;margin-bottom:10px}
+.pt-dashboard .pt-hero h1{font-size:clamp(32px,4vw,65px);margin:12px 0 12px;line-height:1.02}
+.pt-dashboard .pt-hero p{margin-bottom:0}
+.pt-dashboard .pt-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+.pt-dashboard>.pt-hero-metrics{border:1px solid var(--pt-line);border-radius:13px;overflow:hidden;margin:0 0 14px;background:#fff;color:var(--pt-navy)}
+.pt-dashboard>.pt-hero-metrics .pt-hero-metric{border-left:1px solid var(--pt-line);padding:15px 18px}
+.pt-dashboard>.pt-hero-metrics .pt-hero-metric:first-child{border-left:0}
+.pt-dashboard>.pt-hero-metrics .pt-hero-metric-label{color:#627489;min-height:0}
+.pt-dashboard>.pt-hero-metrics .pt-hero-metric-line strong{font-size:clamp(23px,2vw,36px)}
+.pt-dashboard>.pt-hero-metrics .pt-hero-metric-line span{color:#4265a2}
+.pt-dashboard .pt-actions a{min-height:55px}
+@media(max-width:1100px){.pt-dashboard .pt-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.pt-dashboard>.pt-hero-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:782px){.pt-dashboard .pt-hero{min-height:270px;background-position:65% center}.pt-dashboard .pt-hero-copy{width:80%}.pt-brand-logo{width:120px}}
+@media(max-width:560px){.pt-dashboard .pt-hero{min-height:250px;background-position:60% center}.pt-dashboard .pt-hero-copy{width:100%;padding:20px}.pt-dashboard .pt-hero:before{background:linear-gradient(90deg,rgba(3,42,123,.88),rgba(3,42,123,.54))}.pt-dashboard .pt-stats{gap:8px}.pt-dashboard>.pt-hero-metrics .pt-hero-metric{padding:11px}.pt-dashboard>.pt-hero-metrics .pt-hero-metric-line strong{font-size:24px}}
 @media(prefers-reduced-motion:reduce){.pt-button{transition:none}.pt-button:hover,.pt-button:focus{transform:none}}

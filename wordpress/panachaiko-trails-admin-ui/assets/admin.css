@@ -80,7 +80,9 @@ body.pt-private *{box-sizing:border-box}
 .pt-private-body h1{font-size:clamp(55px,8vw,152px)}.pt-private-body p{color:#fff;font-size:clamp(17px,1.55vw,24px);max-width:700px;margin:0 0 32px}
 .pt-private-actions{display:flex;gap:20px;align-items:center;flex-wrap:wrap}.pt-link{font-weight:800;color:#fff;text-decoration:none;border-bottom:2px solid var(--pt-lime);padding-bottom:3px}.pt-link:hover{color:var(--pt-lime)}
 .pt-private-card .pt-hero-metrics{flex-shrink:0;margin-top:0}
-body.login{background:#102945}
+body.login{background:#102945!important;background-image:none!important}
+body.login:before,body.login:after{content:none!important;display:none!important;background-image:none!important}
+body.login #login{position:relative;z-index:1}
 body.login #login h1 a{background-image:none!important;width:auto!important;height:auto!important;text-indent:0!important;font-size:19px;font-weight:800;color:#fff;display:flex;justify-content:center;align-items:center}
 body.login #login h1 a:after{content:'PANACHAIKO TRAILS'}
 body.login #loginform{border-radius:14px;border:0;box-shadow:0 15px 35px rgba(0,0,0,.22)}

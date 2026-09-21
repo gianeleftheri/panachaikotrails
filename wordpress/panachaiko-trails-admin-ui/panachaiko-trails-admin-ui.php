@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.6.5
+ * Version: 0.6.6
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.6.5';
+    private const VERSION = '0.6.6';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -22,6 +22,8 @@ final class Panachaiko_Trails_Admin_UI {
         add_action( 'admin_post_nopriv_pt_verify_email', array( __CLASS__, 'verify_email' ) );
         add_action( 'admin_post_pt_verify_email', array( __CLASS__, 'verify_email' ) );
         add_action( 'template_redirect', array( __CLASS__, 'cms_home' ) );
+        add_filter( 'login_redirect', array( __CLASS__, 'login_redirect' ), 10, 3 );
+        add_action( 'admin_init', array( __CLASS__, 'restrict_subscriber_admin' ) );
     }
     private static function url( string $file ): string {
         return plugin_dir_url( __FILE__ ) . 'assets/' . $file;
@@ -42,6 +44,22 @@ final class Panachaiko_Trails_Admin_UI {
 
     private static function submission_url( array $args = array() ): string {
         return add_query_arg( array_merge( array( 'pt_action' => 'submit_trail' ), $args ), home_url( '/' ) );
+    }
+
+    public static function login_redirect( string $redirect_to, string $requested_redirect_to, $user ): string {
+        if ( ! ( $user instanceof WP_User ) ) { return $redirect_to; }
+        if ( user_can( $user, 'edit_posts' ) ) {
+            return admin_url( 'admin.php?page=' . self::PAGE );
+        }
+        return self::submission_url();
+    }
+
+    public static function restrict_subscriber_admin(): void {
+        if ( ! is_user_logged_in() || current_user_can( 'edit_posts' ) || wp_doing_ajax() ) { return; }
+        global $pagenow;
+        if ( in_array( $pagenow, array( 'admin-post.php', 'async-upload.php' ), true ) ) { return; }
+        wp_safe_redirect( self::submission_url() );
+        exit;
     }
 
     private static function verification_hash( string $token ): string {
@@ -390,7 +408,10 @@ final class Panachaiko_Trails_Admin_UI {
         if ( is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
             wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE ) ); exit;
         }
-        if ( is_user_logged_in() ) { return; }
+        if ( is_user_logged_in() ) {
+            wp_safe_redirect( self::submission_url() );
+            exit;
+        }
         status_header( 200 ); nocache_headers();
         $login = wp_login_url( admin_url( 'admin.php?page=' . self::PAGE ) );
         $public = 'https://panachaikotrails.gr/';

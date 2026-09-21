@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.6.8
+ * Version: 0.6.9
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.6.8';
+    private const VERSION = '0.6.9';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -38,12 +38,11 @@ final class Panachaiko_Trails_Admin_UI {
     }
     public static function admin_assets(): void {
         wp_enqueue_style( 'panachaiko-admin-ui', self::url( 'admin.css' ), array(), self::VERSION );
-        wp_add_inline_style( 'panachaiko-admin-ui', '.pt-hero{background-image:url("' . esc_url( self::hero() ) . '")}' );
+        wp_add_inline_style( 'panachaiko-admin-ui', '.pt-hero{background-image:url("' . esc_url( self::url( 'hero-panachaiko.svg' ) ) . '")}' );
         if ( current_user_can( 'manage_options' ) ) {
             wp_enqueue_script( 'panachaiko-admin-tools', self::url( 'admin-tools.js' ), array(), self::VERSION, true );
         }
     }
-
     public static function admin_body_classes( string $classes ): string {
         $classes .= ' pt-wordpress-tools-hidden';
         if ( current_user_can( 'manage_options' ) && isset( $_GET['pt_wp_tools'] ) && 'show' === sanitize_key( wp_unslash( $_GET['pt_wp_tools'] ) ) ) {
@@ -51,17 +50,13 @@ final class Panachaiko_Trails_Admin_UI {
         }
         return $classes;
     }
-
     public static function admin_bar_tools_toggle( $admin_bar ): void {
         if ( ! current_user_can( 'manage_options' ) ) { return; }
         $admin_bar->add_node( array(
             'id' => 'panachaiko-wp-tools',
             'title' => '<span class="ab-icon dashicons dashicons-admin-tools" aria-hidden="true"></span><span class="ab-label">Εργαλεία WordPress</span>',
             'href' => esc_url( add_query_arg( 'pt_wp_tools', 'show' ) ),
-            'meta' => array(
-                'class' => 'pt-wp-tools-toggle',
-                'title' => 'Προσωρινή εμφάνιση ή απόκρυψη των τεχνικών εργαλείων WordPress',
-            ),
+            'meta' => array( 'class' => 'pt-wp-tools-toggle', 'title' => 'Προσωρινή εμφάνιση ή απόκρυψη των τεχνικών εργαλείων WordPress' ),
         ) );
     }
     public static function login_assets(): void {
@@ -113,28 +108,18 @@ final class Panachaiko_Trails_Admin_UI {
         $confirm = (string) wp_unslash( $_POST['pt_password_confirm'] ?? '' );
         $consent = isset( $_POST['pt_terms'] );
 
-        $special_count = preg_match_all( '/[!@#$%^&*()_+\\-=?.,]/', $password );
-        $has_invalid_password_character = (bool) preg_match( '/[^A-Za-z0-9!@#$%^&*()_+\\-=?.,]/', $password );
+        $special_count = preg_match_all( '/[!@#$%^&*()_+\-=?.,]/', $password );
+        $has_invalid_password_character = (bool) preg_match( '/[^A-Za-z0-9!@#$%^&*()_+\-=?.,]/', $password );
         $validation_status = '';
-        if ( strlen( $name ) < 3 ) {
-            $validation_status = 'invalid_name';
-        } elseif ( ! is_email( $email ) ) {
-            $validation_status = 'invalid_email';
-        } elseif ( '' !== $phone && strlen( $phone ) < 10 ) {
-            $validation_status = 'invalid_phone';
-        } elseif ( strlen( $password ) < 8 ) {
-            $validation_status = 'invalid_password_length';
-        } elseif ( ! preg_match( '/[0-9]/', $password ) ) {
-            $validation_status = 'invalid_password_number';
-        } elseif ( false === $special_count || $special_count < 2 ) {
-            $validation_status = 'invalid_password_special';
-        } elseif ( $has_invalid_password_character ) {
-            $validation_status = 'invalid_password_character';
-        } elseif ( $password !== $confirm ) {
-            $validation_status = 'password_mismatch';
-        } elseif ( ! $consent ) {
-            $validation_status = 'consent_required';
-        }
+        if ( strlen( $name ) < 3 ) $validation_status = 'invalid_name';
+        elseif ( ! is_email( $email ) ) $validation_status = 'invalid_email';
+        elseif ( '' !== $phone && strlen( $phone ) < 10 ) $validation_status = 'invalid_phone';
+        elseif ( strlen( $password ) < 8 ) $validation_status = 'invalid_password_length';
+        elseif ( ! preg_match( '/[0-9]/', $password ) ) $validation_status = 'invalid_password_number';
+        elseif ( false === $special_count || $special_count < 2 ) $validation_status = 'invalid_password_special';
+        elseif ( $has_invalid_password_character ) $validation_status = 'invalid_password_character';
+        elseif ( $password !== $confirm ) $validation_status = 'password_mismatch';
+        elseif ( ! $consent ) $validation_status = 'consent_required';
         if ( '' !== $validation_status ) {
             wp_safe_redirect( self::submission_url( array( 'pt_status' => $validation_status ) ) ); exit;
         }
@@ -477,35 +462,37 @@ final class Panachaiko_Trails_Admin_UI {
         $metrics = self::trail_metrics();
         $cards = array(
             array( 'Δημοσιευμένα άρθρα', self::count( 'post', 'publish' ), 'dashicons-media-document' ),
-            array( 'Διαδρομές', self::count( 'trail', 'publish' ) + self::count( 'trail', 'draft' ), 'dashicons-location-alt' ),
+            array( 'Δημοσιευμένες διαδρομές', self::count( 'trail', 'publish' ), 'dashicons-location-alt' ),
+            array( 'Διαδρομές υπό έλεγχο', self::count( 'trail', 'pending' ), 'dashicons-visibility' ),
             array( 'Σημεία ενδιαφέροντος', self::count( 'trail_poi', 'publish' ) + self::count( 'trail_poi', 'draft' ), 'dashicons-location' ),
-            array( 'Αρχεία πολυμέσων', self::count( 'attachment', 'inherit' ), 'dashicons-format-image' ),
         );
         ?>
         <div class="wrap pt-dashboard">
           <header class="pt-hero" role="banner">
             <div class="pt-hero-copy">
+              <img class="pt-brand-logo" src="<?php echo esc_url( self::url( 'logo-panachaiko.svg' ) ); ?>" alt="Panachaiko Trails" width="178" height="85">
               <span class="pt-eyebrow">PANACHAIKO TRAILS / CONTENT MANAGEMENT</span>
-              <h1><span>ΠΑΝΑΧΑΪΚΟ</span><em>TRAILS</em></h1>
+              <h1><span>Πίνακας</span><em>διαχείρισης</em></h1>
               <p>Βουνό. Διαδρομές. Άνθρωποι. Ιστορίες.</p>
-              <a class="pt-button" href="<?php echo esc_url( admin_url( 'post-new.php?post_type=trail' ) ); ?>">+ Νέα διαδρομή</a>
             </div>
-            <?php self::render_trail_metrics( $metrics ); ?>
           </header>
           <section class="pt-stats" aria-label="Σύνοψη περιεχομένου">
             <?php foreach ( $cards as $card ) : ?>
               <div class="pt-stat"><span class="dashicons <?php echo esc_attr( $card[2] ); ?>" aria-hidden="true"></span><div><span class="pt-stat-title"><?php echo esc_html( $card[0] ); ?></span><strong><?php echo esc_html( number_format_i18n( $card[1] ) ); ?></strong></div></div>
             <?php endforeach; ?>
           </section>
+          <?php self::render_trail_metrics( $metrics ); ?>
           <div class="pt-grid">
             <section class="pt-panel"><div class="pt-panel-head"><h2>Πρόσφατα άρθρα</h2><a href="<?php echo esc_url( admin_url( 'edit.php' ) ); ?>">Όλα τα άρθρα →</a></div>
               <?php if ( $recent ) : ?><ul class="pt-records"><?php foreach ( $recent as $item ) : ?><li><a href="<?php echo esc_url( get_edit_post_link( $item->ID ) ); ?>"><?php echo esc_html( get_the_title( $item ) ?: '(Χωρίς τίτλο)' ); ?></a><small><?php echo esc_html( 'publish' === $item->post_status ? 'Δημοσιευμένο' : 'Προσχέδιο' ); ?> · <?php echo esc_html( get_the_modified_date( 'd/m/Y', $item ) ); ?></small></li><?php endforeach; ?></ul>
               <?php else : ?><p class="pt-empty">Δεν υπάρχουν ακόμη άρθρα.</p><?php endif; ?>
             </section>
             <section class="pt-panel"><div class="pt-panel-head"><h2>Γρήγορες ενέργειες</h2></div><nav class="pt-actions" aria-label="Γρήγορες ενέργειες">
-              <a href="<?php echo esc_url( admin_url( 'post-new.php' ) ); ?>"><span class="dashicons dashicons-edit"></span> Νέο άρθρο <span>→</span></a>
               <a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=trail' ) ); ?>"><span class="dashicons dashicons-location-alt"></span> Νέα διαδρομή <span>→</span></a>
-              <a href="<?php echo esc_url( admin_url( 'upload.php' ) ); ?>"><span class="dashicons dashicons-format-image"></span> Βιβλιοθήκη πολυμέσων <span>→</span></a>
+              <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=trail&post_status=pending' ) ); ?>"><span class="dashicons dashicons-visibility"></span> Έλεγχος υποβολών <span>→</span></a>
+              <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=trail_poi' ) ); ?>"><span class="dashicons dashicons-location"></span> Σημεία ενδιαφέροντος <span>→</span></a>
+              <a href="<?php echo esc_url( admin_url( 'post-new.php' ) ); ?>"><span class="dashicons dashicons-edit"></span> Νέο άρθρο <span>→</span></a>
+              <a href="<?php echo esc_url( admin_url( 'upload.php' ) ); ?>"><span class="dashicons dashicons-format-image"></span> Πολυμέσα <span>→</span></a>
               <?php if ( current_user_can( 'manage_options' ) ) : ?><a href="<?php echo esc_url( admin_url( 'tools.php?page=panachaiko-trails-import' ) ); ?>"><span class="dashicons dashicons-upload"></span> Εισαγωγή διαδρομών <span>→</span></a><?php endif; ?>
             </nav></section>
             <section class="pt-panel pt-routes"><div class="pt-panel-head"><h2>Διαδρομές</h2><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=trail' ) ); ?>">Όλες οι διαδρομές →</a></div>

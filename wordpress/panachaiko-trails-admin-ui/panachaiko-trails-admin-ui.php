@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.6.0
+ * Version: 0.6.1
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -76,7 +76,8 @@ final class Panachaiko_Trails_Admin_UI {
         $confirm = (string) wp_unslash( $_POST['pt_password_confirm'] ?? '' );
         $consent = isset( $_POST['pt_terms'] );
 
-        if ( strlen( $name ) < 3 || ! is_email( $email ) || strlen( $phone ) < 10 || strlen( $password ) < 10 || $password !== $confirm || ! $consent ) {
+        $special_count = preg_match_all( '/[^A-Za-z0-9]/u', $password );
+        if ( strlen( $name ) < 3 || ! is_email( $email ) || ( '' !== $phone && strlen( $phone ) < 10 ) || strlen( $password ) < 8 || ! preg_match( '/[0-9]/', $password ) || false === $special_count || $special_count < 2 || $password !== $confirm || ! $consent ) {
             wp_safe_redirect( self::submission_url( array( 'pt_status' => 'invalid' ) ) ); exit;
         }
         if ( email_exists( $email ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'email_exists' ) ) ); exit; }
@@ -251,7 +252,7 @@ final class Panachaiko_Trails_Admin_UI {
             'verified' => array( 'ok', 'Το email επιβεβαιώθηκε. Μπορείτε τώρα να συνδεθείτε.' ),
             'signed_in' => array( 'ok', 'Είστε ήδη συνδεδεμένος.' ),
             'email_exists' => array( 'warn', 'Υπάρχει ήδη λογαριασμός με αυτό το email. Επιλέξτε Σύνδεση.' ),
-            'invalid' => array( 'warn', 'Ελέγξτε ότι όλα τα πεδία είναι σωστά και ο κωδικός έχει τουλάχιστον 10 χαρακτήρες.' ),
+            'invalid' => array( 'warn', 'Ελέγξτε τα πεδία. Ο κωδικός χρειάζεται τουλάχιστον 8 χαρακτήρες, 1 αριθμό και 2 ειδικούς χαρακτήρες.' ),
             'rate_limited' => array( 'warn', 'Περιμένετε ένα λεπτό πριν δοκιμάσετε ξανά.' ),
             'mail_failed' => array( 'warn', 'Ο λογαριασμός δημιουργήθηκε, αλλά δεν στάλθηκε email. Επικοινωνήστε με τον διαχειριστή.' ),
             'verification_invalid' => array( 'warn', 'Ο σύνδεσμος επιβεβαίωσης δεν είναι έγκυρος ή έχει λήξει.' ),
@@ -303,8 +304,8 @@ final class Panachaiko_Trails_Admin_UI {
                   <input type="hidden" name="action" value="pt_register_account"><?php wp_nonce_field( 'pt_register_account' ); ?>
                   <label>Ονοματεπώνυμο<input type="text" name="pt_name" minlength="3" autocomplete="name" required></label>
                   <label>Email<input type="email" name="pt_email" autocomplete="email" required></label>
-                  <label>Κινητό<input type="tel" name="pt_phone" inputmode="tel" autocomplete="tel" placeholder="+3069XXXXXXXX" required></label>
-                  <div class="pt-register-row"><label>Κωδικός<input type="password" name="pt_password" minlength="10" autocomplete="new-password" required></label><label>Επανάληψη κωδικού<input type="password" name="pt_password_confirm" minlength="10" autocomplete="new-password" required></label></div>
+                  <label>Κινητό (προαιρετικό)<input type="tel" name="pt_phone" inputmode="tel" autocomplete="tel" placeholder="+3069XXXXXXXX"></label>
+                  <div class="pt-register-row"><label>Κωδικός<input type="password" name="pt_password" minlength="8" pattern="(?=.*[0-9])(?=(?:.*[^A-Za-z0-9]){2,}).{8,}" title="Τουλάχιστον 8 χαρακτήρες, 1 αριθμός και 2 ειδικοί χαρακτήρες" autocomplete="new-password" required><small>Τουλάχιστον 8 χαρακτήρες, 1 αριθμός και 2 ειδικοί χαρακτήρες.</small></label><label>Επανάληψη κωδικού<input type="password" name="pt_password_confirm" minlength="8" autocomplete="new-password" required></label></div>
                   <label class="pt-honeypot" aria-hidden="true">Εταιρεία<input type="text" name="pt_company" tabindex="-1" autocomplete="off"></label>
                   <label class="pt-register-consent"><input type="checkbox" name="pt_terms" value="1" required><span>Συμφωνώ με τη δημιουργία λογαριασμού και τη χρήση της τοποθεσίας μόνο όταν ξεκινώ καταγραφή ή ενεργοποιώ SOS.</span></label>
                   <button class="pt-button" type="submit">Δημιουργία λογαριασμού</button>

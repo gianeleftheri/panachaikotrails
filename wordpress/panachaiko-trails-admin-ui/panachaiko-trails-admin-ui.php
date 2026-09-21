@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.6.6
+ * Version: 0.6.7
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,11 +10,13 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.6.6';
+    private const VERSION = '0.6.7';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
         add_action( 'admin_menu', array( __CLASS__, 'register_menu' ) );
+        add_action( 'admin_bar_menu', array( __CLASS__, 'admin_bar_tools_toggle' ), 90 );
+        add_filter( 'admin_body_class', array( __CLASS__, 'admin_body_classes' ) );
         add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_assets' ) );
         add_action( 'login_enqueue_scripts', array( __CLASS__, 'login_assets' ) );
         add_action( 'admin_post_pt_submit_trail', array( __CLASS__, 'submit_trail' ) );
@@ -37,6 +39,30 @@ final class Panachaiko_Trails_Admin_UI {
     public static function admin_assets(): void {
         wp_enqueue_style( 'panachaiko-admin-ui', self::url( 'admin.css' ), array(), self::VERSION );
         wp_add_inline_style( 'panachaiko-admin-ui', '.pt-hero{background-image:url("' . esc_url( self::hero() ) . '")}' );
+        if ( current_user_can( 'manage_options' ) ) {
+            wp_enqueue_script( 'panachaiko-admin-tools', self::url( 'admin-tools.js' ), array(), self::VERSION, true );
+        }
+    }
+
+    public static function admin_body_classes( string $classes ): string {
+        $classes .= ' pt-wordpress-tools-hidden';
+        if ( current_user_can( 'manage_options' ) && isset( $_GET['pt_wp_tools'] ) && 'show' === sanitize_key( wp_unslash( $_GET['pt_wp_tools'] ) ) ) {
+            $classes .= ' pt-wordpress-tools-visible';
+        }
+        return $classes;
+    }
+
+    public static function admin_bar_tools_toggle( $admin_bar ): void {
+        if ( ! current_user_can( 'manage_options' ) ) { return; }
+        $admin_bar->add_node( array(
+            'id' => 'panachaiko-wp-tools',
+            'title' => '<span class="ab-icon dashicons dashicons-admin-tools" aria-hidden="true"></span><span class="ab-label">Εργαλεία WordPress</span>',
+            'href' => esc_url( add_query_arg( 'pt_wp_tools', 'show' ) ),
+            'meta' => array(
+                'class' => 'pt-wp-tools-toggle',
+                'title' => 'Προσωρινή εμφάνιση ή απόκρυψη των τεχνικών εργαλείων WordPress',
+            ),
+        ) );
     }
     public static function login_assets(): void {
         wp_enqueue_style( 'panachaiko-admin-ui-login', self::url( 'admin.css' ), array(), self::VERSION );

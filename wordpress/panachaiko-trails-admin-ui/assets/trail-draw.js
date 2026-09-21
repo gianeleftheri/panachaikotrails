@@ -25,7 +25,9 @@
   var startMarker;
   var endMarker;
   var currentMarker;
-  var points = [];
+  var drawnPoints = [];
+  var recordedPoints = [];
+  var points = drawnPoints;
   var currentMethod = 'gpx';
   var watchId = null;
   var recording = false;
@@ -135,7 +137,8 @@
     try {
       var saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
       if (saved && Array.isArray(saved.points) && saved.points.length && Date.now() - Number(saved.savedAt || 0) < 7 * 86400000) {
-        points = saved.points.slice(0, 5000);
+        recordedPoints = saved.points.slice(0, 5000);
+        points = recordedPoints;
         syncGeometry('Επαναφέρθηκε η τελευταία καταγραφή · ' + points.length + ' σημεία · ' + totalDistance().toFixed(2) + ' χλμ.');
         map.fitBounds(line.getBounds(), { padding: [25, 25] });
       }
@@ -144,6 +147,8 @@
 
   function selectMethod(value) {
     currentMethod = value;
+    if (value === 'draw') points = drawnPoints;
+    if (value === 'record') points = recordedPoints;
     var mapMode = value === 'draw' || value === 'record';
     mapPanel.hidden = !mapMode;
     gpxPanel.hidden = mapMode;
@@ -166,7 +171,7 @@
   });
 
   undoButton.addEventListener('click', function () { points.pop(); syncGeometry(); });
-  clearButton.addEventListener('click', function () { points = []; syncGeometry(); });
+  clearButton.addEventListener('click', function () { drawnPoints = []; points = drawnPoints; syncGeometry(); });
   locateButton.addEventListener('click', function () {
     if (!navigator.geolocation) { syncGeometry('Η συσκευή δεν υποστηρίζει εντοπισμό θέσης.'); return; }
     locateButton.disabled = true;
@@ -201,7 +206,8 @@
   });
 
   recordReset.addEventListener('click', function () {
-    points = [];
+    recordedPoints = [];
+    points = recordedPoints;
     try { localStorage.removeItem(storageKey); } catch (error) {}
     syncGeometry('Η αποθηκευμένη καταγραφή καθαρίστηκε.');
   });

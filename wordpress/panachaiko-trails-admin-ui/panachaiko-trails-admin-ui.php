@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.6.1
+ * Version: 0.6.2
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -76,8 +76,9 @@ final class Panachaiko_Trails_Admin_UI {
         $confirm = (string) wp_unslash( $_POST['pt_password_confirm'] ?? '' );
         $consent = isset( $_POST['pt_terms'] );
 
-        $special_count = preg_match_all( '/[^A-Za-z0-9]/u', $password );
-        if ( strlen( $name ) < 3 || ! is_email( $email ) || ( '' !== $phone && strlen( $phone ) < 10 ) || strlen( $password ) < 8 || ! preg_match( '/[0-9]/', $password ) || false === $special_count || $special_count < 2 || $password !== $confirm || ! $consent ) {
+        $special_count = preg_match_all( '/[!@#$%^&*()_+\-=?.,]/', $password );
+        $has_invalid_password_character = (bool) preg_match( '/[^A-Za-z0-9!@#$%^&*()_+\-=?.,]/', $password );
+        if ( strlen( $name ) < 3 || ! is_email( $email ) || ( '' !== $phone && strlen( $phone ) < 10 ) || strlen( $password ) < 8 || ! preg_match( '/[0-9]/', $password ) || false === $special_count || $special_count < 2 || $has_invalid_password_character || $password !== $confirm || ! $consent ) {
             wp_safe_redirect( self::submission_url( array( 'pt_status' => 'invalid' ) ) ); exit;
         }
         if ( email_exists( $email ) ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'email_exists' ) ) ); exit; }
@@ -305,7 +306,7 @@ final class Panachaiko_Trails_Admin_UI {
                   <label>Ονοματεπώνυμο<input type="text" name="pt_name" minlength="3" autocomplete="name" required></label>
                   <label>Email<input type="email" name="pt_email" autocomplete="email" required></label>
                   <label>Κινητό (προαιρετικό)<input type="tel" name="pt_phone" inputmode="tel" autocomplete="tel" placeholder="+3069XXXXXXXX"></label>
-                  <div class="pt-register-row"><label>Κωδικός<input type="password" name="pt_password" minlength="8" pattern="(?=.*[0-9])(?=(?:.*[^A-Za-z0-9]){2,}).{8,}" title="Τουλάχιστον 8 χαρακτήρες, 1 αριθμός και 2 ειδικοί χαρακτήρες" autocomplete="new-password" required><small>Τουλάχιστον 8 χαρακτήρες, 1 αριθμός και 2 ειδικοί χαρακτήρες.</small></label><label>Επανάληψη κωδικού<input type="password" name="pt_password_confirm" minlength="8" autocomplete="new-password" required></label></div>
+                  <div class="pt-register-row pt-password-grid"><label>Κωδικός<input type="password" name="pt_password" minlength="8" pattern="(?=.*[0-9])(?=(?:.*[!@#$%^&amp;*()_+\-=?.,]){2,})[A-Za-z0-9!@#$%^&amp;*()_+\-=?.,]{8,}" title="Τουλάχιστον 8 χαρακτήρες, 1 αριθμός και 2 ειδικοί χαρακτήρες" autocomplete="new-password" required></label><label>Επανάληψη κωδικού<input type="password" name="pt_password_confirm" minlength="8" autocomplete="new-password" required></label><p class="pt-password-help">Τουλάχιστον 8 χαρακτήρες, 1 αριθμός και 2 ειδικοί χαρακτήρες <span>(! @ # $ % ^ &amp; * ( ) _ - + = ? . ,)</span>.</p></div>
                   <label class="pt-honeypot" aria-hidden="true">Εταιρεία<input type="text" name="pt_company" tabindex="-1" autocomplete="off"></label>
                   <label class="pt-register-consent"><input type="checkbox" name="pt_terms" value="1" required><span>Συμφωνώ με τη δημιουργία λογαριασμού και τη χρήση της τοποθεσίας μόνο όταν ξεκινώ καταγραφή ή ενεργοποιώ SOS.</span></label>
                   <button class="pt-button" type="submit">Δημιουργία λογαριασμού</button>

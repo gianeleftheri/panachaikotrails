@@ -1,25 +1,52 @@
 name: Package Panachaiko Admin UI
 
 on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'wordpress/panachaiko-trails-admin-ui/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/package-admin-ui.yml'
   push:
     branches:
       - main
     paths:
+      - 'src/**'
+      - 'public/**'
       - 'wordpress/panachaiko-trails-admin-ui/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/package-admin-ui.yml'
   workflow_dispatch:
 
 jobs:
-  package:
+  validate-and-package:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: PHP syntax check
         run: php -l wordpress/panachaiko-trails-admin-ui/panachaiko-trails-admin-ui.php
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm install --ignore-scripts
+
+      - name: Build public site
+        run: npm run build
+
       - name: Build plugin ZIP
         run: |
           cd wordpress
           zip -r ../panachaiko-trails-admin-ui.zip panachaiko-trails-admin-ui -x '*/README.md'
+
       - name: Upload plugin ZIP
         uses: actions/upload-artifact@v4
         with:

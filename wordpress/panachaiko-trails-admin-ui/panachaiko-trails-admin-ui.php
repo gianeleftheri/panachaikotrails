@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.6.9
+ * Version: 0.7.0
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.6.9';
+    private const VERSION = '0.7.0';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -38,7 +38,7 @@ final class Panachaiko_Trails_Admin_UI {
     }
     public static function admin_assets(): void {
         wp_enqueue_style( 'panachaiko-admin-ui', self::url( 'admin.css' ), array(), self::VERSION );
-        wp_add_inline_style( 'panachaiko-admin-ui', '.pt-hero{background-image:url("' . esc_url( self::url( 'hero-panachaiko.svg' ) ) . '")}' );
+        wp_add_inline_style( 'panachaiko-admin-ui', '.pt-hero{background-image:url("' . esc_url( self::url( 'dashboard-hero.webp' ) ) . '")}' );
         if ( current_user_can( 'manage_options' ) ) {
             wp_enqueue_script( 'panachaiko-admin-tools', self::url( 'admin-tools.js' ), array(), self::VERSION, true );
         }

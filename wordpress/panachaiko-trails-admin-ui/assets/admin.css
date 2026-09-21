@@ -96,7 +96,7 @@ body.toplevel_page_panachaiko-trails-home #wpcontent{background:#f5f8fd}
 .pt-dashboard .pt-hero{min-height:330px;height:auto;justify-content:center;border-radius:0 0 18px 18px;background-size:cover;background-position:center}
 .pt-dashboard .pt-hero:before{background:linear-gradient(90deg,rgba(3,42,123,.62),rgba(3,42,123,.12) 68%,transparent)}
 .pt-dashboard .pt-hero-copy{width:min(75%,680px);padding:28px clamp(22px,3.5vw,52px)}
-.pt-brand-logo{display:block;width:145px;height:auto;margin-bottom:10px}
+.pt-brand-logo{display:block;width:175px;height:auto;margin-bottom:10px}
 .pt-dashboard .pt-hero h1{font-size:clamp(32px,4vw,65px);margin:12px 0 12px;line-height:1.02}
 .pt-dashboard .pt-hero p{margin-bottom:0}
 .pt-dashboard .pt-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
@@ -108,6 +108,6 @@ body.toplevel_page_panachaiko-trails-home #wpcontent{background:#f5f8fd}
 .pt-dashboard>.pt-hero-metrics .pt-hero-metric-line span{color:#4265a2}
 .pt-dashboard .pt-actions a{min-height:55px}
 @media(max-width:1100px){.pt-dashboard .pt-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.pt-dashboard>.pt-hero-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:782px){.pt-dashboard .pt-hero{min-height:270px;background-position:65% center}.pt-dashboard .pt-hero-copy{width:80%}.pt-brand-logo{width:120px}}
+@media(max-width:782px){.pt-dashboard .pt-hero{min-height:270px;background-position:65% center}.pt-dashboard .pt-hero-copy{width:80%}.pt-brand-logo{width:140px}}
 @media(max-width:560px){.pt-dashboard .pt-hero{min-height:250px;background-position:60% center}.pt-dashboard .pt-hero-copy{width:100%;padding:20px}.pt-dashboard .pt-hero:before{background:linear-gradient(90deg,rgba(3,42,123,.88),rgba(3,42,123,.54))}.pt-dashboard .pt-stats{gap:8px}.pt-dashboard>.pt-hero-metrics .pt-hero-metric{padding:11px}.pt-dashboard>.pt-hero-metrics .pt-hero-metric-line strong{font-size:24px}}
 @media(prefers-reduced-motion:reduce){.pt-button{transition:none}.pt-button:hover,.pt-button:focus{transform:none}}

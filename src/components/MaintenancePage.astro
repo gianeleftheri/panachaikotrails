@@ -35,7 +35,7 @@
         </div>
 
         <div class="actions">
-          <a class="contact" href="mailto:info@panachaikotrails.gr">ΕΠΙΚΟΙΝΩΝΙΑ <span>→</span></a>
+          <button class="contact" type="button" data-contact-open>ΕΠΙΚΟΙΝΩΝΙΑ <span>→</span></button>
           <a class="preview" href="/preview">ΙΔΙΩΤΙΚΗ ΠΡΟΕΠΙΣΚΟΠΗΣΗ</a>
         </div>
       </div>
@@ -43,6 +43,67 @@
 
     <footer aria-hidden="true"></footer>
   </div>
+
+  <div class="contact-backdrop" data-contact-backdrop hidden></div>
+
+  <aside class="contact-drawer" data-contact-drawer aria-hidden="true" aria-labelledby="contact-title">
+    <div class="contact-drawer-head">
+      <div>
+        <span class="contact-eyebrow">PANACHAIKO TRAILS</span>
+        <h2 id="contact-title">Επικοινωνήστε μαζί μας</h2>
+      </div>
+      <button class="contact-close" type="button" aria-label="Κλείσιμο φόρμας" data-contact-close>×</button>
+    </div>
+
+    <p class="contact-intro">Στείλτε μας το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.</p>
+
+    <form class="contact-form" data-contact-form novalidate>
+      <input class="contact-honeypot" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <input type="hidden" name="startedAt" data-contact-started />
+
+      <label>
+        <span>ΟΝΟΜΑ *</span>
+        <input type="text" name="name" autocomplete="name" maxlength="100" required />
+      </label>
+
+      <div class="contact-row">
+        <label>
+          <span>EMAIL *</span>
+          <input type="email" name="email" autocomplete="email" maxlength="160" required />
+        </label>
+        <label>
+          <span>ΤΗΛΕΦΩΝΟ</span>
+          <input type="tel" name="phone" autocomplete="tel" maxlength="40" />
+        </label>
+      </div>
+
+      <label>
+        <span>ΜΗΝΥΜΑ *</span>
+        <textarea name="message" rows="6" minlength="10" maxlength="2000" required></textarea>
+      </label>
+
+      <label class="contact-consent">
+        <input type="checkbox" name="consent" value="yes" required />
+        <span>Συμφωνώ να χρησιμοποιηθούν τα στοιχεία μου αποκλειστικά για την απάντηση στο μήνυμά μου.</span>
+      </label>
+
+      <div class="contact-form-status" data-contact-status aria-live="polite"></div>
+
+      <div class="contact-form-actions">
+        <button class="contact-submit" type="submit" data-contact-submit>
+          ΑΠΟΣΤΟΛΗ ΜΗΝΥΜΑΤΟΣ <span>→</span>
+        </button>
+        <button class="contact-cancel" type="button" data-contact-close>ΑΚΥΡΟ</button>
+      </div>
+    </form>
+
+    <div class="contact-success" data-contact-success hidden>
+      <span class="contact-success-icon">✓</span>
+      <h3>Το μήνυμά σας εστάλη.</h3>
+      <p>Ευχαριστούμε για την επικοινωνία. Θα σας απαντήσουμε το συντομότερο δυνατό.</p>
+      <button type="button" class="contact-submit" data-contact-done>ΚΛΕΙΣΙΜΟ</button>
+    </div>
+  </aside>
 </section>
 
 <style>
@@ -215,6 +276,8 @@
     font-weight:900;
     letter-spacing:.12em;
     text-decoration:none;
+    font-family:inherit;
+    cursor:pointer;
     transition:transform .18s ease,background .18s ease;
   }
   .contact:hover{background:#e6fa78;transform:translateY(-2px)}
@@ -223,6 +286,127 @@
   .preview:hover{color:#fff}
 
   footer{height:1px;border-top:1px solid rgba(255,255,255,.11)}
+
+  :global(body.contact-drawer-open){overflow:hidden}
+  .contact-backdrop{
+    position:fixed;
+    inset:0;
+    z-index:50;
+    background:rgba(2,12,22,.60);
+    backdrop-filter:blur(4px);
+    opacity:0;
+    transition:opacity .28s ease;
+  }
+  .contact-backdrop.is-open{opacity:1}
+  .contact-drawer{
+    position:fixed;
+    top:0;
+    right:0;
+    z-index:51;
+    width:min(540px,100vw);
+    height:100svh;
+    padding:clamp(28px,4vw,48px);
+    overflow-y:auto;
+    color:#fff;
+    background:
+      radial-gradient(circle at 100% 0%,rgba(31,119,190,.18),transparent 34%),
+      linear-gradient(180deg,#071e34 0%,#061827 100%);
+    border-left:1px solid rgba(215,243,63,.26);
+    box-shadow:-28px 0 80px rgba(0,0,0,.38);
+    transform:translateX(102%);
+    transition:transform .36s cubic-bezier(.2,.75,.25,1);
+  }
+  .contact-drawer.is-open{transform:translateX(0)}
+  .contact-drawer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+  .contact-eyebrow{display:block;margin-bottom:10px;color:var(--lime);font-size:10px;font-weight:900;letter-spacing:.22em}
+  .contact-drawer h2{margin:0;font-size:clamp(34px,4vw,48px);line-height:1.02;font-weight:500;letter-spacing:-.04em}
+  .contact-close{
+    width:44px;
+    height:44px;
+    flex:0 0 44px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.04);
+    color:#fff;
+    font:300 30px/1 Arial,sans-serif;
+    cursor:pointer;
+  }
+  .contact-close:hover{border-color:var(--lime);color:var(--lime)}
+  .contact-intro{margin:24px 0 32px;color:#b8cad7;font-size:15px;line-height:1.65}
+  .contact-form{display:grid;gap:20px}
+  .contact-form label{display:grid;gap:8px}
+  .contact-form label>span:first-child{color:#b9cad6;font-size:10px;font-weight:800;letter-spacing:.16em}
+  .contact-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .contact-form input:not([type="checkbox"]),
+  .contact-form textarea{
+    width:100%;
+    border:1px solid rgba(255,255,255,.16);
+    outline:none;
+    background:rgba(255,255,255,.045);
+    color:#fff;
+    font:inherit;
+    transition:border-color .18s ease,background .18s ease;
+  }
+  .contact-form input:not([type="checkbox"]){height:52px;padding:0 15px}
+  .contact-form textarea{min-height:150px;padding:14px 15px;resize:vertical}
+  .contact-form input:focus,
+  .contact-form textarea:focus{border-color:var(--lime);background:rgba(255,255,255,.07)}
+  .contact-consent{
+    grid-template-columns:20px 1fr;
+    align-items:start;
+    gap:12px!important;
+    color:#aebfcb;
+    font-size:12px;
+    line-height:1.5;
+    cursor:pointer;
+  }
+  .contact-consent input{width:17px;height:17px;margin:2px 0 0;accent-color:var(--lime)}
+  .contact-consent span{color:#aebfcb!important;font-size:12px!important;font-weight:400!important;letter-spacing:0!important}
+  .contact-honeypot{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0!important}
+  .contact-form-status{min-height:20px;color:#f0b6ad;font-size:12px;line-height:1.5}
+  .contact-form-status.is-ok{color:var(--lime)}
+  .contact-form-actions{display:flex;align-items:center;gap:18px;padding-top:2px}
+  .contact-submit{
+    display:inline-flex;
+    min-height:54px;
+    align-items:center;
+    justify-content:space-between;
+    gap:24px;
+    padding:0 22px;
+    border:1px solid var(--lime);
+    background:var(--lime);
+    color:#0b2235;
+    font-family:inherit;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.11em;
+    cursor:pointer;
+  }
+  .contact-submit:disabled{opacity:.55;cursor:wait}
+  .contact-cancel{
+    border:0;
+    background:transparent;
+    color:#b8cad7;
+    font-family:inherit;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.14em;
+    cursor:pointer;
+  }
+  .contact-cancel:hover{color:#fff}
+  .contact-success{padding-top:58px}
+  .contact-success-icon{
+    display:grid;
+    width:64px;
+    height:64px;
+    place-items:center;
+    margin-bottom:24px;
+    border:1px solid var(--lime);
+    border-radius:50%;
+    color:var(--lime);
+    font-size:28px;
+  }
+  .contact-success h3{margin:0 0 12px;font-size:34px;font-weight:500}
+  .contact-success p{margin:0 0 30px;color:#b8cad7;line-height:1.65}
 
   @keyframes pulse{50%{box-shadow:0 0 0 11px rgba(215,243,63,0)}}
 
@@ -298,6 +482,11 @@
     .actions{display:grid;gap:22px;margin-top:25px}
     .contact{width:100%;min-height:52px}
     .preview{text-align:center}
+    .contact-drawer{width:100vw;padding:24px 20px 28px}
+    .contact-row{grid-template-columns:1fr}
+    .contact-form-actions{display:grid}
+    .contact-submit{width:100%}
+    .contact-cancel{min-height:42px}
   }
 
   @media(max-height:760px) and (min-width:621px){
@@ -312,3 +501,94 @@
 
   @media(prefers-reduced-motion:reduce){.pulse{animation:none}}
 </style>
+
+
+<script>
+  const drawer = document.querySelector('[data-contact-drawer]');
+  const backdrop = document.querySelector('[data-contact-backdrop]');
+  const openButton = document.querySelector('[data-contact-open]');
+  const closeButtons = document.querySelectorAll('[data-contact-close]');
+  const doneButton = document.querySelector('[data-contact-done]');
+  const form = document.querySelector('[data-contact-form]');
+  const status = document.querySelector('[data-contact-status]');
+  const submitButton = document.querySelector('[data-contact-submit]');
+  const startedAt = document.querySelector('[data-contact-started]');
+  const success = document.querySelector('[data-contact-success]');
+
+  let lastFocused = null;
+
+  const openDrawer = () => {
+    if (!drawer || !backdrop) return;
+    lastFocused = document.activeElement;
+    backdrop.hidden = false;
+    if (startedAt) startedAt.value = String(Date.now());
+    requestAnimationFrame(() => {
+      backdrop.classList.add('is-open');
+      drawer.classList.add('is-open');
+      drawer.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('contact-drawer-open');
+      drawer.querySelector('.contact-close')?.focus();
+    });
+  };
+
+  const closeDrawer = () => {
+    if (!drawer || !backdrop) return;
+    drawer.classList.remove('is-open');
+    backdrop.classList.remove('is-open');
+    drawer.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('contact-drawer-open');
+    window.setTimeout(() => { backdrop.hidden = true; }, 280);
+    if (lastFocused instanceof HTMLElement) lastFocused.focus();
+  };
+
+  openButton?.addEventListener('click', openDrawer);
+  closeButtons.forEach((button) => button.addEventListener('click', closeDrawer));
+  doneButton?.addEventListener('click', closeDrawer);
+  backdrop?.addEventListener('click', closeDrawer);
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && drawer?.classList.contains('is-open')) closeDrawer();
+  });
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!(form instanceof HTMLFormElement) || !(submitButton instanceof HTMLButtonElement)) return;
+
+    status?.classList.remove('is-ok');
+    if (status) status.textContent = '';
+
+    if (!form.reportValidity()) return;
+
+    const data = new FormData(form);
+    const payload = Object.fromEntries(data.entries());
+
+    submitButton.disabled = true;
+    submitButton.textContent = 'ΑΠΟΣΤΟΛΗ...';
+
+    try {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 8000);
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      window.clearTimeout(timeout);
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result?.message || 'Η αποστολή απέτυχε. Δοκιμάστε ξανά.');
+
+      form.hidden = true;
+      if (success) success.hidden = false;
+      form.reset();
+    } catch (error) {
+      if (status) {
+        status.textContent = error instanceof Error ? error.message : 'Η αποστολή απέτυχε. Δοκιμάστε ξανά.';
+      }
+    } finally {
+      submitButton.disabled = false;
+      submitButton.innerHTML = 'ΑΠΟΣΤΟΛΗ ΜΗΝΥΜΑΤΟΣ <span>→</span>';
+    }
+  });
+</script>

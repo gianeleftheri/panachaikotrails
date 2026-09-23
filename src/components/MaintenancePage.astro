@@ -102,12 +102,11 @@
       </div>
     </form>
 
+    <div class="contact-success-panel" data-contact-success role="status" aria-live="polite" hidden>
+      <span class="contact-success-icon">✓</span>
+      <div>Το email σας στάλθηκε<br />με επιτυχία.</div>
+    </div>
   </aside>
-
-  <div class="contact-toast" data-contact-toast role="status" aria-live="polite" hidden>
-    <span class="contact-toast-icon">✓</span>
-    <span>Το email σας στάλθηκε με επιτυχία.</span>
-  </div>
 </section>
 
 <style>
@@ -400,39 +399,34 @@
     cursor:pointer;
   }
   .contact-cancel:hover{color:#fff}
-  .contact-toast{
-    position:fixed;
-    left:50%;
-    bottom:clamp(24px,5vh,54px);
-    z-index:70;
-    display:flex;
-    align-items:center;
-    gap:12px;
-    min-height:54px;
-    max-width:min(92vw,460px);
-    padding:14px 20px;
-    border:1px solid rgba(215,243,63,.42);
-    background:rgba(6,26,43,.96);
-    box-shadow:0 18px 54px rgba(0,0,0,.34);
-    color:#fff;
-    font-size:13px;
-    font-weight:700;
-    letter-spacing:.02em;
-    transform:translate(-50%,18px);
-    opacity:0;
-    transition:opacity .22s ease,transform .22s ease;
-  }
-  .contact-toast.is-visible{opacity:1;transform:translate(-50%,0)}
-  .contact-toast-icon{
+  .contact-success-panel{
+    min-height:calc(100svh - clamp(56px,8vw,96px));
     display:grid;
-    width:28px;
-    height:28px;
-    flex:0 0 28px;
+    place-content:center;
+    justify-items:center;
+    gap:22px;
+    padding:36px 0;
+    text-align:center;
+  }
+  .contact-success-panel[hidden]{display:none}
+  .contact-success-icon{
+    display:grid;
+    width:68px;
+    height:68px;
     place-items:center;
     border:1px solid var(--lime);
     border-radius:50%;
     color:var(--lime);
-    font-size:15px;
+    font-size:30px;
+    box-shadow:0 0 0 10px rgba(215,243,63,.06);
+  }
+  .contact-success-panel div{
+    max-width:420px;
+    color:#fff;
+    font-size:clamp(32px,4vw,46px);
+    line-height:1.08;
+    font-weight:600;
+    letter-spacing:-.035em;
   }
 
   @keyframes pulse{50%{box-shadow:0 0 0 11px rgba(215,243,63,0)}}
@@ -541,25 +535,16 @@
   const status = document.querySelector('[data-contact-status]');
   const submitButton = document.querySelector('[data-contact-submit]');
   const startedAt = document.querySelector('[data-contact-started]');
-  const toast = document.querySelector('[data-contact-toast]');
+  const drawerHead = drawer?.querySelector('.contact-drawer-head');
+  const drawerIntro = drawer?.querySelector('.contact-intro');
+  const successPanel = document.querySelector('[data-contact-success]');
   const turnstileContainer = document.querySelector('[data-turnstile-container]');
   const turnstileNote = document.querySelector('[data-turnstile-note]');
 
   let lastFocused = null;
   let turnstileWidgetId = null;
   let turnstileSiteKey = '';
-  let toastTimer = null;
-
-  const showSuccessToast = () => {
-    if (!toast) return;
-    if (toastTimer) window.clearTimeout(toastTimer);
-    toast.hidden = false;
-    requestAnimationFrame(() => toast.classList.add('is-visible'));
-    toastTimer = window.setTimeout(() => {
-      toast.classList.remove('is-visible');
-      window.setTimeout(() => { toast.hidden = true; }, 220);
-    }, 4200);
-  };
+  let successCloseTimer = null;
 
   const waitForTurnstile = async () => {
     for (let i = 0; i < 40; i += 1) {
@@ -629,6 +614,13 @@
     if (!drawer || !backdrop) return;
     lastFocused = document.activeElement;
     backdrop.hidden = false;
+    if (successCloseTimer) {
+      window.clearTimeout(successCloseTimer);
+      successCloseTimer = null;
+    }
+    if (drawerHead instanceof HTMLElement) drawerHead.hidden = false;
+    if (drawerIntro instanceof HTMLElement) drawerIntro.hidden = false;
+    if (successPanel instanceof HTMLElement) successPanel.hidden = true;
     if (form instanceof HTMLFormElement) {
       form.hidden = false;
       form.reset();
@@ -699,8 +691,21 @@
 
       form.reset();
       if (turnstileWidgetId !== null) window.turnstile?.reset?.(turnstileWidgetId);
-      closeDrawer();
-      showSuccessToast();
+
+      form.hidden = true;
+      if (drawerHead instanceof HTMLElement) drawerHead.hidden = true;
+      if (drawerIntro instanceof HTMLElement) drawerIntro.hidden = true;
+      if (successPanel instanceof HTMLElement) successPanel.hidden = false;
+
+      successCloseTimer = window.setTimeout(() => {
+        closeDrawer();
+        window.setTimeout(() => {
+          if (successPanel instanceof HTMLElement) successPanel.hidden = true;
+          if (drawerHead instanceof HTMLElement) drawerHead.hidden = false;
+          if (drawerIntro instanceof HTMLElement) drawerIntro.hidden = false;
+          form.hidden = false;
+        }, 320);
+      }, 2000);
     } catch (error) {
       if (status) {
         status.textContent = error instanceof Error ? error.message : 'Η αποστολή απέτυχε. Δοκιμάστε ξανά.';

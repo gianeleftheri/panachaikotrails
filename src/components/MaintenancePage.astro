@@ -87,6 +87,17 @@
         <span>Συμφωνώ να χρησιμοποιηθούν τα στοιχεία μου αποκλειστικά για την απάντηση στο μήνυμά μου.</span>
       </label>
 
+      <div class="contact-turnstile-wrap">
+        <div
+          class="cf-turnstile"
+          data-sitekey="1x00000000000000000000AA"
+          data-theme="dark"
+          data-size="flexible"
+          data-response-field-name="cf-turnstile-response"
+        ></div>
+        <small>Επαλήθευση ασφαλείας Cloudflare</small>
+      </div>
+
       <div class="contact-form-status" data-contact-status aria-live="polite"></div>
 
       <div class="contact-form-actions">
@@ -362,6 +373,9 @@
   .contact-consent input{width:17px;height:17px;margin:2px 0 0;accent-color:var(--lime)}
   .contact-consent span{color:#aebfcb!important;font-size:12px!important;font-weight:400!important;letter-spacing:0!important}
   .contact-honeypot{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0!important}
+  .contact-turnstile-wrap{display:grid;gap:8px;padding:4px 0}
+  .contact-turnstile-wrap small{color:#8197a8;font-size:10px;letter-spacing:.08em}
+  .contact-turnstile-wrap :global(iframe){max-width:100%}
   .contact-form-status{min-height:20px;color:#f0b6ad;font-size:12px;line-height:1.5}
   .contact-form-status.is-ok{color:var(--lime)}
   .contact-form-actions{display:flex;align-items:center;gap:18px;padding-top:2px}
@@ -503,6 +517,8 @@
 </style>
 
 
+<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
 <script>
   const drawer = document.querySelector('[data-contact-drawer]');
   const backdrop = document.querySelector('[data-contact-backdrop]');
@@ -562,6 +578,11 @@
     const data = new FormData(form);
     const payload = Object.fromEntries(data.entries());
 
+    if (!payload['cf-turnstile-response']) {
+      if (status) status.textContent = 'Ολοκληρώστε την επαλήθευση ασφαλείας Cloudflare.';
+      return;
+    }
+
     submitButton.disabled = true;
     submitButton.textContent = 'ΑΠΟΣΤΟΛΗ...';
 
@@ -586,6 +607,7 @@
       if (status) {
         status.textContent = error instanceof Error ? error.message : 'Η αποστολή απέτυχε. Δοκιμάστε ξανά.';
       }
+      window.turnstile?.reset?.();
     } finally {
       submitButton.disabled = false;
       submitButton.innerHTML = 'ΑΠΟΣΤΟΛΗ ΜΗΝΥΜΑΤΟΣ <span>→</span>';

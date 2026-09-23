@@ -345,6 +345,7 @@ if (app) {
     const statusLabel = trail.status === 'investigation' ? 'υπό διερεύνηση' : trail.existing ? 'υπάρχει' : 'σχεδιάζεται';
     const elevationRange = trail.elev_min === null || trail.elev_max === null ? '—' : `${trail.elev_min}–${trail.elev_max} μ`;
     const hasElevationSamples = trail.segments.some(segment => segment.some(point => typeof point[2] === 'number'));
+    trailDrawer.classList.toggle('no-elevation', !hasElevationSamples);
     tdCardBar.style.background = trail.color;
     tdTitleBlock.classList.add('selected');
     tdTitleBlock.style.setProperty('--trail-color', trail.color);

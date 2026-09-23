@@ -108,6 +108,8 @@ const normalizeTrail = (value: unknown, fallback?: Trail): Trail | null => {
     elev_max: raw.elev_max === undefined ? (fallback?.elev_max ?? null) : asNullableNumber(raw.elev_max),
     gain_m: raw.gain_m === undefined ? (fallback?.gain_m ?? 0) : asNumber(raw.gain_m, fallback?.gain_m ?? 0),
     loss_m: raw.loss_m === undefined ? (fallback?.loss_m ?? 0) : asNumber(raw.loss_m, fallback?.loss_m ?? 0),
+    duration_minutes: raw.duration_minutes === undefined ? fallback?.duration_minutes : (asNumber(raw.duration_minutes) > 0 ? Math.round(asNumber(raw.duration_minutes)) : undefined),
+    difficulty: typeof raw.difficulty === 'string' && raw.difficulty.trim() ? decodeHtmlEntities(raw.difficulty.trim()) : fallback?.difficulty,
     segments,
     photos: raw.photos === undefined ? (fallback?.photos ?? []) : normalizePoiArray(raw.photos),
     videos: raw.videos === undefined ? (fallback?.videos ?? []) : normalizePoiArray(raw.videos),

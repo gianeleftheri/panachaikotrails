@@ -36,6 +36,8 @@ export type Trail = {
   elev_max: number | null;
   gain_m: number;
   loss_m: number;
+  duration_minutes?: number;
+  difficulty?: string;
   segments: TrailPoint[][];
   photos: TrailPoi[];
   videos: TrailPoi[];

@@ -40,6 +40,7 @@ export const POST: APIRoute = async ({ request, url }) => {
   const website = clean(payload.website, 200);
   const consent = payload.consent === 'yes';
   const startedAt = Number(payload.startedAt || 0);
+  const turnstileToken = clean(payload['cf-turnstile-response'] ?? payload.turnstileToken, 2048);
 
   if (website) return json({ ok: true });
 
@@ -61,6 +62,10 @@ export const POST: APIRoute = async ({ request, url }) => {
 
   if (!consent) {
     return json({ message: 'Απαιτείται συγκατάθεση για την αποστολή της φόρμας.' }, 400);
+  }
+
+  if (!turnstileToken) {
+    return json({ message: 'Ολοκληρώστε την επαλήθευση ασφαλείας Cloudflare.' }, 400);
   }
 
   const wordpressEndpoint =
@@ -86,6 +91,7 @@ export const POST: APIRoute = async ({ request, url }) => {
         website,
         consent: 'yes',
         startedAt,
+        turnstileToken,
       }),
       signal: controller.signal,
     });

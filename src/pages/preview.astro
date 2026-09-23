@@ -1,0 +1,42 @@
+---
+import { PRIVATE_PREVIEW_COOKIE, isPrivatePreviewCookieValid, privatePreviewSecret, safeInternalRedirect } from '../lib/private-preview';
+export const prerender = false;
+
+const secret = privatePreviewSecret();
+const isActive = await isPrivatePreviewCookieValid(Astro.cookies.get(PRIVATE_PREVIEW_COOKIE)?.value, secret);
+const error = Astro.url.searchParams.get('error');
+const redirectTo = safeInternalRedirect(Astro.url.searchParams.get('redirect'));
+Astro.response.headers.set('Cache-Control', 'private, no-store, max-age=0');
+---
+
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="theme-color" content="#0b2118" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Ιδιωτική προεπισκόπηση | Panachaiko Trails</title>
+  </head>
+  <body>
+    <main class="preview-login">
+      <section class="preview-card">
+        <div class="brand"><img src="/logo-panachaiko.svg" alt="" /><strong>PANACHAIKO TRAILS</strong></div>
+        <span class="preview-kicker"><i></i> ΙΔΙΩΤΙΚΗ ΠΡΟΕΠΙΣΚΟΠΗΣΗ</span>
+        <h1>{isActive ? 'Η προεπισκόπηση είναι ενεργή.' : 'Δείτε το site πριν δημοσιευτεί.'}</h1>
+        <p>{isActive ? 'Σε αυτόν τον browser βλέπετε ολόκληρη την εφαρμογή, ενώ οι επισκέπτες συνεχίζουν να βλέπουν τη σελίδα «Υπό κατασκευή».' : 'Πληκτρολογήστε τον προσωπικό κωδικό. Η πρόσβαση θα παραμείνει ενεργή μόνο σε αυτόν τον browser για 8 ώρες.'}</p>
+        {error === 'invalid' && <p class="alert" role="alert">Ο κωδικός δεν είναι σωστός. Δοκιμάστε ξανά.</p>}
+        {error === 'config' && <p class="alert" role="alert">Η ιδιωτική προεπισκόπηση δεν έχει ρυθμιστεί ακόμη.</p>}
+        {isActive ? (
+          <div class="preview-actions"><a class="button" href={redirectTo}>ΜΕΤΑΒΑΣΗ ΣΤΟ SITE <span>↗</span></a><form method="post" action="/api/private-preview-exit"><button class="button secondary" type="submit">ΕΞΟΔΟΣ</button></form></div>
+        ) : (
+          <form class="preview-form" method="post" action="/api/private-preview"><input type="hidden" name="redirect" value={redirectTo} /><label for="preview-password">ΚΩΔΙΚΟΣ ΠΡΟΣΒΑΣΗΣ</label><input id="preview-password" name="password" type="password" autocomplete="current-password" required autofocus /><button class="button" type="submit">ΕΝΕΡΓΟΠΟΙΗΣΗ <span>↗</span></button></form>
+        )}
+      </section>
+    </main>
+    <style>
+      *{box-sizing:border-box}html{min-height:100%;background:#07130f}body{margin:0;min-height:100%;font-family:Arial,sans-serif;color:#fff;background:#07130f}.preview-login{position:relative;display:grid;place-items:center;min-height:100svh;padding:32px 20px;overflow:hidden;background:radial-gradient(circle at 90% 12%,rgba(213,239,74,.1),transparent 32%),linear-gradient(135deg,#102b21,#07130f)}.preview-login::before{position:absolute;inset:0;content:"";opacity:.14;background-image:linear-gradient(rgba(153,190,166,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(153,190,166,.25) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,black,transparent 85%)}.preview-card{position:relative;width:min(100%,620px);padding:clamp(30px,6vw,58px);border:1px solid #294438;background:rgba(9,30,22,.94);box-shadow:0 30px 90px rgba(0,0,0,.35)}.brand{display:flex;align-items:center;gap:15px;margin-bottom:52px}.brand img{width:60px;height:60px}.brand strong{font-size:15px;letter-spacing:.08em}.preview-kicker{display:flex;align-items:center;gap:12px;margin-bottom:22px;color:#a6b9ae;font-size:11px;font-weight:700;letter-spacing:.2em}.preview-kicker i{display:block;width:27px;height:2px;background:#d5ef4a}h1{max-width:520px;margin:0 0 18px;font-size:clamp(35px,6vw,58px);line-height:1.02;font-weight:500;letter-spacing:-.035em}p{margin:0 0 32px;color:#afc0b7;font-size:17px;line-height:1.7}.alert{margin-bottom:22px;padding:13px 15px;border-left:3px solid #d5ef4a;background:rgba(213,239,74,.08);color:#fff;font-size:14px}.preview-form{display:grid;gap:12px}label{font-size:10px;font-weight:700;letter-spacing:.16em;color:#b7c9bf}input[type="password"]{width:100%;height:55px;padding:0 16px;border:1px solid #3e5b4c;border-radius:0;outline:none;background:#0e291e;color:#fff;font:inherit}input[type="password"]:focus{border-color:#d5ef4a;box-shadow:0 0 0 3px rgba(213,239,74,.1)}.preview-actions{display:flex;flex-wrap:wrap;gap:12px}.preview-actions form{margin:0}.button{display:inline-flex;align-items:center;justify-content:center;gap:18px;width:max-content;min-height:52px;margin-top:8px;padding:0 23px;border:1px solid #c0da37;background:#c0da37;color:#102219;font-size:11px;font-weight:800;letter-spacing:.1em;text-decoration:none;cursor:pointer}.button:hover{background:#dcf65b;border-color:#dcf65b}.secondary{background:transparent;border-color:#60766a;color:#fff}@media(max-width:540px){.preview-card{padding:30px 24px}.brand{margin-bottom:42px}.preview-actions,.preview-actions form,.button{width:100%}}
+    </style>
+  </body>
+</html>

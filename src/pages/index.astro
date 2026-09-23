@@ -1,10 +1,8 @@
 ---
-import TrailExplorer from '../components/TrailExplorer.astro';
-import '../styles/global.css';
-import '../styles/front-end-refresh.css';
+import MaintenancePage from '../components/MaintenancePage.astro';
 
-const title = 'Panachaiko Trails | Δίκτυο μονοπατιών Παναχαϊκού';
-const description = 'Διαδραστικός χάρτης του δικτύου μονοπατιών στο Παναχαϊκό όρος.';
+const title = 'Υπό κατασκευή | Panachaiko Trails';
+const description = 'Το νέο Panachaiko Trails ετοιμάζεται. Σύντομα θα ανακαλύψετε τα μονοπάτια και τις διαδρομές του Παναχαϊκού όρους.';
 ---
 
 <!doctype html>
@@ -13,11 +11,10 @@ const description = 'Διαδραστικός χάρτης του δικτύου
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#12201a" />
-    <link rel="preconnect" href="https://server.arcgisonline.com" crossorigin />
-    <link rel="preconnect" href="https://cms.panachaikotrails.gr" crossorigin />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="theme-color" content="#081711" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
   </head>
-  <body><TrailExplorer /></body>
+  <body><MaintenancePage /></body>
 </html>

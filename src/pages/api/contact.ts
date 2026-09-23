@@ -70,37 +70,82 @@ export const POST: APIRoute = async ({ request, url }) => {
 
   const wordpressEndpoint =
     import.meta.env.CONTACT_WORDPRESS_ENDPOINT ||
-    'https://cms.panachaikotrails.gr/wp-json/panachaiko/v1/contact';
+    'https://cms.panachaikotrails.gr/wp-json/panachaiko/v1/contact/';
 
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(wordpressEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'User-Agent': 'PanachaikoTrails-Contact/1.0',
-      },
-      body: JSON.stringify({
-        name,
-        email,
-        phone,
-        message,
-        website,
-        consent: 'yes',
-        startedAt,
-        turnstileToken,
-      }),
-      signal: controller.signal,
+    const body = JSON.stringify({
+      name,
+      email,
+      phone,
+      message,
+      website,
+      consent: 'yes',
+      startedAt,
+      turnstileToken,
     });
+
+    const sendPost = async (target: string) => {
+      let response = await fetch(target, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'PanachaikoTrails-Contact/1.0',
+        },
+        body,
+        signal: controller.signal,
+        redirect: 'manual',
+      });
+
+      // Some hosting/canonical rules answer with 301/302. Re-POST to the target
+      // instead of letting fetch silently convert the request to GET.
+      if ([301, 302, 303, 307, 308].includes(response.status)) {
+        const location = response.headers.get('location');
+        if (location) {
+          const redirected = new URL(location, target).toString();
+          response = await fetch(redirected, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'User-Agent': 'PanachaikoTrails-Contact/1.0',
+            },
+            body,
+            signal: controller.signal,
+            redirect: 'manual',
+          });
+        }
+      }
+      return response;
+    };
+
+    let response = await sendPost(wordpressEndpoint);
+    let result = await response.json().catch(() => ({}));
+
+    // Retry the alternate trailing-slash form when WordPress reports no matching route.
+    if (!response.ok && result?.code === 'rest_no_route') {
+      const alternate = wordpressEndpoint.endsWith('/')
+        ? wordpressEndpoint.slice(0, -1)
+        : wordpressEndpoint + '/';
+      response = await sendPost(alternate);
+      result = await response.json().catch(() => ({}));
+    }
 
     clearTimeout(timeout);
 
-    const result = await response.json().catch(() => ({}));
     if (!response.ok) {
       console.error('WordPress contact endpoint error', response.status, result);
+
+      if (result?.code === 'rest_no_route') {
+        return json(
+          { message: 'Το WordPress endpoint επικοινωνίας δεν είναι ενεργό. Ελέγξτε ότι το Panachaiko Trails Admin UI 0.9.9 είναι εγκατεστημένο και ενεργό.' },
+          503,
+        );
+      }
+
       return json(
         { message: typeof result?.message === 'string' ? result.message : 'Η αποστολή δεν ολοκληρώθηκε. Δοκιμάστε ξανά σε λίγο.' },
         response.status >= 400 && response.status < 600 ? response.status : 502,

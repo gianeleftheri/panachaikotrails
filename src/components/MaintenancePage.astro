@@ -63,16 +63,19 @@
   .scene-media{
     position:absolute;
     inset:0;
-    display:block;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
     overflow:hidden;
   }
   .scene-image{
     display:block;
-    width:100%;
+    width:auto;
     height:100%;
     max-width:none;
+    flex:0 0 auto;
     object-fit:contain;
-    object-position:center center;
+    object-position:right center;
     image-rendering:auto;
     filter:saturate(.98) contrast(1.03) brightness(.82);
   }
@@ -186,11 +189,15 @@
   @keyframes pulse{50%{box-shadow:0 0 0 11px rgba(215,243,63,0)}}
 
   @media(max-width:980px){
+    .scene-media{
+      justify-content:flex-end;
+    }
     .scene-image{
-      width:100%;
+      width:auto;
       height:100%;
+      min-width:0;
       object-fit:contain;
-      object-position:center center;
+      object-position:right center;
     }
     .scene-shade{background:linear-gradient(90deg,rgba(5,31,22,.98) 0%,rgba(5,31,22,.94) 48%,rgba(5,31,22,.68) 72%,rgba(5,31,22,.28) 100%),linear-gradient(180deg,rgba(3,18,13,.28),rgba(3,18,13,.22))}
     .copy{width:min(100%,620px)}
@@ -208,12 +215,15 @@
     .scene-media{
       inset:auto 0 0;
       height:52svh;
+      align-items:flex-end;
+      justify-content:flex-end;
     }
     .scene-image{
-      width:100%;
+      width:auto;
       height:100%;
+      min-width:0;
       object-fit:contain;
-      object-position:center bottom;
+      object-position:right bottom;
       filter:saturate(.96) contrast(1.02) brightness(.74);
     }
     .scene-shade{

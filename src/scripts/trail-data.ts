@@ -9,6 +9,14 @@ const CACHE_KEY = 'panachaiko-trails-cache-v5';
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const CMS_TRAILS_URL = import.meta.env.PUBLIC_TRAILS_API_URL || 'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/trails';
 
+// The CMS contains Π-14's traced geometry, but does not yet publish its
+// elevation, walking time, or difficulty. These values are published by the
+// Municipality of Patras and the December 2024 Achaia Development study.
+export const P14_REFERENCE = {
+  municipality: 'https://e-patras.gr/el/qrcode-panahaiko',
+  study: 'https://www.achaiasa.gr/images/downloads/CLLD_LEADER_PAA/Sxediosunergasias/CORINTH/Empirognomosini_Diadromon_Axaia_Teliki.pdf'
+};
+
 const trailModules = import.meta.glob<TrailDataModule>('../data/trails/*.json', { eager: true, import: 'default' });
 const rawBundledTrails = Object.values(trailModules).reduce<Record<string, unknown>>(
   (all, item) => ({ ...all, [item.key]: item.trail }),
@@ -123,9 +131,17 @@ const normalizeTrail = (value: unknown, fallback?: Trail): Trail | null => {
   };
 };
 
+const addPublishedP14Details = (code: string, trail: Trail): Trail => code === 'Π-14' ? {
+  ...trail,
+  elev_min: trail.elev_min ?? 833,
+  elev_max: trail.elev_max ?? 1010,
+  duration_minutes: trail.duration_minutes ?? 120,
+  difficulty: trail.difficulty ?? 'Μέτρια'
+} : trail;
+
 const normalizeCollection = (collection: Record<string, unknown>): TrailCollection => Object.entries(collection).reduce<TrailCollection>((all, [key, value]) => {
   const trail = normalizeTrail(value);
-  if (trail) all[key] = trail;
+  if (trail) all[key] = addPublishedP14Details(key, trail);
   return all;
 }, {});
 
@@ -145,7 +161,7 @@ const normalizeApiResponse = (payload: unknown): TrailCollection | null => {
     const fallback = bundledTrails[item.key];
     const trail = normalizeTrail(item.trail, fallback);
     if (!trail) return;
-    collection[item.key] = trail;
+    collection[item.key] = addPublishedP14Details(item.key, trail);
     validCmsItems += 1;
   });
 

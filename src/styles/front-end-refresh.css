@@ -1,0 +1,279 @@
+/* Visual refresh of the existing map controls. Behaviour lives in the original scripts. */
+.trail-app {
+  --ui-surface: rgba(16, 34, 28, .96);
+  --ui-border: rgba(178, 197, 156, .32);
+  --ui-accent: #aaca74;
+  --ui-accent-text: #e5f0c6;
+  --ui-drawer-width: min(42vw, clamp(390px, 31vw, 450px));
+}
+
+.topbar {
+  height: 70px;
+  padding-inline: clamp(18px, 2vw, 34px);
+  background: var(--ui-surface);
+  border-bottom-color: var(--ui-border);
+}
+
+.brand svg { flex: none; }
+.topbar-actions { gap: 8px; }
+.tool-label { display: none; }
+
+.trail-menu-toggle,
+.locate-btn,
+.shelter-btn,
+.view3d-btn {
+  background: rgba(255, 255, 255, .035);
+  border-color: var(--ui-border);
+  color: #e9eee6;
+  transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+
+.trail-menu-toggle { border-radius: 10px; min-height: 38px; }
+.trail-menu-toggle.open,
+.locate-btn.active {
+  background: #244634;
+  border-color: var(--ui-accent);
+  color: var(--ui-accent-text);
+}
+.shelter-btn { color: #e9eee6; }
+.view3d-btn { font-size: inherit; }
+.submit-trail-cta {
+  background: #294735;
+  border-color: var(--ui-border);
+  box-shadow: none;
+  border-radius: 10px;
+  min-height: 38px;
+}
+
+.trail-menu-toggle:hover,
+.locate-btn:not(:disabled):hover,
+.shelter-btn:hover,
+.view3d-btn:hover,
+.submit-trail-cta:hover {
+  background: #305440;
+  border-color: var(--ui-accent);
+  color: #fff;
+}
+
+.topbar-actions :is(button, a):focus-visible,
+.trail-panel-pin:focus-visible,
+.trail-panel-close:focus-visible,
+.td-close:focus-visible,
+.trail-drawer-handle:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 3px;
+}
+
+.panel,
+.route-builder-panel,
+.trail-drawer,
+.shelter-panel {
+  background: var(--ui-surface);
+  border-color: var(--ui-border);
+  box-shadow: 0 18px 48px rgba(2, 14, 12, .48);
+}
+
+.left-panel {
+  top: 84px;
+  left: 18px;
+  width: clamp(310px, 23vw, 366px);
+  border-radius: 15px;
+}
+.left-panel.open { max-height: min(720px, calc(100dvh - 106px)); }
+.left-panel-head { padding: 17px 15px 13px; }
+.count-row { font-family: var(--sans); }
+.count-row strong { color: var(--ui-accent-text); font: 700 20px/1.2 var(--sans); }
+.trail-list { border-top-color: var(--ui-border); }
+.trail-row { min-height: 58px; padding: 11px 15px; }
+.trail-row.active { background: rgba(170, 202, 116, .12); }
+.trail-row-name { font-size: 13px; font-weight: 600; }
+.trail-panel-pin { filter: none; }
+.trail-panel-pin.active { color: var(--ui-accent-text); }
+
+.route-builder-panel {
+  top: 80px;
+  right: 18px;
+  width: 340px;
+  border-radius: 15px;
+  max-height: calc(100dvh - 98px);
+  overflow: auto;
+}
+.rb-gps-btn,
+.rb-calc-btn,
+.rb-select { min-height: 42px; border-radius: 9px; }
+.rb-calc-btn:not(:disabled) { background: #2f6345; }
+.shelter-panel { top: 80px; border-radius: 14px; }
+
+.trail-drawer {
+  top: 70px;
+  width: var(--ui-drawer-width);
+  max-width: 42vw;
+}
+.trail-drawer-handle { background: var(--ui-surface); border-color: var(--ui-border); }
+.trail-drawer-handle.open { right: var(--ui-drawer-width); }
+.td-titleblock { padding: 22px 52px 15px 22px; }
+.td-titleblock .big,
+.trail-card-title { font: 700 21px/1.28 var(--sans); }
+.td-tab.active { color: var(--ui-accent-text); border-bottom-color: var(--ui-accent); }
+.td-panel { padding-inline: 22px; }
+.stat-box { border-radius: 9px; border-color: var(--ui-border); }
+.stat-box .value { font: 700 18px/1.3 var(--sans); }
+
+@media (min-width: 1500px) {
+  .left-panel { width: 370px; }
+  .left-panel.open { max-height: min(820px, calc(100dvh - 106px)); }
+  .trail-app { --ui-drawer-width: clamp(450px, 29vw, 560px); }
+  .trail-drawer { max-width: 38vw; }
+  .td-panel { padding: 23px 28px 32px; }
+  .td-titleblock { padding-left: 28px; }
+  .trail-row { min-height: 65px; }
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    height: 60px;
+    padding-inline: 15px;
+    backdrop-filter: none;
+  }
+  .brand svg { width: 29px; height: 29px; }
+  .brand-text h1 { font-size: 17px; }
+
+  /* The same six working controls become the bottom toolbar on phones. */
+  .topbar-actions {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 600;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 2px;
+    min-height: calc(69px + env(safe-area-inset-bottom));
+    padding: 5px 6px calc(5px + env(safe-area-inset-bottom));
+    background: #10231c;
+    border-top: 1px solid var(--ui-border);
+    box-shadow: 0 -8px 28px rgba(2, 16, 12, .35);
+  }
+
+  .topbar-actions > :is(button, a):not(.recenter-btn) {
+    width: 100%;
+    height: 59px;
+    min-height: 59px;
+    padding: 5px 1px 4px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: #e5ece5;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 10px;
+    line-height: 1.1;
+    font-weight: 600;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    box-shadow: none;
+  }
+  .topbar-actions > :is(button, a):not(.recenter-btn) svg { flex: none; width: 22px; height: 22px; }
+  .trail-menu-toggle .btn-label,
+  .submit-trail-cta span,
+  .tool-label { display: block; }
+  .topbar-actions > :is(button, a).open,
+  .topbar-actions > .locate-btn.active {
+    color: var(--ui-accent-text);
+    border-color: rgba(170, 202, 116, .5);
+    background: #213b2d;
+  }
+  .topbar-actions > :is(button, a):not(.recenter-btn):hover { background: #263d31; }
+  .topbar-actions > :is(button, a):disabled { opacity: .42; }
+  .topbar-actions > .recenter-btn.show {
+    display: flex;
+    position: absolute;
+    right: 11px;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--ui-surface);
+    border-color: var(--ui-border);
+  }
+
+  .left-panel {
+    top: auto;
+    bottom: calc(79px + env(safe-area-inset-bottom));
+    left: 8px;
+    width: calc(100% - 16px);
+    border-radius: 16px;
+  }
+  .left-panel.open { max-height: min(54dvh, 530px); }
+  .trail-row { min-height: 55px; }
+
+  .route-builder-panel {
+    top: auto;
+    left: 8px;
+    right: 8px;
+    bottom: calc(79px + env(safe-area-inset-bottom));
+    width: auto;
+    max-height: min(67dvh, 560px);
+    overflow-y: auto;
+    border-radius: 16px;
+  }
+  .shelter-panel {
+    top: auto;
+    left: 8px;
+    right: 8px;
+    bottom: calc(79px + env(safe-area-inset-bottom));
+    transform: none;
+    min-width: 0;
+  }
+
+  .trail-drawer {
+    top: auto;
+    left: 8px;
+    right: 8px;
+    bottom: calc(79px + env(safe-area-inset-bottom));
+    width: auto;
+    max-width: none;
+    height: min(58dvh, 570px);
+    border: 1px solid var(--ui-border);
+    border-radius: 16px;
+    transform: translateY(calc(100% + 100px));
+  }
+  .trail-drawer.open { transform: translateY(0); }
+  .trail-drawer-handle {
+    display: grid;
+    place-items: center;
+    top: auto;
+    right: 11px;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--ui-border);
+    border-radius: 12px;
+  }
+  .trail-drawer-handle.open { display: none; }
+  .td-titleblock { padding: 18px 48px 10px 18px; }
+  .td-panel { padding: 15px 18px 25px; }
+  .td-tabs { padding-inline: 8px; }
+  .td-tab { min-height: 44px; }
+  .distance-badge { top: 69px; }
+  .route-mode-toggle { top: 107px; }
+  .leaflet-bottom { bottom: calc(76px + env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 390px) {
+  .topbar-actions { gap: 0; padding-inline: 3px; }
+  .topbar-actions > :is(button, a):not(.recenter-btn) { font-size: 9px; }
+  .brand-text { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar-actions :is(button, a),
+  .trail-drawer,
+  .left-panel { transition-duration: .01ms; }
+}

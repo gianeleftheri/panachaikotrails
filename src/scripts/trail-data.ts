@@ -60,18 +60,21 @@ const normalizePoiArray = (value: unknown): TrailPoi[] => Array.isArray(value)
 const normalizeNavigation = (value: unknown, fallback?: TrailNavigation): TrailNavigation | undefined => {
   if (!value || typeof value !== 'object') return fallback;
   const raw = value as Record<string, unknown>;
-  const startRaw = raw.start && typeof raw.start === 'object' ? raw.start as Record<string, unknown> : null;
-  const endRaw = raw.end && typeof raw.end === 'object' ? raw.end as Record<string, unknown> : null;
-  const startLat = startRaw ? Number(startRaw.lat) : NaN;
-  const startLng = startRaw ? Number(startRaw.lng) : NaN;
-  const endLat = endRaw ? Number(endRaw.lat) : NaN;
-  const endLng = endRaw ? Number(endRaw.lng) : NaN;
+  // The CMS sends { lat, lng }; the local cache stores normalized [lat, lng].
+  const startRaw = raw.start && typeof raw.start === 'object' ? raw.start as Record<string, unknown> | unknown[] : null;
+  const endRaw = raw.end && typeof raw.end === 'object' ? raw.end as Record<string, unknown> | unknown[] : null;
+  const coordinate = (point: Record<string, unknown> | unknown[] | null, axis: 'lat' | 'lng') =>
+    Number(Array.isArray(point) ? point[axis === 'lat' ? 0 : 1] : point?.[axis]);
+  const startLat = coordinate(startRaw, 'lat');
+  const startLng = coordinate(startRaw, 'lng');
+  const endLat = coordinate(endRaw, 'lat');
+  const endLng = coordinate(endRaw, 'lng');
   if (![startLat, startLng, endLat, endLng].every(Number.isFinite)) return fallback;
   return {
     start: [startLat, startLng],
     end: [endLat, endLng],
-    start_label: typeof startRaw?.label === 'string' ? decodeHtmlEntities(startRaw.label) : fallback?.start_label,
-    end_label: typeof endRaw?.label === 'string' ? decodeHtmlEntities(endRaw.label) : fallback?.end_label,
+    start_label: typeof raw.start_label === 'string' ? raw.start_label : (!Array.isArray(startRaw) && typeof startRaw?.label === 'string' ? decodeHtmlEntities(startRaw.label) : fallback?.start_label),
+    end_label: typeof raw.end_label === 'string' ? raw.end_label : (!Array.isArray(endRaw) && typeof endRaw?.label === 'string' ? decodeHtmlEntities(endRaw.label) : fallback?.end_label),
     direction_verified: typeof raw.direction_verified === 'boolean' ? raw.direction_verified : fallback?.direction_verified
   };
 };

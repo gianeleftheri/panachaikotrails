@@ -88,14 +88,8 @@
       </label>
 
       <div class="contact-turnstile-wrap">
-        <div
-          class="cf-turnstile"
-          data-sitekey="1x00000000000000000000AA"
-          data-theme="dark"
-          data-size="flexible"
-          data-response-field-name="cf-turnstile-response"
-        ></div>
-        <small>Επαλήθευση ασφαλείας Cloudflare</small>
+        <div class="contact-turnstile" data-turnstile-container></div>
+        <small data-turnstile-note>Επαλήθευση ασφαλείας Cloudflare</small>
       </div>
 
       <div class="contact-form-status" data-contact-status aria-live="polite"></div>
@@ -517,7 +511,7 @@
 </style>
 
 
-<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <script>
   const drawer = document.querySelector('[data-contact-drawer]');
@@ -530,8 +524,76 @@
   const submitButton = document.querySelector('[data-contact-submit]');
   const startedAt = document.querySelector('[data-contact-started]');
   const success = document.querySelector('[data-contact-success]');
+  const turnstileContainer = document.querySelector('[data-turnstile-container]');
+  const turnstileNote = document.querySelector('[data-turnstile-note]');
 
   let lastFocused = null;
+  let turnstileWidgetId = null;
+  let turnstileSiteKey = '';
+
+  const waitForTurnstile = async () => {
+    for (let i = 0; i < 40; i += 1) {
+      if (window.turnstile?.render) return true;
+      await new Promise((resolve) => window.setTimeout(resolve, 100));
+    }
+    return false;
+  };
+
+  const ensureTurnstile = async () => {
+    if (!turnstileContainer) return;
+
+    if (!turnstileSiteKey) {
+      try {
+        const response = await fetch('/api/contact-config', {
+          headers: {'Accept':'application/json'},
+          cache: 'no-store',
+        });
+        const config = await response.json().catch(() => ({}));
+
+        if (!response.ok || !config?.configured || !config?.siteKey) {
+          if (turnstileNote) {
+            turnstileNote.textContent = 'Το Cloudflare Turnstile δεν έχει ρυθμιστεί ακόμη στο CMS.';
+          }
+          return;
+        }
+
+        turnstileSiteKey = config.siteKey;
+      } catch {
+        if (turnstileNote) {
+          turnstileNote.textContent = 'Δεν ήταν δυνατή η φόρτωση της επαλήθευσης Cloudflare.';
+        }
+        return;
+      }
+    }
+
+    const ready = await waitForTurnstile();
+    if (!ready || !window.turnstile?.render) {
+      if (turnstileNote) turnstileNote.textContent = 'Η επαλήθευση Cloudflare δεν φορτώθηκε. Ανανεώστε τη σελίδα.';
+      return;
+    }
+
+    if (turnstileWidgetId !== null) {
+      window.turnstile.reset(turnstileWidgetId);
+      return;
+    }
+
+    turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+      sitekey: turnstileSiteKey,
+      theme: 'dark',
+      size: 'flexible',
+      'response-field': true,
+      'response-field-name': 'cf-turnstile-response',
+      callback: () => {
+        if (turnstileNote) turnstileNote.textContent = 'Η επαλήθευση ασφαλείας ολοκληρώθηκε.';
+      },
+      'expired-callback': () => {
+        if (turnstileNote) turnstileNote.textContent = 'Η επαλήθευση έληξε. Ολοκληρώστε την ξανά.';
+      },
+      'error-callback': () => {
+        if (turnstileNote) turnstileNote.textContent = 'Η επαλήθευση Cloudflare απέτυχε. Δοκιμάστε ξανά.';
+      },
+    });
+  };
 
   const openDrawer = () => {
     if (!drawer || !backdrop) return;
@@ -544,6 +606,7 @@
       drawer.setAttribute('aria-hidden', 'false');
       document.body.classList.add('contact-drawer-open');
       drawer.querySelector('.contact-close')?.focus();
+      ensureTurnstile();
     });
   };
 
@@ -607,7 +670,7 @@
       if (status) {
         status.textContent = error instanceof Error ? error.message : 'Η αποστολή απέτυχε. Δοκιμάστε ξανά.';
       }
-      window.turnstile?.reset?.();
+      if (turnstileWidgetId !== null) window.turnstile?.reset?.(turnstileWidgetId);
     } finally {
       submitButton.disabled = false;
       submitButton.innerHTML = 'ΑΠΟΣΤΟΛΗ ΜΗΝΥΜΑΤΟΣ <span>→</span>';

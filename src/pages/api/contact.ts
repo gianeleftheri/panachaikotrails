@@ -14,7 +14,11 @@ const json = (body: Record<string, unknown>, status = 200) =>
 const clean = (value: unknown, max: number) =>
   typeof value === 'string' ? value.trim().slice(0, max) : '';
 
-export const POST: APIRoute = async ({ request, url }) => {
+const RATE_COOKIE = 'pt_contact_rate';
+const RATE_WINDOW_SECONDS = 30 * 60;
+const RATE_LIMIT = 3;
+
+export const POST: APIRoute = async ({ request, url, cookies }) => {
   const origin = request.headers.get('origin');
   if (origin) {
     try {
@@ -24,6 +28,30 @@ export const POST: APIRoute = async ({ request, url }) => {
     } catch {
       return json({ message: 'Μη έγκυρη προέλευση αιτήματος.' }, 403);
     }
+  }
+
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const rawRate = cookies.get(RATE_COOKIE)?.value || '';
+  const [rawCount, rawStarted] = rawRate.split(':');
+  let rateCount = Number.parseInt(rawCount || '0', 10);
+  let rateStarted = Number.parseInt(rawStarted || '0', 10);
+
+  if (!Number.isFinite(rateCount) || rateCount < 0) rateCount = 0;
+  if (!Number.isFinite(rateStarted) || rateStarted <= 0 || nowSeconds - rateStarted >= RATE_WINDOW_SECONDS) {
+    rateCount = 0;
+    rateStarted = nowSeconds;
+  }
+
+  if (rateCount >= RATE_LIMIT) {
+    const retryAfter = Math.max(1, RATE_WINDOW_SECONDS - (nowSeconds - rateStarted));
+    const minutes = Math.max(1, Math.ceil(retryAfter / 60));
+    return json(
+      {
+        message: `Έχετε φτάσει το όριο των 3 μηνυμάτων. Μπορείτε να στείλετε ξανά σε περίπου ${minutes} λεπτά.`,
+        retryAfter,
+      },
+      429,
+    );
   }
 
   let payload: Record<string, unknown>;
@@ -152,7 +180,23 @@ export const POST: APIRoute = async ({ request, url }) => {
       );
     }
 
-    return json({ ok: true });
+    const nextCount = rateCount + 1;
+    const elapsed = Math.max(0, nowSeconds - rateStarted);
+    const maxAge = Math.max(1, RATE_WINDOW_SECONDS - elapsed);
+
+    cookies.set(RATE_COOKIE, `${nextCount}:${rateStarted}`, {
+      httpOnly: true,
+      secure: import.meta.env.PROD,
+      sameSite: 'strict',
+      path: '/',
+      maxAge,
+    });
+
+    return json({
+      ok: true,
+      remaining: Math.max(0, RATE_LIMIT - nextCount),
+      resetsIn: maxAge,
+    });
   } catch (error) {
     console.error('Contact proxy error', error);
     return json({ message: 'Δεν ήταν δυνατή η σύνδεση με την υπηρεσία email. Δοκιμάστε ξανά.' }, 502);

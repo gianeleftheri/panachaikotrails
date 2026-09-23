@@ -126,6 +126,9 @@ if (app) {
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
 
+  const routeIcon = '<svg viewBox="0 0 20 30" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 26c4-2 6-4 5-7s4-4 5-7c1-2-2-3 2-8" /></svg>';
+  const formatDuration = (minutes: number) => `${Math.floor(minutes / 60)}ω ${String(minutes % 60).padStart(2, '0')}′`;
+
   const styleFor = (trail: Trail, active = false): L.PathOptions => ({
     color: trail.color || (trail.existing ? '#84a06e' : '#9c917c'),
     weight: active ? 6 : 3.5,
@@ -259,10 +262,16 @@ if (app) {
   const elevationSvg = (trail: Trail) => {
     const pts = elevationProfile(trail);
     if (!pts.length) return '<div class="empty-note">Δεν υπάρχουν δεδομένα υψομέτρου.</div>';
-    const W = 300, H = 95, p = 5, minE = Math.min(...pts.map(x => x.e)), maxE = Math.max(...pts.map(x => x.e)), maxD = pts.at(-1)?.d || 1;
-    const sx = (d: number) => p + d / maxD * (W - p * 2), sy = (e: number) => H - p - (e - minE) / Math.max(1, maxE - minE) * (H - p * 2);
-    const line = pts.map(x => `${sx(x.d).toFixed(1)},${sy(x.e).toFixed(1)}`).join(' ');
-    return `<svg class="elevation-chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polygon points="${p},${H} ${line} ${W-p},${H}" fill="rgba(207,90,52,.2)"/><polyline points="${line}" fill="none" stroke="#cf5a34" stroke-width="2"/></svg><div class="chart-labels"><span>${minE} μ</span><span>${maxE} μ</span></div>`;
+    const W = 600, H = 110, top = 9, bottom = 100;
+    const minE = Math.min(...pts.map(x => x.e)), maxE = Math.max(...pts.map(x => x.e)), maxD = pts.at(-1)?.d || 1;
+    const sx = (d: number) => d / maxD * W;
+    const sy = (e: number) => bottom - (e - minE) / Math.max(1, maxE - minE) * (bottom - top);
+    const line = pts.map(point => `${sx(point.d).toFixed(1)},${sy(point.e).toFixed(1)}`).join(' ');
+    const horizontal = [top, (top + bottom) / 2, bottom].map(y => `<line x1="0" y1="${y}" x2="${W}" y2="${y}" />`).join('');
+    const vertical = [0, .25, .5, .75, 1].map(part => `<line x1="${W * part}" y1="${top}" x2="${W * part}" y2="${bottom}" />`).join('');
+    const altitude = (value: number) => `${Math.round(value).toLocaleString('el-GR')} μ`;
+    const startY = sy(pts[0].e) / H * 100, endY = sy(pts[pts.length - 1].e) / H * 100;
+    return `<div class="elevation-chart" role="img" aria-label="Υψομετρικό προφίλ από ${altitude(pts[0].e)} έως ${altitude(pts[pts.length - 1].e)}"><div class="elevation-y-axis"><span>${altitude(maxE)}</span><span>${altitude((minE + maxE) / 2)}</span><span>${altitude(minE)}</span></div><div class="elevation-plot"><div class="elevation-chart-visual"><svg class="elevation-chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="trail-elevation-fill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f79445" stop-opacity=".33"/><stop offset="1" stop-color="#f79445" stop-opacity=".03"/></linearGradient></defs><g class="elevation-grid">${horizontal}${vertical}</g><polygon points="0,${bottom} ${line} ${W},${bottom}" fill="url(#trail-elevation-fill)"/><polyline points="${line}" fill="none" stroke="#f17c34" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg><span class="elevation-endpoint start" style="top:${startY.toFixed(1)}%">Α</span><span class="elevation-endpoint finish" style="top:${endY.toFixed(1)}%">Τ</span></div><div class="elevation-x-axis"><span>0 χλμ</span><span>${(trail.length_km * .25).toFixed(1)}</span><span>${(trail.length_km * .5).toFixed(1)}</span><span>${(trail.length_km * .75).toFixed(1)}</span><span>${trail.length_km.toFixed(1)} χλμ</span></div></div></div>`;
   };
 
   const openDrawer = () => { trailDrawer.classList.add('open'); trailDrawerHandle?.classList.add('open'); };
@@ -313,7 +322,9 @@ if (app) {
     const statusLabel = trail.status === 'investigation' ? 'υπό διερεύνηση' : trail.existing ? 'υπάρχει' : 'σχεδιάζεται';
     const elevationRange = trail.elev_min === null || trail.elev_max === null ? '—' : `${trail.elev_min}–${trail.elev_max} μ`;
     tdCardBar.style.background = trail.color;
-    tdTitleBlock.innerHTML = `<div class="trail-card-code">${escapeHtml(code)}<span class="status-pill ${trail.existing ? 'status-existing' : 'status-planned'}">${escapeHtml(statusLabel)}</span></div><div class="trail-card-title">${escapeHtml(trail.name)}</div>`;
+    tdTitleBlock.classList.add('selected');
+    tdTitleBlock.style.setProperty('--trail-color', trail.color);
+    tdTitleBlock.innerHTML = `<span class="trail-card-route-icon" aria-hidden="true">${routeIcon}</span><div class="trail-card-heading"><div class="trail-card-title">${escapeHtml(code)} — ${escapeHtml(trail.name)}</div><div class="trail-card-subtitle"><span class="status-pill ${trail.existing ? 'status-existing' : 'status-planned'}">${escapeHtml(statusLabel)}</span>${trail.source ? `<span>Πηγή: ${escapeHtml(trail.source)}</span>` : ''}</div></div>`;
     tdTabs.hidden = false;
     const count = (id: string, value: number) => { const el = document.getElementById(id); if (el) el.textContent = value ? ` (${value})` : ''; };
     count('tdCountNotes', trail.notes.length); count('tdCountPhotos', trail.photos.length); count('tdCountVideos', trail.videos.length);
@@ -322,7 +333,13 @@ if (app) {
     const photos = document.querySelector<HTMLElement>('.td-panel[data-panel="photos"]');
     const videos = document.querySelector<HTMLElement>('.td-panel[data-panel="videos"]');
     const meta = [trail.source ? `Πηγή: ${escapeHtml(trail.source)}` : '', trail.verified_at ? `Επαλήθευση: ${escapeHtml(trail.verified_at)}` : ''].filter(Boolean).join(' · ');
-    if (info) info.innerHTML = `<div class="stat-grid"><div class="stat-box"><span class="label">Απόσταση</span><span class="value">${trail.length_km.toFixed(2)} χλμ</span></div><div class="stat-box"><span class="label">Υψόμετρο</span><span class="value">${elevationRange}</span></div><div class="stat-box"><span class="label">Ανάβαση</span><span class="value moss">+${trail.gain_m} μ</span></div><div class="stat-box"><span class="label">Κατάβαση</span><span class="value">−${trail.loss_m} μ</span></div></div>${trail.description ? `<div class="trail-description">${trail.description}</div>` : ''}${meta ? `<div class="trail-meta-line">${meta}</div>` : ''}<div class="section-label">Υψομετρικό προφίλ</div><div class="elevation-wrap">${elevationSvg(trail)}</div>`;
+    const metrics = [
+      { label: 'Συνολική απόσταση', value: `${trail.length_km.toFixed(2)} χλμ` },
+      { label: 'Ανάβαση', value: `+${trail.gain_m} μ` },
+      trail.duration_minutes ? { label: 'Χρόνος πορείας', value: formatDuration(trail.duration_minutes) } : { label: 'Υψόμετρο', value: elevationRange },
+      trail.difficulty ? { label: 'Βαθμός δυσκολίας', value: trail.difficulty } : { label: 'Κατάβαση', value: `−${trail.loss_m} μ` }
+    ];
+    if (info) info.innerHTML = `<div class="stat-grid">${metrics.map(metric => `<div class="stat-box"><span class="value">${escapeHtml(metric.value)}</span><span class="label">${escapeHtml(metric.label)}</span></div>`).join('')}</div>${trail.description ? `<div class="trail-description">${trail.description}</div>` : ''}<div class="section-label">Υψομετρικό προφίλ</div><div class="elevation-wrap">${elevationSvg(trail)}</div>${meta ? `<div class="trail-meta-line">${meta}</div>` : ''}`;
     if (notes) notes.innerHTML = trail.notes.length ? `<div class="notes-list">${trail.notes.map((poi, index) => renderNote(poi, poiKey(code, 'note', index, poi))).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί ενδείξεις ακόμα — κάνε κλικ πάνω στη γραμμή του μονοπατιού για να προσθέσεις.</div>';
     if (photos) photos.innerHTML = trail.photos.length ? `<div class="media-grid">${trail.photos.map((poi, index) => renderPhoto(poi, poiKey(code, 'photo', index, poi))).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί φωτογραφίες ακόμα — κάνε κλικ πάνω στη γραμμή για προσθήκη.</div>';
     if (videos) videos.innerHTML = trail.videos.length ? `<div class="media-list">${trail.videos.map((poi, index) => renderVideo(poi, poiKey(code, 'video', index, poi))).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί βίντεο ακόμα — κάνε κλικ πάνω στη γραμμή για προσθήκη.</div>';
@@ -428,7 +445,9 @@ if (app) {
       visibleLines.set(code, codeLines);
 
       const row = document.createElement('button'); row.type = 'button'; row.className = 'trail-row'; row.id = `row-${code}`; row.style.borderLeftColor = 'transparent';
-      row.innerHTML = `<span class="trail-row-text"><span class="trail-row-code">${escapeHtml(code)}</span><span class="trail-row-name">${escapeHtml(trail.name)}</span></span><span class="trail-row-dist">${trail.length_km.toFixed(1)}χλμ</span>`;
+      row.style.setProperty('--trail-color', trail.color);
+      const rowMeta = [trail.difficulty, trail.duration_minutes ? formatDuration(trail.duration_minutes) : '', trail.gain_m > 0 ? `↑ ${trail.gain_m} μ` : '', trail.elev_min !== null && trail.elev_max !== null ? `${trail.elev_min}–${trail.elev_max} μ` : ''].filter(Boolean).join(' · ') || (trail.existing ? 'Υπάρχον μονοπάτι' : 'Σχεδιαζόμενη διαδρομή');
+      row.innerHTML = `<span class="trail-row-icon" aria-hidden="true">${routeIcon}</span><span class="trail-row-text"><span class="trail-row-code">${escapeHtml(code)}</span><span class="trail-row-name">${escapeHtml(trail.name)}</span><span class="trail-row-meta">${escapeHtml(rowMeta)}</span></span><span class="trail-row-dist">${trail.length_km.toFixed(1)} χλμ</span>`;
       row.addEventListener('click', () => { selectTrail(code); closeTrailPanelAfterSelection(); }); trailList.append(row);
       if (rbTrailSelect) { const option = document.createElement('option'); option.value = code; option.textContent = `${code} — ${trail.name}`; rbTrailSelect.append(option); }
     });

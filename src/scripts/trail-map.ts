@@ -1,7 +1,7 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Trail, TrailCollection, TrailPoi, TrailPoint } from '../types/trail';
-import { loadInitialTrails, refreshTrailsFromCms } from './trail-data';
+import { loadInitialTrails, refreshTrailsFromCms, P14_REFERENCE } from './trail-data';
 import { createTrailContentController } from './trail-content';
 
 type UserPosition = { lat: number; lng: number; accuracy: number };
@@ -282,7 +282,9 @@ if (app) {
 
   const elevationSvg = (trail: Trail) => {
     const pts = elevationProfile(trail);
-    if (!pts.length) return '<div class="empty-note">Δεν υπάρχουν δεδομένα υψομέτρου.</div>';
+    if (!pts.length) return trail.elev_min !== null && trail.elev_max !== null
+      ? '<div class="empty-note">Υπάρχει δημοσιευμένο υψομετρικό εύρος, αλλά λείπουν μετρήσεις ανά σημείο για αξιόπιστο γράφημα.</div>'
+      : '<div class="empty-note">Δεν υπάρχουν δεδομένα υψομέτρου.</div>';
     const W = 600, H = 110, top = 9, bottom = 100;
     const minE = Math.min(...pts.map(x => x.e)), maxE = Math.max(...pts.map(x => x.e)), maxD = pts.at(-1)?.d || 1;
     const sx = (d: number) => d / maxD * W;
@@ -342,6 +344,7 @@ if (app) {
   const fillDrawer = (code: string, trail: Trail) => {
     const statusLabel = trail.status === 'investigation' ? 'υπό διερεύνηση' : trail.existing ? 'υπάρχει' : 'σχεδιάζεται';
     const elevationRange = trail.elev_min === null || trail.elev_max === null ? '—' : `${trail.elev_min}–${trail.elev_max} μ`;
+    const hasElevationSamples = trail.segments.some(segment => segment.some(point => typeof point[2] === 'number'));
     tdCardBar.style.background = trail.color;
     tdTitleBlock.classList.add('selected');
     tdTitleBlock.style.setProperty('--trail-color', trail.color);
@@ -356,11 +359,14 @@ if (app) {
     const meta = [trail.source ? `Πηγή: ${escapeHtml(trail.source)}` : '', trail.verified_at ? `Επαλήθευση: ${escapeHtml(trail.verified_at)}` : ''].filter(Boolean).join(' · ');
     const metrics = [
       { label: 'Συνολική απόσταση', value: `${trail.length_km.toFixed(2)} χλμ` },
-      { label: 'Ανάβαση', value: `+${trail.gain_m} μ` },
+      trail.gain_m > 0 || hasElevationSamples ? { label: 'Ανάβαση', value: `+${trail.gain_m} μ` } : { label: 'Υψόμετρο', value: elevationRange },
       trail.duration_minutes ? { label: 'Χρόνος πορείας', value: formatDuration(trail.duration_minutes) } : { label: 'Υψόμετρο', value: elevationRange },
       trail.difficulty ? { label: 'Βαθμός δυσκολίας', value: trail.difficulty } : { label: 'Κατάβαση', value: `−${trail.loss_m} μ` }
     ];
-    if (info) info.innerHTML = `<div class="stat-grid">${metrics.map(metric => `<div class="stat-box"><span class="value">${escapeHtml(metric.value)}</span><span class="label">${escapeHtml(metric.label)}</span></div>`).join('')}</div>${trail.description ? `<div class="trail-description">${trail.description}</div>` : ''}<div class="section-label">Υψομετρικό προφίλ</div><div class="elevation-wrap">${elevationSvg(trail)}</div>${meta ? `<div class="trail-meta-line">${meta}</div>` : ''}`;
+    const publishedReferences = code === 'Π-14'
+      ? `<div class="trail-reference-line">Στοιχεία μελέτης: <a href="${P14_REFERENCE.municipality}" target="_blank" rel="noopener noreferrer">Δήμος Πατρέων</a> (υψόμετρο, διάρκεια) · <a href="${P14_REFERENCE.study}" target="_blank" rel="noopener noreferrer">ΑΧΑΪΑ Α.Ε., 2024</a> (δυσκολία). Η διάρκεια είναι χωρίς στάσεις.</div>`
+      : '';
+    if (info) info.innerHTML = `<div class="stat-grid">${metrics.map(metric => `<div class="stat-box"><span class="value">${escapeHtml(metric.value)}</span><span class="label">${escapeHtml(metric.label)}</span></div>`).join('')}</div>${trail.description ? `<div class="trail-description">${trail.description}</div>` : ''}<div class="section-label">Υψομετρικό προφίλ</div><div class="elevation-wrap">${elevationSvg(trail)}</div>${publishedReferences}${meta ? `<div class="trail-meta-line">${meta}</div>` : ''}`;
     if (notes) notes.innerHTML = trail.notes.length ? `<div class="notes-list">${trail.notes.map((poi, index) => renderNote(poi, poiKey(code, 'note', index, poi))).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί ενδείξεις ακόμα — κάνε κλικ πάνω στη γραμμή του μονοπατιού για να προσθέσεις.</div>';
     if (photos) photos.innerHTML = trail.photos.length ? `<div class="media-grid">${trail.photos.map((poi, index) => renderPhoto(poi, poiKey(code, 'photo', index, poi))).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί φωτογραφίες ακόμα — κάνε κλικ πάνω στη γραμμή για προσθήκη.</div>';
     if (videos) videos.innerHTML = trail.videos.length ? `<div class="media-list">${trail.videos.map((poi, index) => renderVideo(poi, poiKey(code, 'video', index, poi))).join('')}</div>` : '<div class="empty-note">Δεν έχουν προστεθεί βίντεο ακόμα — κάνε κλικ πάνω στη γραμμή για προσθήκη.</div>';

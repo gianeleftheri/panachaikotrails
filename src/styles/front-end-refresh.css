@@ -167,6 +167,8 @@
   transform: translateY(calc(100% + 28px));
 }
 .trail-drawer.open { transform: translateY(0); }
+.trail-drawer.no-elevation { height: auto; max-height: min(410px, calc(100dvh - 90px)); }
+.trail-drawer.no-elevation .td-body { flex: 0 1 auto; }
 .trail-drawer-handle {
   top: auto;
   right: 20px;
@@ -343,6 +345,7 @@
     transform: translateY(calc(100% + 100px));
   }
   .trail-drawer.open { transform: translateY(0); }
+  .trail-drawer.no-elevation { height: auto; max-height: min(58dvh, 570px); }
   .td-titleblock.selected { gap: 9px; padding: 13px 45px 9px 13px; }
   .td-titleblock.selected .trail-card-title { font-size: 16px; }
   .trail-card-route-icon { width: 21px; height: 30px; }

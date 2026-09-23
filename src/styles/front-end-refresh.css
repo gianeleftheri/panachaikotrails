@@ -192,6 +192,8 @@
 .td-panel[data-panel="info"] .section-label { margin: 10px 0 7px; }
 .td-panel[data-panel="info"] .elevation-wrap { border: 0; padding: 0; background: transparent; }
 .td-panel[data-panel="info"] .trail-meta-line { margin-top: 6px; }
+.trail-reference-line { margin-top: 9px; color: var(--parchment-dim); font-size: 11px; line-height: 1.45; }
+.trail-reference-line a { color: var(--ui-accent-text); text-underline-offset: 2px; }
 .elevation-chart { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 9px; width: 100%; }
 .elevation-y-axis { display: flex; flex-direction: column; justify-content: space-between; height: 103px; color: var(--parchment-dim); font: 10px var(--sans); text-align: right; }
 .elevation-plot { min-width: 0; }

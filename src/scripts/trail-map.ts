@@ -248,8 +248,29 @@ if (app) {
   const elevationProfile = (trail: Trail) => {
     let distance = 0;
     const pts: Array<{ d: number; e: number }> = [];
-    trail.segments.forEach(segment => {
-      let previous: TrailPoint | null = null;
+    // CMS segments may arrive out of order. Follow their connected endpoints
+    // from the official start, without changing the segments drawn on the map.
+    const remaining = trail.segments.filter(segment => segment.length >= 2).slice();
+    const start = trail.navigation?.start;
+    let endpoint: TrailPoint | null = start ? [start[1], start[0]] : (remaining[0]?.[0] ?? null);
+    const ordered: TrailPoint[][] = [];
+    while (remaining.length && endpoint) {
+      let nearestIndex = 0;
+      let reverse = false;
+      let nearestDistance = Infinity;
+      remaining.forEach((segment, index) => {
+        const first = haversine(endpoint![0], endpoint![1], segment[0][0], segment[0][1]);
+        const last = haversine(endpoint![0], endpoint![1], segment[segment.length - 1][0], segment[segment.length - 1][1]);
+        if (first < nearestDistance) { nearestDistance = first; nearestIndex = index; reverse = false; }
+        if (last < nearestDistance) { nearestDistance = last; nearestIndex = index; reverse = true; }
+      });
+      const segment = remaining.splice(nearestIndex, 1)[0];
+      if (reverse) segment.reverse();
+      ordered.push(segment);
+      endpoint = segment[segment.length - 1];
+    }
+    let previous: TrailPoint | null = null;
+    ordered.forEach(segment => {
       segment.forEach(point => {
         if (previous) distance += haversine(previous[0], previous[1], point[0], point[1]);
         if (typeof point[2] === 'number') pts.push({ d: distance, e: point[2] });

@@ -102,7 +102,7 @@
       </div>
     </form>
 
-    <div class="contact-success-panel" data-contact-success role="status" aria-live="polite" hidden>
+    <div class="contact-success-panel" data-contact-success role="status" aria-live="polite">
       <span class="contact-success-icon">✓</span>
       <div>Το email σας στάλθηκε<br />με επιτυχία.</div>
     </div>
@@ -400,15 +400,35 @@
   }
   .contact-cancel:hover{color:#fff}
   .contact-success-panel{
-    min-height:calc(100svh - clamp(56px,8vw,96px));
+    position:absolute;
+    inset:0;
+    z-index:5;
     display:grid;
     place-content:center;
     justify-items:center;
     gap:22px;
-    padding:36px 0;
+    padding:48px;
     text-align:center;
+    background:
+      radial-gradient(circle at 70% 30%,rgba(31,119,190,.16),transparent 38%),
+      linear-gradient(180deg,#071e34 0%,#061827 100%);
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transition:opacity .18s ease,visibility .18s ease;
   }
-  .contact-success-panel[hidden]{display:none}
+  .contact-drawer.is-success .contact-success-panel{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+  }
+  .contact-drawer.is-success .contact-drawer-head,
+  .contact-drawer.is-success .contact-intro,
+  .contact-drawer.is-success .contact-form{
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+  }
   .contact-success-icon{
     display:grid;
     width:68px;
@@ -535,9 +555,6 @@
   const status = document.querySelector('[data-contact-status]');
   const submitButton = document.querySelector('[data-contact-submit]');
   const startedAt = document.querySelector('[data-contact-started]');
-  const drawerHead = drawer?.querySelector('.contact-drawer-head');
-  const drawerIntro = drawer?.querySelector('.contact-intro');
-  const successPanel = document.querySelector('[data-contact-success]');
   const turnstileContainer = document.querySelector('[data-turnstile-container]');
   const turnstileNote = document.querySelector('[data-turnstile-note]');
 
@@ -618,9 +635,7 @@
       window.clearTimeout(successCloseTimer);
       successCloseTimer = null;
     }
-    if (drawerHead instanceof HTMLElement) drawerHead.hidden = false;
-    if (drawerIntro instanceof HTMLElement) drawerIntro.hidden = false;
-    if (successPanel instanceof HTMLElement) successPanel.hidden = true;
+    drawer.classList.remove('is-success');
     if (form instanceof HTMLFormElement) {
       form.hidden = false;
       form.reset();
@@ -643,7 +658,10 @@
     backdrop.classList.remove('is-open');
     drawer.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('contact-drawer-open');
-    window.setTimeout(() => { backdrop.hidden = true; }, 280);
+    window.setTimeout(() => {
+      backdrop.hidden = true;
+      drawer.classList.remove('is-success');
+    }, 280);
     if (lastFocused instanceof HTMLElement) lastFocused.focus();
   };
 
@@ -692,17 +710,12 @@
       form.reset();
       if (turnstileWidgetId !== null) window.turnstile?.reset?.(turnstileWidgetId);
 
-      form.hidden = true;
-      if (drawerHead instanceof HTMLElement) drawerHead.hidden = true;
-      if (drawerIntro instanceof HTMLElement) drawerIntro.hidden = true;
-      if (successPanel instanceof HTMLElement) successPanel.hidden = false;
+      drawer.classList.add('is-success');
 
       successCloseTimer = window.setTimeout(() => {
         closeDrawer();
         window.setTimeout(() => {
-          if (successPanel instanceof HTMLElement) successPanel.hidden = true;
-          if (drawerHead instanceof HTMLElement) drawerHead.hidden = false;
-          if (drawerIntro instanceof HTMLElement) drawerIntro.hidden = false;
+          drawer.classList.remove('is-success');
           form.hidden = false;
         }, 320);
       }, 2000);

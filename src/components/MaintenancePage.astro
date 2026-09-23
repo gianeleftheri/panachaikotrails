@@ -102,13 +102,12 @@
       </div>
     </form>
 
-    <div class="contact-success" data-contact-success hidden>
-      <span class="contact-success-icon">✓</span>
-      <h3>Το μήνυμά σας εστάλη.</h3>
-      <p>Ευχαριστούμε για την επικοινωνία. Θα σας απαντήσουμε το συντομότερο δυνατό.</p>
-      <button type="button" class="contact-submit" data-contact-done>ΚΛΕΙΣΙΜΟ</button>
-    </div>
   </aside>
+
+  <div class="contact-toast" data-contact-toast role="status" aria-live="polite" hidden>
+    <span class="contact-toast-icon">✓</span>
+    <span>Το email σας στάλθηκε με επιτυχία.</span>
+  </div>
 </section>
 
 <style>
@@ -401,20 +400,40 @@
     cursor:pointer;
   }
   .contact-cancel:hover{color:#fff}
-  .contact-success{padding-top:58px}
-  .contact-success-icon{
+  .contact-toast{
+    position:fixed;
+    left:50%;
+    bottom:clamp(24px,5vh,54px);
+    z-index:70;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-height:54px;
+    max-width:min(92vw,460px);
+    padding:14px 20px;
+    border:1px solid rgba(215,243,63,.42);
+    background:rgba(6,26,43,.96);
+    box-shadow:0 18px 54px rgba(0,0,0,.34);
+    color:#fff;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.02em;
+    transform:translate(-50%,18px);
+    opacity:0;
+    transition:opacity .22s ease,transform .22s ease;
+  }
+  .contact-toast.is-visible{opacity:1;transform:translate(-50%,0)}
+  .contact-toast-icon{
     display:grid;
-    width:64px;
-    height:64px;
+    width:28px;
+    height:28px;
+    flex:0 0 28px;
     place-items:center;
-    margin-bottom:24px;
     border:1px solid var(--lime);
     border-radius:50%;
     color:var(--lime);
-    font-size:28px;
+    font-size:15px;
   }
-  .contact-success h3{margin:0 0 12px;font-size:34px;font-weight:500}
-  .contact-success p{margin:0 0 30px;color:#b8cad7;line-height:1.65}
 
   @keyframes pulse{50%{box-shadow:0 0 0 11px rgba(215,243,63,0)}}
 
@@ -518,18 +537,29 @@
   const backdrop = document.querySelector('[data-contact-backdrop]');
   const openButton = document.querySelector('[data-contact-open]');
   const closeButtons = document.querySelectorAll('[data-contact-close]');
-  const doneButton = document.querySelector('[data-contact-done]');
   const form = document.querySelector('[data-contact-form]');
   const status = document.querySelector('[data-contact-status]');
   const submitButton = document.querySelector('[data-contact-submit]');
   const startedAt = document.querySelector('[data-contact-started]');
-  const success = document.querySelector('[data-contact-success]');
+  const toast = document.querySelector('[data-contact-toast]');
   const turnstileContainer = document.querySelector('[data-turnstile-container]');
   const turnstileNote = document.querySelector('[data-turnstile-note]');
 
   let lastFocused = null;
   let turnstileWidgetId = null;
   let turnstileSiteKey = '';
+  let toastTimer = null;
+
+  const showSuccessToast = () => {
+    if (!toast) return;
+    if (toastTimer) window.clearTimeout(toastTimer);
+    toast.hidden = false;
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+    toastTimer = window.setTimeout(() => {
+      toast.classList.remove('is-visible');
+      window.setTimeout(() => { toast.hidden = true; }, 220);
+    }, 4200);
+  };
 
   const waitForTurnstile = async () => {
     for (let i = 0; i < 40; i += 1) {
@@ -599,6 +629,11 @@
     if (!drawer || !backdrop) return;
     lastFocused = document.activeElement;
     backdrop.hidden = false;
+    if (form instanceof HTMLFormElement) {
+      form.hidden = false;
+      form.reset();
+    }
+    if (status) status.textContent = '';
     if (startedAt) startedAt.value = String(Date.now());
     requestAnimationFrame(() => {
       backdrop.classList.add('is-open');
@@ -622,7 +657,6 @@
 
   openButton?.addEventListener('click', openDrawer);
   closeButtons.forEach((button) => button.addEventListener('click', closeDrawer));
-  doneButton?.addEventListener('click', closeDrawer);
   backdrop?.addEventListener('click', closeDrawer);
 
   document.addEventListener('keydown', (event) => {
@@ -663,9 +697,10 @@
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result?.message || 'Η αποστολή απέτυχε. Δοκιμάστε ξανά.');
 
-      form.hidden = true;
-      if (success) success.hidden = false;
       form.reset();
+      if (turnstileWidgetId !== null) window.turnstile?.reset?.(turnstileWidgetId);
+      closeDrawer();
+      showSuccessToast();
     } catch (error) {
       if (status) {
         status.textContent = error instanceof Error ? error.message : 'Η αποστολή απέτυχε. Δοκιμάστε ξανά.';

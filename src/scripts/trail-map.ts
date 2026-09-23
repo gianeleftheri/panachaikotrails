@@ -43,19 +43,142 @@ if (app) {
   if (!mapElement || !trailList || !trailPanel || !trailDrawer || !tdTabs || !tdTitleBlock || !tdCardBar) throw new Error('Missing trail explorer elements.');
 
   const map = L.map(mapElement, { zoomControl: false }).setView([38.2, 21.835], 12);
-  const imageryLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Tiles © Esri, Maxar, Earthstar Geographics | Μονοπάτια: ΟΦΥΠΕΚΑ' });
-  // Let imagery finish before labels compete for network and rendering time.
-  imageryLayer.once('load', () => {
-    const addLabels = () => {
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, opacity: .85 }).addTo(map);
-    };
-    if (typeof window.requestIdleCallback === 'function') {
-      window.requestIdleCallback(addLabels, { timeout: 1200 });
-    } else {
-      window.setTimeout(addLabels, 1800);
+  map.createPane('trafficPane');
+  const trafficPane = map.getPane('trafficPane');
+  if (trafficPane) {
+    trafficPane.style.zIndex = '350';
+    trafficPane.style.pointerEvents = 'none';
+  }
+  const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors | Μονοπάτια: ΟΦΥΠΕΚΑ'
+  });
+  const imageryLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 18,
+    attribution: 'Tiles © Esri, Maxar, Earthstar Geographics | Μονοπάτια: ΟΦΥΠΕΚΑ'
+  });
+  const imageryLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 18,
+    opacity: .85,
+    pane: 'overlayPane',
+    attribution: 'Labels © Esri'
+  });
+  const terrainLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 18,
+    attribution: 'Topographic map © Esri | Μονοπάτια: ΟΦΥΠΕΚΑ'
+  });
+  const tomtomTrafficKey = import.meta.env.PUBLIC_TOMTOM_API_KEY?.trim() ?? '';
+  const trafficLayer = tomtomTrafficKey
+    ? L.tileLayer(`https://api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=${encodeURIComponent(tomtomTrafficKey)}`, {
+        maxZoom: 22,
+        opacity: .82,
+        pane: 'trafficPane',
+        attribution: 'Κυκλοφορία © TomTom'
+      })
+    : null;
+
+  type BasemapKind = 'street' | 'satellite' | 'terrain';
+  const basemaps: Record<BasemapKind, L.TileLayer[]> = {
+    street: [streetLayer],
+    satellite: [imageryLayer, imageryLabels],
+    terrain: [terrainLayer]
+  };
+  let activeBasemap: BasemapKind = 'satellite';
+  let trafficEnabled = false;
+
+  const setBasemap = (kind: BasemapKind) => {
+    (Object.keys(basemaps) as BasemapKind[]).forEach(key => {
+      basemaps[key].forEach(layer => {
+        if (map.hasLayer(layer)) map.removeLayer(layer);
+      });
+    });
+    basemaps[kind].forEach(layer => layer.addTo(map));
+    activeBasemap = kind;
+    window.localStorage.setItem('panachaiko-basemap', kind);
+    mapElement.dataset.basemap = kind;
+    document.querySelectorAll<HTMLButtonElement>('[data-basemap]').forEach(button => {
+      const selected = button.dataset.basemap === kind;
+      button.classList.toggle('active', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+  };
+
+  const setTrafficEnabled = (enabled: boolean) => {
+    trafficEnabled = Boolean(enabled && trafficLayer);
+    if (trafficLayer) {
+      if (trafficEnabled && !map.hasLayer(trafficLayer)) trafficLayer.addTo(map);
+      if (!trafficEnabled && map.hasLayer(trafficLayer)) map.removeLayer(trafficLayer);
+    }
+    window.localStorage.setItem('panachaiko-traffic', trafficEnabled ? '1' : '0');
+    document.querySelectorAll<HTMLButtonElement>('[data-traffic-toggle]').forEach(button => {
+      button.classList.toggle('active', trafficEnabled);
+      button.setAttribute('aria-pressed', String(trafficEnabled));
+    });
+  };
+
+  const savedBasemap = window.localStorage.getItem('panachaiko-basemap');
+  const initialBasemap: BasemapKind = savedBasemap === 'street' || savedBasemap === 'terrain' ? savedBasemap : 'satellite';
+  setBasemap(initialBasemap);
+  setTrafficEnabled(window.localStorage.getItem('panachaiko-traffic') === '1');
+
+  const BasemapControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: () => {
+      const control = L.DomUtil.create('div', 'basemap-control');
+      control.innerHTML = `
+        <button class="basemap-toggle" type="button" aria-label="Τύπος χάρτη" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15m6-12v15"/></svg>
+          <span>Τύπος χάρτη</span>
+        </button>
+        <div class="basemap-menu" role="group" aria-label="Επιλογή τύπου χάρτη">
+          <div class="basemap-menu-title">Τύπος χάρτη</div>
+          <div class="basemap-options">
+            <button type="button" data-basemap="street" aria-pressed="false"><span class="basemap-preview preview-street"><i></i></span><strong>Προεπιλεγμένο</strong></button>
+            <button type="button" data-basemap="satellite" aria-pressed="false"><span class="basemap-preview preview-satellite"><i></i></span><strong>Δορυφόρος</strong></button>
+            <button type="button" data-basemap="terrain" aria-pressed="false"><span class="basemap-preview preview-terrain"><i></i></span><strong>Έδαφος</strong></button>
+          </div>
+          <div class="basemap-divider"></div>
+          <button class="traffic-option" type="button" data-traffic-toggle aria-pressed="false" ${trafficLayer ? '' : 'disabled'}>
+            <span class="traffic-copy"><strong>Κυκλοφορία</strong><small>${trafficLayer ? 'Ζωντανή ροή στους δρόμους' : 'Απαιτείται TomTom API key'}</small></span>
+            <span class="traffic-scale" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span class="traffic-switch" aria-hidden="true"><i></i></span>
+          </button>
+        </div>`;
+
+      L.DomEvent.disableClickPropagation(control);
+      L.DomEvent.disableScrollPropagation(control);
+      const toggle = control.querySelector<HTMLButtonElement>('.basemap-toggle');
+      const menu = control.querySelector<HTMLElement>('.basemap-menu');
+      toggle?.addEventListener('click', () => {
+        const open = !control.classList.contains('open');
+        control.classList.toggle('open', open);
+        toggle.setAttribute('aria-expanded', String(open));
+      });
+      control.querySelectorAll<HTMLButtonElement>('[data-basemap]').forEach(button => {
+        button.addEventListener('click', () => {
+          const kind = button.dataset.basemap as BasemapKind;
+          setBasemap(kind);
+          control.classList.remove('open');
+          toggle?.setAttribute('aria-expanded', 'false');
+        });
+      });
+      control.querySelector<HTMLButtonElement>('[data-traffic-toggle]')?.addEventListener('click', () => {
+        setTrafficEnabled(!trafficEnabled);
+      });
+      document.addEventListener('click', event => {
+        if (!control.contains(event.target as Node)) {
+          control.classList.remove('open');
+          toggle?.setAttribute('aria-expanded', 'false');
+        }
+      });
+      window.setTimeout(() => {
+        setBasemap(activeBasemap);
+        setTrafficEnabled(trafficEnabled);
+      }, 0);
+      return control;
     }
   });
-  imageryLayer.addTo(map);
+  new BasemapControl().addTo(map);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
 

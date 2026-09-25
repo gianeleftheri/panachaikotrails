@@ -194,7 +194,7 @@ final class Panachaiko_Recreation_Spots {
 
         $featured = get_the_post_thumbnail_url( $post, 'large' );
         $seed_key = (string) get_post_meta( $post->ID, 'recreation_seed_key', true );
-        $fallback_image_url = $seed_key && 'skala-vountenis' !== $seed_key ? '/recreation-spots/' . $seed_key . '.jpg' : null;
+        $fallback_image_url = self::fallback_image_url( $seed_key );
         return array(
             'id' => $post->ID,
             'seed_key' => $seed_key,
@@ -340,6 +340,18 @@ final class Panachaiko_Recreation_Spots {
             $lng = get_post_meta( $post_id, 'longitude', true );
             echo is_numeric( $lat ) && is_numeric( $lng ) ? esc_html( number_format( (float) $lat, 6, '.', '' ) . ', ' . number_format( (float) $lng, 6, '.', '' ) ) : '—';
         }
+    }
+
+    private static function fallback_image_url( string $seed_key ): ?string {
+        $ids = array(
+            'tranos-vrachos' => '1UxkSHJ-zKIVf1U2MQFGmG3yHV74nhXTJ',
+            'agios-ioannis-kokkinovrysi' => '15vr7K0z4NMGrPDehQKMXXAPtAtVcX7bT',
+            'lakka-sorous' => '1y8KSrj4zlHSGbYRMXEfqh9rNfFzAJxjQ',
+            'profitis-ilias-pournarokastro' => '1y9kKnsdjqKF5yAFd2AbMp4Vx7B21k_ZP',
+            'mintzaika' => '1uV86yvvhWXoHi1kCTe_LPvOXKjFRgQn6',
+        );
+        if ( ! isset( $ids[ $seed_key ] ) ) return null;
+        return 'https://drive.google.com/thumbnail?id=' . rawurlencode( $ids[ $seed_key ] ) . '&sz=w1200';
     }
 
     public static function sanitize_spot_type( $value ): string {

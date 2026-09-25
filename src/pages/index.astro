@@ -1,5 +1,12 @@
 ---
 import MaintenancePage from '../components/MaintenancePage.astro';
+import { getPanachaikoSiteStatus } from '../lib/site-status';
+
+export const prerender = false;
+
+const siteStatus = await getPanachaikoSiteStatus();
+if (!siteStatus.under_construction) return Astro.redirect('/map', 302);
+Astro.response.headers.set('Cache-Control', 'no-store, max-age=0');
 
 const title = 'Υπό κατασκευή | Panachaiko Trails';
 const description = 'Το νέο Panachaiko Trails ετοιμάζεται. Σύντομα θα ανακαλύψετε τα μονοπάτια και τις διαδρομές του Παναχαϊκού όρους.';

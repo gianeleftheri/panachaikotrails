@@ -246,7 +246,7 @@
     bottom: 0;
     z-index: 600;
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     align-items: stretch;
     gap: 2px;
     min-height: calc(69px + env(safe-area-inset-bottom));
@@ -395,4 +395,22 @@
   .topbar-actions :is(button, a),
   .trail-drawer,
   .left-panel { transition-duration: .01ms; }
+}
+
+.recreation-panel { top: 84px; left: 18px; width: clamp(310px, 23vw, 366px); border-radius: 15px; }
+.recreation-panel.open { max-height: min(720px, calc(100dvh - 106px)); }
+.recreation-list { border-top-color: var(--ui-border); }
+.recreation-row { min-height: 64px; padding: 10px 14px; }
+.recreation-row.active { background: rgba(56, 189, 248, .11); }
+
+@media (max-width: 760px) {
+  .recreation-panel {
+    top: auto;
+    bottom: calc(79px + env(safe-area-inset-bottom));
+    left: 8px;
+    width: calc(100% - 16px);
+    border-radius: 16px;
+  }
+  .recreation-panel.open { max-height: min(54dvh, 530px); }
+  .recreation-row { min-height: 56px; }
 }

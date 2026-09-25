@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.7.0
+ * Version: 0.7.1
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.7.0';
+    private const VERSION = '0.7.1';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -460,11 +460,13 @@ final class Panachaiko_Trails_Admin_UI {
         $recent = get_posts( array( 'post_type' => 'post', 'post_status' => array( 'publish', 'draft' ), 'numberposts' => 4, 'orderby' => 'modified', 'order' => 'DESC' ) );
         $routes = get_posts( array( 'post_type' => 'trail', 'post_status' => array( 'publish', 'draft' ), 'numberposts' => 3, 'orderby' => 'modified', 'order' => 'DESC' ) );
         $metrics = self::trail_metrics();
+        $under_construction = '0' !== (string) get_option( 'panachaiko_under_construction', '1' );
+        $site_status_updated = isset( $_GET['site_status_updated'] ) && '1' === sanitize_key( wp_unslash( $_GET['site_status_updated'] ) );
         $cards = array(
             array( 'Δημοσιευμένα άρθρα', self::count( 'post', 'publish' ), 'dashicons-media-document' ),
             array( 'Δημοσιευμένες διαδρομές', self::count( 'trail', 'publish' ), 'dashicons-location-alt' ),
             array( 'Διαδρομές υπό έλεγχο', self::count( 'trail', 'pending' ), 'dashicons-visibility' ),
-            array( 'Σημεία ενδιαφέροντος', self::count( 'trail_poi', 'publish' ) + self::count( 'trail_poi', 'draft' ), 'dashicons-location' ),
+            array( 'Χώροι αναψυχής', self::count( 'recreation_spot', 'publish' ) + self::count( 'recreation_spot', 'draft' ), 'dashicons-palmtree' ),
         );
         ?>
         <div class="wrap pt-dashboard">
@@ -482,6 +484,27 @@ final class Panachaiko_Trails_Admin_UI {
             <?php endforeach; ?>
           </section>
           <?php self::render_trail_metrics( $metrics ); ?>
+          <?php if ( current_user_can( 'manage_options' ) ) : ?>
+            <section class="pt-site-status <?php echo $under_construction ? 'is-maintenance' : 'is-live'; ?>" aria-label="Κατάσταση ιστοσελίδας">
+              <div class="pt-site-status-copy">
+                <span class="pt-site-status-kicker">ΚΑΤΑΣΤΑΣΗ ΙΣΤΟΣΕΛΙΔΑΣ</span>
+                <div class="pt-site-status-title">
+                  <span class="pt-site-status-dot" aria-hidden="true"></span>
+                  <strong><?php echo esc_html( $under_construction ? 'Υπό Κατασκευή — ΕΝΕΡΓΟ' : 'Δημόσια λειτουργία — ΕΝΕΡΓΗ' ); ?></strong>
+                </div>
+                <p><?php echo esc_html( $under_construction ? 'Οι επισκέπτες βλέπουν τη σελίδα «Υπό κατασκευή». Η ιδιωτική προεπισκόπηση παραμένει διαθέσιμη.' : 'Η κεντρική εφαρμογή και ο χάρτης είναι δημόσια προσβάσιμα χωρίς κωδικό προεπισκόπησης.' ); ?></p>
+                <?php if ( $site_status_updated ) : ?><div class="pt-site-status-saved">Η ρύθμιση αποθηκεύτηκε.</div><?php endif; ?>
+              </div>
+              <form class="pt-site-status-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+                <input type="hidden" name="action" value="panachaiko_update_site_status">
+                <input type="hidden" name="under_construction" value="<?php echo $under_construction ? '0' : '1'; ?>">
+                <?php wp_nonce_field( 'panachaiko_update_site_status' ); ?>
+                <button type="submit" class="pt-site-status-button">
+                  <?php echo esc_html( $under_construction ? 'Απενεργοποίηση — Δημοσίευση site' : 'Ενεργοποίηση Under Construction' ); ?>
+                </button>
+              </form>
+            </section>
+          <?php endif; ?>
           <div class="pt-grid">
             <section class="pt-panel"><div class="pt-panel-head"><h2>Πρόσφατα άρθρα</h2><a href="<?php echo esc_url( admin_url( 'edit.php' ) ); ?>">Όλα τα άρθρα →</a></div>
               <?php if ( $recent ) : ?><ul class="pt-records"><?php foreach ( $recent as $item ) : ?><li><a href="<?php echo esc_url( get_edit_post_link( $item->ID ) ); ?>"><?php echo esc_html( get_the_title( $item ) ?: '(Χωρίς τίτλο)' ); ?></a><small><?php echo esc_html( 'publish' === $item->post_status ? 'Δημοσιευμένο' : 'Προσχέδιο' ); ?> · <?php echo esc_html( get_the_modified_date( 'd/m/Y', $item ) ); ?></small></li><?php endforeach; ?></ul>
@@ -490,6 +513,7 @@ final class Panachaiko_Trails_Admin_UI {
             <section class="pt-panel"><div class="pt-panel-head"><h2>Γρήγορες ενέργειες</h2></div><nav class="pt-actions" aria-label="Γρήγορες ενέργειες">
               <a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=trail' ) ); ?>"><span class="dashicons dashicons-location-alt"></span> Νέα διαδρομή <span>→</span></a>
               <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=trail&post_status=pending' ) ); ?>"><span class="dashicons dashicons-visibility"></span> Έλεγχος υποβολών <span>→</span></a>
+              <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=recreation_spot' ) ); ?>"><span class="dashicons dashicons-palmtree"></span> Χώροι Αναψυχής <span>→</span></a>
               <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=trail_poi' ) ); ?>"><span class="dashicons dashicons-location"></span> Σημεία ενδιαφέροντος <span>→</span></a>
               <a href="<?php echo esc_url( admin_url( 'post-new.php' ) ); ?>"><span class="dashicons dashicons-edit"></span> Νέο άρθρο <span>→</span></a>
               <a href="<?php echo esc_url( admin_url( 'upload.php' ) ); ?>"><span class="dashicons dashicons-format-image"></span> Πολυμέσα <span>→</span></a>

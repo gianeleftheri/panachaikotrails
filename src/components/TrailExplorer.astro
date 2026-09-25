@@ -1,5 +1,6 @@
 ---
 import TrailTopbar from './TrailTopbar.astro';
+import RecreationPanel from './RecreationPanel.astro';
 import RouteBuilder from './RouteBuilder.astro';
 import TrailDrawer from './TrailDrawer.astro';
 import MapOverlays from './MapOverlays.astro';
@@ -13,6 +14,7 @@ import MapLibreTerrainV3 from './MapLibreTerrainV3.astro';
   <div id="map" aria-label="Διαδραστικός χάρτης μονοπατιών"></div>
   <TrailTopbar />
   <RouteBuilder />
+  <RecreationPanel />
 
   <aside class="panel left-panel" id="trailPanel">
     <div class="left-panel-head">
@@ -43,4 +45,5 @@ import MapLibreTerrainV3 from './MapLibreTerrainV3.astro';
   import '../scripts/navigation-shell';
   import '../scripts/trail-map';
   import '../scripts/trail-endpoints';
+  import '../scripts/recreation-spots';
 </script>

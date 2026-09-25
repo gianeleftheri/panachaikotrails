@@ -25,6 +25,7 @@ require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-diagnostics.php'
 require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-submissions-admin.php';
 require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-routing.php';
 require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-importer.php';
+require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-recreation.php';
 
 function panachaiko_trails_boot(): void {
     Panachaiko_Trails_Post_Types::init();
@@ -35,6 +36,7 @@ function panachaiko_trails_boot(): void {
     Panachaiko_Trails_Diagnostics::init();
     Panachaiko_Trails_Submissions_Admin::init();
     Panachaiko_Trails_Importer::init();
+    Panachaiko_Recreation_Spots::init();
 }
 add_action( 'plugins_loaded', 'panachaiko_trails_boot' );
 

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails CMS
  * Description: Headless WordPress data layer and REST API for Panachaiko Trails.
- * Version: 0.4.2
+ * Version: 0.4.3
  * Author: Panachaiko Trails
  * Requires at least: 6.5
  * Requires PHP: 7.4
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'PANACHAIKO_TRAILS_VERSION', '0.4.2' );
+define( 'PANACHAIKO_TRAILS_VERSION', '0.4.3' );
 define( 'PANACHAIKO_TRAILS_FILE', __FILE__ );
 define( 'PANACHAIKO_TRAILS_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -26,6 +26,7 @@ require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-submissions-admi
 require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-routing.php';
 require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-importer.php';
 require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-recreation.php';
+require_once PANACHAIKO_TRAILS_DIR . 'includes/class-panachaiko-site-settings.php';
 
 function panachaiko_trails_boot(): void {
     Panachaiko_Trails_Post_Types::init();
@@ -37,6 +38,7 @@ function panachaiko_trails_boot(): void {
     Panachaiko_Trails_Submissions_Admin::init();
     Panachaiko_Trails_Importer::init();
     Panachaiko_Recreation_Spots::init();
+    Panachaiko_Site_Settings::init();
 }
 add_action( 'plugins_loaded', 'panachaiko_trails_boot' );
 

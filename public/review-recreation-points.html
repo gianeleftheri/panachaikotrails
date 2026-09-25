@@ -3,55 +3,66 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Panachaiko Trails — Έλεγχος σημείων αναψυχής και θέας</title>
+  <title>Panachaiko Trails — Πρόσβαση σε σημεία αναψυχής και θέας</title>
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <style>
     html,body,#map{height:100%;margin:0}
     body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#07100b;color:#fff}
     #map{position:absolute;inset:0}
-    .panel{position:absolute;z-index:5;top:16px;left:16px;width:min(390px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;background:rgba(7,16,11,.92);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);border-radius:16px;box-shadow:0 16px 44px rgba(0,0,0,.35)}
+    .panel{position:absolute;z-index:5;top:16px;left:16px;width:min(430px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;background:rgba(7,16,11,.94);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);border-radius:16px;box-shadow:0 16px 44px rgba(0,0,0,.35)}
     .panel h1{font-size:18px;line-height:1.25;margin:0;padding:16px 16px 6px}
-    .panel .sub{font-size:12px;color:#cbd5e1;padding:0 16px 12px}
+    .panel .sub{font-size:12px;color:#cbd5e1;padding:0 16px 12px;line-height:1.45}
     .point-list{display:grid;gap:8px;padding:0 12px 14px}
     .point{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;padding:10px;border-radius:12px;background:rgba(255,255,255,.06);cursor:pointer;border:1px solid transparent}
     .point:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.1)}
     .num{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#ff6b35;color:#fff;font-weight:800}
     .point b{display:block;font-size:13px;line-height:1.3}
-    .point small{display:block;margin-top:3px;color:#aebbc5;font-size:11px}
+    .point small{display:block;margin-top:3px;color:#aebbc5;font-size:11px;line-height:1.35}
+    .route-meta{margin-top:5px;font-size:11px;line-height:1.35;color:#7dd3fc}
+    .route-meta.ok{color:#86efac}.route-meta.err{color:#fca5a5}.route-meta.loading{color:#fde68a}
     .legend{padding:12px 16px;border-top:1px solid rgba(255,255,255,.12);font-size:12px;color:#d4dde5}
     .legend-row{display:flex;align-items:center;gap:8px;margin:6px 0}
     .line-sample{width:28px;height:4px;border-radius:999px;background:linear-gradient(90deg,#06b6d4,#f59e0b,#22c55e,#e879f9)}
+    .access-sample{width:28px;height:5px;border-radius:999px;background:#38bdf8;box-shadow:0 0 0 1px #082f49}
+    .start-sample{width:13px;height:13px;border-radius:50%;background:#38bdf8;border:2px solid white}
     .marker{width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#ff6b35;border:3px solid #fff;box-shadow:0 3px 12px rgba(0,0,0,.45);display:grid;place-items:center}
     .marker span{transform:rotate(45deg);font-weight:900;font-size:12px;color:#fff}
-    .maplibregl-popup-content{color:#111827;border-radius:12px;padding:12px 14px;max-width:280px}
+    .access-start{width:12px;height:12px;border-radius:50%;background:#38bdf8;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45)}
+    .maplibregl-popup-content{color:#111827;border-radius:12px;padding:12px 14px;max-width:300px}
     .maplibregl-popup-content b{font-size:13px}
     .maplibregl-popup-content small{display:block;margin-top:4px;color:#4b5563}
-    .status{padding:10px 16px;border-top:1px solid rgba(255,255,255,.12);font-size:11px;color:#93c5fd}
-    @media (max-width:700px){.panel{top:10px;left:10px;width:calc(100vw - 20px);max-height:42vh}.maplibregl-ctrl-top-right{top:43vh}}
+    .status{padding:10px 16px;border-top:1px solid rgba(255,255,255,.12);font-size:11px;color:#93c5fd;line-height:1.4}
+    @media (max-width:700px){.panel{top:10px;left:10px;width:calc(100vw - 20px);max-height:45vh}.maplibregl-ctrl-top-right{top:46vh}}
   </style>
 </head>
 <body>
   <div id="map"></div>
   <aside class="panel">
-    <h1>Σημεία αναψυχής / θέας — χωρικός έλεγχος</h1>
-    <div class="sub">Οι υπάρχουσες διαδρομές του Panachaiko Trails εμφανίζονται μαζί με τα 6 σημεία. Πατήστε σημείο ή διαδρομή για λεπτομέρειες.</div>
+    <h1>Σύνδεση μονοπατιών → σημείων</h1>
+    <div class="sub">
+      Δοκιμαστικός χάρτης. Για κάθε σημείο επιλέγεται το κοντινότερο καταχωρισμένο μονοπάτι
+      και ζητείται πραγματική πεζοπορική πορεία από το ίδιο routing service του Panachaiko Trails.
+      <b>Δεν χρησιμοποιείται ευθεία ως εναλλακτική.</b>
+    </div>
     <div class="point-list" id="pointList"></div>
     <div class="legend">
-      <div class="legend-row"><span class="num" style="width:22px;height:22px;font-size:10px">1</span> Σημεία ελέγχου</div>
+      <div class="legend-row"><span class="num" style="width:22px;height:22px;font-size:10px">1</span> Σημείο ενδιαφέροντος</div>
       <div class="legend-row"><span class="line-sample"></span> Υφιστάμενες διαδρομές</div>
+      <div class="legend-row"><span class="access-sample"></span> Υπολογισμένη πεζοπορική πρόσβαση</div>
+      <div class="legend-row"><span class="start-sample"></span> Αφετηρία πρόσβασης πάνω/δίπλα στο μονοπάτι</div>
     </div>
-    <div class="status" id="status">Φόρτωση διαδρομών…</div>
+    <div class="status" id="status">Φόρτωση διαδρομών και υπολογισμός προσβάσεων…</div>
   </aside>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
     const points = [
-      {n:1,name:'ΤΡΑΝΟΣ ΒΡΑΧΟΣ',lat:38.201704,lng:21.799969},
-      {n:2,name:'ΑΓΙΟΣ ΙΩΑΝΝΗΣ – ΚΟΚΚΙΝΟΒΡΥΣΗ',lat:38.230763,lng:21.831333},
-      {n:3,name:'ΘΕΣΗ «ΛΑΚΚΑΣΟΡΟΥΣ» (όρια κοινοτήτων Σουλίου & Μοίρα)',lat:38.167958,lng:21.829067},
-      {n:4,name:'ΠΡΟΦΗΤΗΣ ΗΛΙΑΣ ΠΟΥΡΝΑΡΟΚΑΣΤΡΟ',lat:38.211121,lng:21.810584},
-      {n:5,name:'ΘΕΣΗ «ΣΚΑΛΑ»',lat:38.254820,lng:21.818761},
-      {n:6,name:'ΜΙΚΡΟ ΠΛΑΤΩΜΑ ΠΡΙΝ ΤΑ ΜΙΤΖΑΙΪΚΑ',lat:38.182962,lng:21.820551}
+      {n:1,name:'ΤΡΑΝΟΣ ΒΡΑΧΟΣ',lat:38.201704,lng:21.799969,trailCode:'Π-1',trailName:'ΠΟΥΡΝΑΡΟΚΑΣΤΡΟ - ΚΑΤΑΦΥΓΙΟ',startLat:38.20971,startLng:21.81292,offsetM:1440},
+      {n:2,name:'ΑΓΙΟΣ ΙΩΑΝΝΗΣ – ΚΟΚΚΙΝΟΒΡΥΣΗ',lat:38.230763,lng:21.831333,trailCode:'Π-3',trailName:'ΡΩΜΑΝΟΣ – ΖΑΣΤΟΒΑ – ΚΟΚΚΙΝΟΒΡΥΣΗ',startLat:38.2306754725,startLng:21.8312238858,offsetM:14},
+      {n:3,name:'ΘΕΣΗ «ΛΑΚΚΑΣΟΡΟΥΣ» (όρια κοινοτήτων Σουλίου & Μοίρα)',lat:38.167958,lng:21.829067,trailCode:'Π-13',trailName:'ΠΕΤΡΩΤΟ (διασταύρωση) – ΜΟΙΡΑ',startLat:38.15805,startLng:21.82814,offsetM:1105},
+      {n:4,name:'ΠΡΟΦΗΤΗΣ ΗΛΙΑΣ ΠΟΥΡΝΑΡΟΚΑΣΤΡΟ',lat:38.211121,lng:21.810584,trailCode:'Π-1',trailName:'ΠΟΥΡΝΑΡΟΚΑΣΤΡΟ - ΚΑΤΑΦΥΓΙΟ',startLat:38.2101,startLng:21.81254,offsetM:205},
+      {n:5,name:'ΘΕΣΗ «ΣΚΑΛΑ»',lat:38.254820,lng:21.818761,trailCode:'Π-4',trailName:'ΜΠΑΛΑ - ΚΟΚΚΙΝΟΒΡΥΣΗ',startLat:38.24303,startLng:21.81226,offsetM:1429},
+      {n:6,name:'ΜΙΚΡΟ ΠΛΑΤΩΜΑ ΠΡΙΝ ΤΑ ΜΙΤΖΑΙΪΚΑ',lat:38.182962,lng:21.820551,trailCode:'Ε31',trailName:'ACHAIA CLAUS - ΠΕΤΡΩΤΟ',startLat:38.16233,startLng:21.80971,offsetM:2482}
     ];
 
     const trailFiles = [
@@ -59,29 +70,36 @@
       '534490011109.json','5bd0bb7ca00f.json','632281c1c127.json','662cc45a4cda.json',
       '691ae4047433.json','7df4d8bbc519.json','b66f1a1b9a5c.json','c85c7d89f840.json','d7991d6268b8.json'
     ];
+
     const rawBase = 'https://raw.githubusercontent.com/gianeleftheri/panachaikotrails/main/src/data/trails/';
+    const routeEndpoint = 'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/route';
+
+    function decodePolyline(encoded, precision=6){
+      let index=0, lat=0, lng=0;
+      const coordinates=[];
+      const factor=Math.pow(10, precision);
+      while(index < encoded.length){
+        let b, shift=0, result=0;
+        do{ b=encoded.charCodeAt(index++)-63; result |= (b & 0x1f) << shift; shift += 5; }while(b >= 0x20);
+        const dlat=(result & 1) ? ~(result >> 1) : (result >> 1);
+        lat += dlat;
+        shift=0; result=0;
+        do{ b=encoded.charCodeAt(index++)-63; result |= (b & 0x1f) << shift; shift += 5; }while(b >= 0x20);
+        const dlng=(result & 1) ? ~(result >> 1) : (result >> 1);
+        lng += dlng;
+        coordinates.push([lng/factor, lat/factor]);
+      }
+      return coordinates;
+    }
 
     const style = {
-      version: 8,
-      sources: {
-        satellite: {
-          type:'raster',
-          tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-          tileSize:256,maxzoom:19,attribution:'Imagery © Esri, Maxar, Earthstar Geographics'
-        },
-        labels: {
-          type:'raster',
-          tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],
-          tileSize:256,maxzoom:19,attribution:'Labels © Esri'
-        },
-        terrainSource: {
-          type:'raster-dem',
-          tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
-          tileSize:256,maxzoom:15,encoding:'terrarium',
-          attribution:'Elevation © Mapzen / AWS Terrain Tiles'
-        }
+      version:8,
+      sources:{
+        satellite:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'Imagery © Esri, Maxar, Earthstar Geographics'},
+        labels:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'Labels © Esri'},
+        terrainSource:{type:'raster-dem',tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],tileSize:256,maxzoom:15,encoding:'terrarium',attribution:'Elevation © Mapzen / AWS Terrain Tiles'}
       },
-      layers: [
+      layers:[
         {id:'bg',type:'background',paint:{'background-color':'#07100b'}},
         {id:'satellite',type:'raster',source:'satellite',paint:{'raster-saturation':-.08,'raster-contrast':.1}},
         {id:'labels',type:'raster',source:'labels',paint:{'raster-opacity':.78}}
@@ -90,49 +108,139 @@
     };
 
     const map = new maplibregl.Map({
-      container:'map',
-      style,
-      center:[21.83,38.21],
-      zoom:11.3,
-      pitch:38,
-      bearing:-8,
-      attributionControl:true
+      container:'map', style, center:[21.83,38.21], zoom:11.3, pitch:38, bearing:-8, attributionControl:true
     });
     map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
 
-    const list = document.getElementById('pointList');
-    points.forEach(p => {
-      const row = document.createElement('div');
+    const list=document.getElementById('pointList');
+    const rowByNumber=new Map();
+
+    points.forEach(p=>{
+      const row=document.createElement('div');
       row.className='point';
-      row.innerHTML='<span class="num">'+p.n+'</span><div><b>'+p.name+'</b><small>'+p.lat.toFixed(6)+', '+p.lng.toFixed(6)+'</small></div>';
-      row.addEventListener('click',()=>map.flyTo({center:[p.lng,p.lat],zoom:15.2,pitch:55,duration:900}));
+      row.innerHTML =
+        '<span class="num">'+p.n+'</span>'+
+        '<div><b>'+p.name+'</b>'+
+        '<small>'+p.lat.toFixed(6)+', '+p.lng.toFixed(6)+'</small>'+
+        '<small>Κοντινότερο: <b>'+p.trailCode+'</b> — '+p.trailName+'</small>'+
+        '<div class="route-meta loading" id="routeMeta'+p.n+'">Υπολογισμός πεζοπορικής πρόσβασης…</div></div>';
+      row.addEventListener('click',()=>{
+        const source=map.getSource('access-'+p.n);
+        const route=source && source._data && source._data.geometry && source._data.geometry.coordinates;
+        if(route && route.length>1){
+          const b=new maplibregl.LngLatBounds();
+          route.forEach(c=>b.extend(c));
+          b.extend([p.lng,p.lat]);
+          map.fitBounds(b,{padding:90,maxZoom:16,duration:850});
+        }else{
+          map.flyTo({center:[p.lng,p.lat],zoom:15.2,pitch:55,duration:900});
+        }
+      });
       list.appendChild(row);
+      rowByNumber.set(p.n,row);
 
       const el=document.createElement('div');
       el.className='marker';
       el.innerHTML='<span>'+p.n+'</span>';
       new maplibregl.Marker({element:el,anchor:'bottom'})
         .setLngLat([p.lng,p.lat])
-        .setPopup(new maplibregl.Popup({offset:22}).setHTML('<b>'+p.n+'. '+p.name+'</b><small>'+p.lat.toFixed(6)+', '+p.lng.toFixed(6)+'</small>'))
-        .addTo(map);
+        .setPopup(new maplibregl.Popup({offset:22}).setHTML(
+          '<b>'+p.n+'. '+p.name+'</b>'+
+          '<small>Κοντινότερο μονοπάτι: '+p.trailCode+' — '+p.trailName+'</small>'+
+          '<small>'+p.lat.toFixed(6)+', '+p.lng.toFixed(6)+'</small>'
+        )).addTo(map);
+
+      const startEl=document.createElement('div');
+      startEl.className='access-start';
+      new maplibregl.Marker({element:startEl,anchor:'center'})
+        .setLngLat([p.startLng,p.startLat])
+        .setPopup(new maplibregl.Popup({offset:12}).setHTML(
+          '<b>Αφετηρία πρόσβασης για #'+p.n+'</b>'+
+          '<small>'+p.trailCode+' — '+p.trailName+'</small>'+
+          '<small>'+p.startLat.toFixed(6)+', '+p.startLng.toFixed(6)+'</small>'
+        )).addTo(map);
     });
 
-    map.on('load', async () => {
-      const bounds = new maplibregl.LngLatBounds();
-      points.forEach(p=>bounds.extend([p.lng,p.lat]));
-      let loaded=0, failed=0;
+    async function calculateAccess(p){
+      const meta=document.getElementById('routeMeta'+p.n);
+      try{
+        const response=await fetch(routeEndpoint,{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body:JSON.stringify({
+            start_lat:p.startLat,start_lng:p.startLng,
+            end_lat:p.lat,end_lng:p.lng
+          }),
+          credentials:'omit'
+        });
+        const payload=await response.json().catch(()=>({}));
+        if(!response.ok || !payload.shape){
+          throw new Error(payload.message || 'Δεν βρέθηκε πεζοπορική διαδρομή.');
+        }
 
-      for (const file of trailFiles) {
-        try {
-          const res = await fetch(rawBase + file, {cache:'no-store'});
-          if (!res.ok) throw new Error('HTTP '+res.status);
-          const data = await res.json();
-          const key = data.key || file.replace('.json','');
-          const trail = data.trail || {};
-          const segments = (trail.segments || [])
-            .map(seg => seg.map(pt => [Number(pt[0]),Number(pt[1])]).filter(pt=>Number.isFinite(pt[0])&&Number.isFinite(pt[1])))
+        const coords=decodePolyline(payload.shape, payload.shape_precision ?? 6);
+        if(coords.length<2) throw new Error('Κενή γεωμετρία routing.');
+
+        const id='access-'+p.n;
+        map.addSource(id,{type:'geojson',data:{
+          type:'Feature',
+          properties:{point:p.n,trail:p.trailCode},
+          geometry:{type:'LineString',coordinates:coords}
+        }});
+        map.addLayer({
+          id:id+'-shadow',type:'line',source:id,
+          layout:{'line-cap':'round','line-join':'round'},
+          paint:{'line-color':'#082f49','line-width':9,'line-opacity':.88}
+        });
+        map.addLayer({
+          id:id+'-line',type:'line',source:id,
+          layout:{'line-cap':'round','line-join':'round'},
+          paint:{'line-color':'#38bdf8','line-width':5,'line-opacity':.98}
+        });
+        map.on('mouseenter',id+'-line',()=>map.getCanvas().style.cursor='pointer');
+        map.on('mouseleave',id+'-line',()=>map.getCanvas().style.cursor='');
+        map.on('click',id+'-line',e=>{
+          const km=typeof payload.distance_km==='number'?payload.distance_km:null;
+          const mins=typeof payload.time_seconds==='number'?Math.round(payload.time_seconds/60):null;
+          new maplibregl.Popup().setLngLat(e.lngLat).setHTML(
+            '<b>Πρόσβαση #'+p.n+' από '+p.trailCode+'</b>'+
+            '<small>'+(km!==null?'Απόσταση routing: '+km.toFixed(2)+' km':'')+(mins!==null?' · ~'+mins+' λεπτά':'')+'</small>'+
+            '<small>Υπολογισμός pedestrian routing — όχι ευθεία.</small>'
+          ).addTo(map);
+        });
+
+        const km=typeof payload.distance_km==='number'?payload.distance_km:null;
+        const mins=typeof payload.time_seconds==='number'?Math.round(payload.time_seconds/60):null;
+        meta.className='route-meta ok';
+        meta.textContent='Πρόσβαση routing: '+(km!==null?km.toFixed(2)+' km':'διαθέσιμη')+(mins!==null?' · ~'+mins+' λεπτά':'');
+        return true;
+      }catch(err){
+        console.error('Access route '+p.n,err);
+        meta.className='route-meta err';
+        meta.textContent='Δεν βρέθηκε πραγματική χαρτογραφημένη πεζοπορική σύνδεση. Δεν σχεδιάστηκε ευθεία.';
+        return false;
+      }
+    }
+
+    map.on('load',async()=>{
+      const bounds=new maplibregl.LngLatBounds();
+      points.forEach(p=>{
+        bounds.extend([p.lng,p.lat]);
+        bounds.extend([p.startLng,p.startLat]);
+      });
+
+      let loaded=0,failed=0;
+      for(const file of trailFiles){
+        try{
+          const res=await fetch(rawBase+file,{cache:'no-store'});
+          if(!res.ok) throw new Error('HTTP '+res.status);
+          const data=await res.json();
+          const key=data.key || file.replace('.json','');
+          const trail=data.trail || {};
+          const segments=(trail.segments||[])
+            .map(seg=>seg.map(pt=>[Number(pt[0]),Number(pt[1])]).filter(pt=>Number.isFinite(pt[0])&&Number.isFinite(pt[1])))
             .filter(seg=>seg.length>1);
-          if (!segments.length) continue;
+          if(!segments.length) continue;
           segments.flat().forEach(pt=>bounds.extend(pt));
 
           const sourceId='trail-'+file.replace('.json','');
@@ -151,24 +259,33 @@
             layout:{'line-cap':'round','line-join':'round'},
             paint:{'line-color':trail.color||'#ff6b35','line-width':4,'line-opacity':.95}
           });
-
           map.on('mouseenter',sourceId+'-line',()=>map.getCanvas().style.cursor='pointer');
           map.on('mouseleave',sourceId+'-line',()=>map.getCanvas().style.cursor='');
           map.on('click',sourceId+'-line',e=>{
-            new maplibregl.Popup()
-              .setLngLat(e.lngLat)
-              .setHTML('<b>'+key+' — '+(trail.name||'Διαδρομή')+'</b><small>Μήκος: '+(trail.length_km ?? '—')+' km</small>')
-              .addTo(map);
+            new maplibregl.Popup().setLngLat(e.lngLat).setHTML(
+              '<b>'+key+' — '+(trail.name||'Διαδρομή')+'</b>'+
+              '<small>Μήκος: '+(trail.length_km ?? '—')+' km</small>'
+            ).addTo(map);
           });
           loaded++;
-        } catch (err) {
+        }catch(err){
           console.error(file,err);
           failed++;
         }
       }
 
-      if (!bounds.isEmpty()) map.fitBounds(bounds,{padding:{top:70,right:70,bottom:70,left:430},maxZoom:13.2,duration:900});
-      document.getElementById('status').textContent = 'Φορτώθηκαν '+loaded+' διαδρομές' + (failed ? ' · '+failed+' αποτυχίες φόρτωσης' : '') + '.';
+      const routingResults=await Promise.all(points.map(calculateAccess));
+      const routed=routingResults.filter(Boolean).length;
+
+      if(!bounds.isEmpty()){
+        const leftPad=window.innerWidth>700?470:70;
+        map.fitBounds(bounds,{padding:{top:70,right:70,bottom:70,left:leftPad},maxZoom:13.2,duration:900});
+      }
+      document.getElementById('status').textContent =
+        'Φορτώθηκαν '+loaded+' διαδρομές'+
+        (failed?' · '+failed+' αποτυχίες φόρτωσης':'')+
+        ' · Πραγματικό pedestrian routing για '+routed+'/'+points.length+' σημεία. '+
+        'Για αποτυχία routing δεν χρησιμοποιείται ευθεία.';
     });
   </script>
 </body>

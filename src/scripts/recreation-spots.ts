@@ -10,6 +10,7 @@ type RecreationSpot = {
   lng: number;
   elevation_m: number | null;
   featured_image_url: string | null;
+  fallback_image_url: string | null;
   source_url: string;
 };
 
@@ -17,12 +18,12 @@ const API_URL = import.meta.env.PUBLIC_RECREATION_API_URL || 'https://cms.panach
 const SOURCE_URL = 'https://e-patras.gr/el/qrcode-panahaiko';
 
 const fallbackSpots: RecreationSpot[] = [
-  { id:'tranos-vrachos', title:'Τρανός Βράχος', type:'recreation_viewpoint', settlement:'Σούλι / Ελικίστρα', lat:38.201704, lng:21.799969, elevation_m:740, featured_image_url:null, source_url:SOURCE_URL, description:'Θέση νοτιοδυτικά του Πουρναρόκαστρου, προς την κατεύθυνση του Chalet, με πρόσβαση από βατό χωματόδρομο. Προσφέρει πανοραμική θέα προς τον Πατραϊκό κόλπο, το Μεσολόγγι και τη Γέφυρα Ρίου–Αντιρρίου.' },
-  { id:'agios-ioannis-kokkinovrysi', title:'Άγιος Ιωάννης – Κοκκινόβρυση', type:'recreation_viewpoint', settlement:'Ελικίστρα / Βούντενη', lat:38.230763, lng:21.831333, elevation_m:1094, featured_image_url:null, source_url:SOURCE_URL, description:'Χώρος στον προαύλιο χώρο του ξωκλησιού του Αγίου Ιωάννη, περίπου 500 μέτρα μετά τον ασφαλτοστρωμένο δρόμο Ελικίστρα – Ζάστοβα – Κοκκινόβρυση. Η προσέγγιση περνά μέσα από δάσος κεφαλληνιακής ελάτης.' },
-  { id:'lakka-sorous', title:'Λάκκα Σορούς', type:'recreation_viewpoint', settlement:'Μοίρα', lat:38.167958, lng:21.829067, elevation_m:695, featured_image_url:null, source_url:SOURCE_URL, description:'Βρίσκεται στον ασφαλτοστρωμένο δρόμο Αγίου Ιωάννη Σουλίου – Μοίρας, περίπου δύο χιλιόμετρα πριν από τη Μοίρα. Η θέση προσφέρει θέα προς την κοιλάδα του Γλαύκου και τον Πατραϊκό κόλπο.' },
-  { id:'mintzaika', title:'Μιντζαίικα', type:'recreation_viewpoint', settlement:'Σούλι', lat:38.182962, lng:21.820551, elevation_m:645, featured_image_url:null, source_url:SOURCE_URL, description:'Μικρό πλάτωμα στον ασφαλτοστρωμένο δρόμο προς τον Άγιο Ιωάννη Σουλίου, πριν από τα Μιντζαίικα. Προσφέρει θέα προς την κοιλάδα του Γλαύκου, τον Πατραϊκό κόλπο και τις γύρω ορεινές πλαγιές.' },
-  { id:'skala-vountenis', title:'Σκάλα Βούντενης', type:'watchtower_site', settlement:'Βούντενη', lat:38.254820, lng:21.818761, elevation_m:620, featured_image_url:null, source_url:SOURCE_URL, description:'Θέση στον δρόμο Βούντενη – Δραγώλενα – Κοκκινόβρυση, περίπου δύο χιλιόμετρα από τη Βούντενη. Προσφέρει θέα προς τον Χάραδρο και προς τις περιοχές του Ρίου και του Άνω Καστριτσίου.' },
-  { id:'profitis-ilias-pournarokastro', title:'Προφήτης Ηλίας Πουρναρόκαστρο', type:'watchtower_site', settlement:'Ελικίστρα', lat:38.211121, lng:21.810584, elevation_m:694, featured_image_url:null, source_url:SOURCE_URL, description:'Σημείο στο Πουρναρόκαστρο, στον λόφο του Προφήτη Ηλία με το ομώνυμο εκκλησάκι. Η θέση προσφέρει πανοραμική θέα 360° στην ευρύτερη περιοχή.' }
+  { id:'tranos-vrachos', title:'Τρανός Βράχος', type:'recreation_viewpoint', settlement:'Σούλι / Ελικίστρα', lat:38.201704, lng:21.799969, elevation_m:740, featured_image_url:null, fallback_image_url:'/recreation-spots/tranos-vrachos.jpg', source_url:SOURCE_URL, description:'Θέση νοτιοδυτικά του Πουρναρόκαστρου, προς την κατεύθυνση του Chalet, με πρόσβαση από βατό χωματόδρομο. Προσφέρει πανοραμική θέα προς τον Πατραϊκό κόλπο, το Μεσολόγγι και τη Γέφυρα Ρίου–Αντιρρίου.' },
+  { id:'agios-ioannis-kokkinovrysi', title:'Άγιος Ιωάννης – Κοκκινόβρυση', type:'recreation_viewpoint', settlement:'Ελικίστρα / Βούντενη', lat:38.230763, lng:21.831333, elevation_m:1094, featured_image_url:null, fallback_image_url:'/recreation-spots/agios-ioannis-kokkinovrysi.jpg', source_url:SOURCE_URL, description:'Χώρος στον προαύλιο χώρο του ξωκλησιού του Αγίου Ιωάννη, περίπου 500 μέτρα μετά τον ασφαλτοστρωμένο δρόμο Ελικίστρα – Ζάστοβα – Κοκκινόβρυση. Η προσέγγιση περνά μέσα από δάσος κεφαλληνιακής ελάτης.' },
+  { id:'lakka-sorous', title:'Λάκκα Σορούς', type:'recreation_viewpoint', settlement:'Μοίρα', lat:38.167958, lng:21.829067, elevation_m:695, featured_image_url:null, fallback_image_url:'/recreation-spots/lakka-sorous.jpg', source_url:SOURCE_URL, description:'Βρίσκεται στον ασφαλτοστρωμένο δρόμο Αγίου Ιωάννη Σουλίου – Μοίρας, περίπου δύο χιλιόμετρα πριν από τη Μοίρα. Η θέση προσφέρει θέα προς την κοιλάδα του Γλαύκου και τον Πατραϊκό κόλπο.' },
+  { id:'mintzaika', title:'Μιντζαίικα', type:'recreation_viewpoint', settlement:'Σούλι', lat:38.182962, lng:21.820551, elevation_m:645, featured_image_url:null, fallback_image_url:'/recreation-spots/mintzaika.jpg', source_url:SOURCE_URL, description:'Μικρό πλάτωμα στον ασφαλτοστρωμένο δρόμο προς τον Άγιο Ιωάννη Σουλίου, πριν από τα Μιντζαίικα. Προσφέρει θέα προς την κοιλάδα του Γλαύκου, τον Πατραϊκό κόλπο και τις γύρω ορεινές πλαγιές.' },
+  { id:'skala-vountenis', title:'Σκάλα Βούντενης', type:'watchtower_site', settlement:'Βούντενη', lat:38.254820, lng:21.818761, elevation_m:620, featured_image_url:null, fallback_image_url:null, source_url:SOURCE_URL, description:'Θέση στον δρόμο Βούντενη – Δραγώλενα – Κοκκινόβρυση, περίπου δύο χιλιόμετρα από τη Βούντενη. Προσφέρει θέα προς τον Χάραδρο και προς τις περιοχές του Ρίου και του Άνω Καστριτσίου.' },
+  { id:'profitis-ilias-pournarokastro', title:'Προφήτης Ηλίας Πουρναρόκαστρο', type:'watchtower_site', settlement:'Ελικίστρα', lat:38.211121, lng:21.810584, elevation_m:694, featured_image_url:null, fallback_image_url:'/recreation-spots/profitis-ilias-pournarokastro.jpg', source_url:SOURCE_URL, description:'Σημείο στο Πουρναρόκαστρο, στον λόφο του Προφήτη Ηλία με το ομώνυμο εκκλησάκι. Η θέση προσφέρει πανοραμική θέα 360° στην ευρύτερη περιοχή.' }
 ];
 
 const runtime = window as typeof window & { __panachaikoMap?: L.Map };
@@ -51,6 +52,7 @@ const normalize = (raw: unknown): RecreationSpot | null => {
     lng,
     elevation_m: Number.isFinite(elevation) ? elevation : null,
     featured_image_url: typeof item.featured_image_url === 'string' && item.featured_image_url ? item.featured_image_url : null,
+    fallback_image_url: typeof item.fallback_image_url === 'string' && item.fallback_image_url ? item.fallback_image_url : null,
     source_url: typeof item.source_url === 'string' ? item.source_url : ''
   };
 };
@@ -73,8 +75,9 @@ const spotTypeLabel = (spot: RecreationSpot) =>
   spot.type === 'other' ? 'Σημείο ενδιαφέροντος' : 'Χώρος αναψυχής / θέας';
 
 const popupHtml = (spot: RecreationSpot) => {
-  const image = spot.featured_image_url
-    ? '<img class="recreation-popup-image" src="' + escapeHtml(spot.featured_image_url) + '" alt="" />'
+  const imageUrl = spot.featured_image_url || spot.fallback_image_url;
+  const image = imageUrl
+    ? '<img class="recreation-popup-image" src="' + escapeHtml(imageUrl) + '" alt="" />'
     : '';
   const elevation = spot.elevation_m !== null ? ' · ' + Math.round(spot.elevation_m) + ' μ.' : '';
   const source = spot.source_url

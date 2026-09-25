@@ -193,8 +193,11 @@ final class Panachaiko_Recreation_Spots {
         if ( null === $lat || null === $lng ) return null;
 
         $featured = get_the_post_thumbnail_url( $post, 'large' );
+        $seed_key = (string) get_post_meta( $post->ID, 'recreation_seed_key', true );
+        $fallback_image_url = $seed_key && 'skala-vountenis' !== $seed_key ? '/recreation-spots/' . $seed_key . '.jpg' : null;
         return array(
             'id' => $post->ID,
+            'seed_key' => $seed_key,
             'title' => get_the_title( $post ),
             'description' => wp_strip_all_tags( $post->post_content ),
             'description_html' => wp_kses_post( apply_filters( 'the_content', $post->post_content ) ),
@@ -204,6 +207,7 @@ final class Panachaiko_Recreation_Spots {
             'lng' => $lng,
             'elevation_m' => self::nullable_number_meta( $post->ID, 'elevation_m' ),
             'featured_image_url' => is_string( $featured ) ? $featured : null,
+            'fallback_image_url' => $fallback_image_url,
             'source_url' => (string) get_post_meta( $post->ID, 'source_url', true ),
         );
     }

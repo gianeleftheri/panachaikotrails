@@ -457,44 +457,33 @@ if (app) {
 
   const positionDrawerEar = () => {
     if (!trailDrawerHandle || trailDrawerHandle.hidden) return;
-    if (!drawerDesktopQuery.matches) {
+
+    if (drawerDetached && drawerDesktopQuery.matches) {
+      const rect = trailDrawer.getBoundingClientRect();
       const earWidth = 58;
-      const left = Math.max(8, window.innerWidth / 2 - earWidth / 2);
+      const left = Math.min(
+        window.innerWidth - earWidth - 8,
+        Math.max(8, rect.left + rect.width / 2 - earWidth / 2)
+      );
+      const top = Math.min(
+        window.innerHeight - 30,
+        Math.max(72, rect.top - 28)
+      );
       trailDrawerHandle.style.left = left + 'px';
-      trailDrawerHandle.style.right = 'auto';
-
-      if (trailDrawer.classList.contains('open')) {
-        const rect = trailDrawer.getBoundingClientRect();
-        trailDrawerHandle.style.top = Math.max(62, rect.top - 28) + 'px';
-        trailDrawerHandle.style.bottom = 'auto';
-      } else {
-        trailDrawerHandle.style.top = 'auto';
-        trailDrawerHandle.style.bottom = 'calc(79px + env(safe-area-inset-bottom))';
-      }
-      return;
-    }
-
-    const rect = trailDrawer.getBoundingClientRect();
-    const earWidth = 58;
-    const centeredLeft = Math.min(
-      window.innerWidth - earWidth - 8,
-      Math.max(8, rect.left + rect.width / 2 - earWidth / 2)
-    );
-
-    if (drawerDetached || trailDrawer.classList.contains('open')) {
-      trailDrawerHandle.style.left = centeredLeft + 'px';
-      trailDrawerHandle.style.top = Math.max(72, rect.top - 28) + 'px';
+      trailDrawerHandle.style.top = top + 'px';
       trailDrawerHandle.style.right = 'auto';
       trailDrawerHandle.style.bottom = 'auto';
       return;
     }
 
-    trailDrawerHandle.style.left = centeredLeft + 'px';
-    trailDrawerHandle.style.top = 'auto';
+    // Docked mode: the grab tab always touches the lower edge of the main toolbar.
+    const toolbarHeight = drawerDesktopQuery.matches ? 70 : 60;
+    const earWidth = 58;
+    trailDrawerHandle.style.left = Math.max(8, window.innerWidth / 2 - earWidth / 2) + 'px';
+    trailDrawerHandle.style.top = toolbarHeight + 'px';
     trailDrawerHandle.style.right = 'auto';
-    trailDrawerHandle.style.bottom = '6px';
+    trailDrawerHandle.style.bottom = 'auto';
   };
-
   const syncDrawerEar = () => {
     const visible = trailDrawer.classList.contains('open') && !trailDrawer.classList.contains('minimized');
     trailDrawerHandle?.classList.toggle('open', visible);
@@ -527,7 +516,7 @@ if (app) {
 
     tdUndock?.classList.toggle('active', drawerDetached);
     tdUndock?.setAttribute('aria-pressed', String(drawerDetached));
-    tdUndock?.setAttribute('title', drawerDetached ? 'Επαναφορά παραθύρου κάτω' : 'Αποδέσμευση παραθύρου');
+    tdUndock?.setAttribute('title', drawerDetached ? 'Επαναφορά παραθύρου κάτω από τη μπάρα' : 'Αποδέσμευση παραθύρου');
     syncDrawerEar();
   };
 

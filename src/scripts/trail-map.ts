@@ -121,14 +121,12 @@ if (app) {
   setBasemap(initialBasemap);
   setTrafficEnabled(window.localStorage.getItem('panachaiko-traffic') === '1');
 
-  const BasemapControl = L.Control.extend({
-    options: { position: 'topright' },
-    onAdd: () => {
+  const createBasemapControl = () => {
       const control = L.DomUtil.create('div', 'basemap-control');
       control.innerHTML = `
-        <button class="basemap-toggle" type="button" aria-label="Τύπος χάρτη" aria-expanded="false">
+        <button class="basemap-toggle" type="button" aria-label="Χάρτες" aria-expanded="false">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15m6-12v15"/></svg>
-          <span>Τύπος χάρτη</span>
+          <span>Χάρτες</span>
         </button>
         <div class="basemap-menu" role="group" aria-label="Επιλογή τύπου χάρτη">
           <div class="basemap-menu-title">Τύπος χάρτη</div>
@@ -176,9 +174,8 @@ if (app) {
         setTrafficEnabled(trafficEnabled);
       }, 0);
       return control;
-    }
-  });
-  new BasemapControl().addTo(map);
+  };
+  document.querySelector('.topbar-actions')?.appendChild(createBasemapControl());
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
 

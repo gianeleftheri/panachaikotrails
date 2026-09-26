@@ -136,6 +136,11 @@ if (app) {
             <button type="button" data-basemap="terrain" aria-pressed="false"><span class="basemap-preview preview-terrain"><i></i></span><strong>Έδαφος</strong></button>
           </div>
           <div class="basemap-divider"></div>
+          <button class="basemap-3d-option" type="button" data-view3d-toggle>
+            <span class="basemap-3d-icon" aria-hidden="true">3D</span>
+            <span class="traffic-copy"><strong>3D Προβολή</strong><small>Τρισδιάστατη προβολή επιλεγμένου μονοπατιού</small></span>
+          </button>
+          <div class="basemap-divider"></div>
           <button class="traffic-option" type="button" data-traffic-toggle aria-pressed="false" ${trafficLayer ? '' : 'disabled'}>
             <span class="traffic-copy"><strong>Κυκλοφορία</strong><small>${trafficLayer ? 'Ζωντανή ροή στους δρόμους' : 'Απαιτείται TomTom API key'}</small></span>
             <span class="traffic-scale" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
@@ -159,6 +164,16 @@ if (app) {
           control.classList.remove('open');
           toggle?.setAttribute('aria-expanded', 'false');
         });
+      });
+      control.querySelector<HTMLButtonElement>('[data-view3d-toggle]')?.addEventListener('click', () => {
+        closeDrawer();
+        routeBuilderPanel?.classList.remove('open');
+        routeBuilderToggle?.classList.remove('open');
+        setTrailPanelOpen(false);
+        if (!selectedCode && codes.length) selectTrail(codes[0]);
+        view3dOverlay?.classList.add('open');
+        control.classList.remove('open');
+        toggle?.setAttribute('aria-expanded', 'false');
       });
       control.querySelector<HTMLButtonElement>('[data-traffic-toggle]')?.addEventListener('click', () => {
         setTrafficEnabled(!trafficEnabled);
@@ -711,14 +726,6 @@ if (app) {
     }));
   });
 
-  view3dBtn?.addEventListener('click', () => {
-    closeDrawer();
-    routeBuilderPanel?.classList.remove('open');
-    routeBuilderToggle?.classList.remove('open');
-    setTrailPanelOpen(false);
-    if (!selectedCode && codes.length) selectTrail(codes[0]);
-    view3dOverlay?.classList.add('open');
-  });
   view3dClose?.addEventListener('click', () => view3dOverlay?.classList.remove('open'));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { view3dOverlay?.classList.remove('open'); routeBuilderPanel?.classList.remove('open'); shelterPanel?.classList.remove('show'); } });
 }

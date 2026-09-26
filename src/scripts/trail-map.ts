@@ -615,8 +615,8 @@ if (app) {
     });
 
     renderPoiMarkers();
-    const countElement = document.getElementById('trail-count'); const lengthElement = document.getElementById('total-length');
-    if (countElement) countElement.textContent = String(codes.length); if (lengthElement) lengthElement.textContent = totalLength.toFixed(1);
+    const countElement = document.getElementById('trail-count');
+    if (countElement) countElement.textContent = String(codes.length);
     app.dataset.trailCount = String(codes.length);
     if (fitMap && allBounds.length) map.fitBounds(L.latLngBounds(allBounds), { padding: [40, 40] });
     if (previousSelection && trails[previousSelection]) selectTrail(previousSelection, false, false);

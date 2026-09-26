@@ -476,11 +476,15 @@ if (app) {
       return;
     }
 
-    // Docked mode: the grab tab always touches the lower edge of the main toolbar.
+    // Docked mode: when closed the grab touches the toolbar;
+    // when open it travels with the panel and stays attached to its lower edge.
     const toolbarHeight = drawerDesktopQuery.matches ? 70 : 60;
     const earWidth = 78;
+    const panelHeight = trailDrawer.getBoundingClientRect().height;
+    const isOpen = trailDrawer.classList.contains('open') && !trailDrawer.classList.contains('minimized');
+
     trailDrawerHandle.style.left = Math.max(8, window.innerWidth / 2 - earWidth / 2) + 'px';
-    trailDrawerHandle.style.top = toolbarHeight + 'px';
+    trailDrawerHandle.style.top = (toolbarHeight + (isOpen ? panelHeight : 0)) + 'px';
     trailDrawerHandle.style.right = 'auto';
     trailDrawerHandle.style.bottom = 'auto';
   };

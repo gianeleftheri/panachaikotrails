@@ -1195,3 +1195,25 @@
     height: 34px !important;
   }
 }
+
+
+/* The grab follows the rolling edge of the docked panel. */
+@media (min-width: 761px) {
+  .trail-drawer-handle:not(.detached):not([hidden]) {
+    transition:
+      top .46s cubic-bezier(.22, 1, .36, 1),
+      background-color .18s ease,
+      border-color .18s ease,
+      box-shadow .18s ease !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .trail-drawer-handle:not([hidden]) {
+    transition:
+      top .42s cubic-bezier(.22, 1, .36, 1),
+      background-color .18s ease,
+      border-color .18s ease,
+      box-shadow .18s ease !important;
+  }
+}

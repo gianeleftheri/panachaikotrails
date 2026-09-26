@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.7.3';
+    private const VERSION = '0.7.4';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -34,7 +34,7 @@ final class Panachaiko_Trails_Admin_UI {
         return plugin_dir_url( __FILE__ ) . 'assets/' . $file;
     }
     private static function hero(): string {
-        return self::url( 'hero-panachaiko.svg' );
+        return self::url( 'cms-hero-provided.svg' );
     }
     public static function register_menu(): void {
         add_menu_page( 'Panachaiko Trails', 'Panachaiko Trails', 'edit_posts', self::PAGE, array( __CLASS__, 'render_dashboard' ), 'dashicons-location-alt', 2 );

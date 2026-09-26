@@ -458,10 +458,19 @@ if (app) {
   const positionDrawerEar = () => {
     if (!trailDrawerHandle || trailDrawerHandle.hidden) return;
     if (!drawerDesktopQuery.matches) {
-      trailDrawerHandle.style.removeProperty('left');
-      trailDrawerHandle.style.removeProperty('top');
-      trailDrawerHandle.style.removeProperty('right');
-      trailDrawerHandle.style.removeProperty('bottom');
+      const earWidth = 58;
+      const left = Math.max(8, window.innerWidth / 2 - earWidth / 2);
+      trailDrawerHandle.style.left = left + 'px';
+      trailDrawerHandle.style.right = 'auto';
+
+      if (trailDrawer.classList.contains('open')) {
+        const rect = trailDrawer.getBoundingClientRect();
+        trailDrawerHandle.style.top = Math.max(62, rect.top - 28) + 'px';
+        trailDrawerHandle.style.bottom = 'auto';
+      } else {
+        trailDrawerHandle.style.top = 'auto';
+        trailDrawerHandle.style.bottom = 'calc(79px + env(safe-area-inset-bottom))';
+      }
       return;
     }
 
@@ -526,6 +535,13 @@ if (app) {
     trailDrawerHandle?.removeAttribute('hidden');
     trailDrawer.classList.add('open');
     trailDrawer.classList.remove('minimized');
+    syncDrawerEar();
+  };
+
+  const prepareDrawerForUserOpen = () => {
+    trailDrawerHandle?.removeAttribute('hidden');
+    trailDrawer.classList.remove('open', 'minimized');
+    if (!drawerDesktopQuery.matches) setDrawerDetached(false);
     syncDrawerEar();
   };
 
@@ -677,6 +693,10 @@ if (app) {
     const statusLabel = trail.status === 'investigation' ? 'υπό διερεύνηση' : trail.existing ? 'υπάρχει' : 'σχεδιάζεται';
     const elevationRange = trail.elev_min === null || trail.elev_max === null ? '—' : `${trail.elev_min}–${trail.elev_max} μ`;
     const hasElevationSamples = trail.segments.some(segment => segment.some(point => typeof point[2] === 'number'));
+    const contentVolume = trail.notes.length + trail.photos.length + trail.videos.length + (trail.description ? 1 : 0);
+    const preferredWidth = contentVolume >= 10 ? 1280 : contentVolume >= 6 ? 1120 : contentVolume >= 3 ? 940 : 760;
+    trailDrawer.style.setProperty('--td-preferred-width', preferredWidth + 'px');
+    trailDrawer.dataset.contentVolume = contentVolume >= 10 ? 'large' : contentVolume >= 6 ? 'medium' : contentVolume >= 3 ? 'small' : 'compact';
     trailDrawer.classList.toggle('no-elevation', !hasElevationSamples);
     tdCardBar.style.background = trail.color;
     tdTitleBlock.classList.add('selected');
@@ -748,7 +768,9 @@ if (app) {
     row?.classList.add('active');
     if (row) row.style.borderLeftColor = trail.color;
     if (fly && group?.getBounds().isValid()) map.flyToBounds(group.getBounds(), { padding: [80, 80], duration: .9, maxZoom: 15 });
-    fillDrawer(code, trail); openDrawer(); updateDistanceBadge();
+    fillDrawer(code, trail);
+    if (drawerDesktopQuery.matches) openDrawer(); else prepareDrawerForUserOpen();
+    updateDistanceBadge();
     document.dispatchEvent(new CustomEvent('panachaiko:trail-selected', { detail: { code } }));
     if (view3dTitle) view3dTitle.textContent = `3D · ${code} — ${trail.name}`;
   };

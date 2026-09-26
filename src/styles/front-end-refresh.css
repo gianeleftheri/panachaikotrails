@@ -853,3 +853,95 @@
     transform: rotate(180deg);
   }
 }
+
+
+/* Responsive trail-detail sizing by content volume and screen size. */
+@media (min-width: 1101px) {
+  .trail-drawer:not(.detached) {
+    width: min(
+      var(--td-preferred-width, 940px),
+      calc(100vw - clamp(310px, 23vw, 366px) - 52px)
+    );
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .trail-drawer:not(.detached) {
+    width: calc(100vw - 24px);
+  }
+}
+
+/* Mobile: fixed compact height, fixed position, manual open only via the ear. */
+@media (max-width: 760px) {
+  .trail-drawer,
+  .trail-drawer.no-elevation {
+    top: auto !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: calc(79px + env(safe-area-inset-bottom)) !important;
+    width: auto !important;
+    height: min(39dvh, 360px) !important;
+    min-height: 280px;
+    max-height: min(39dvh, 360px) !important;
+    transform: translateY(calc(100% + 110px));
+  }
+
+  .trail-drawer.open {
+    transform: translateY(0);
+  }
+
+  .trail-drawer.detached {
+    left: 8px !important;
+    right: 8px !important;
+    top: auto !important;
+    bottom: calc(79px + env(safe-area-inset-bottom)) !important;
+    width: auto !important;
+    height: min(39dvh, 360px) !important;
+    min-width: 0 !important;
+    min-height: 280px !important;
+    max-width: none !important;
+    max-height: min(39dvh, 360px) !important;
+  }
+
+  .trail-drawer-handle,
+  .trail-drawer-handle.open {
+    position: fixed !important;
+    z-index: 945;
+    display: grid !important;
+    place-items: center;
+    width: 58px !important;
+    height: 28px !important;
+    padding: 0;
+    border: 1px solid var(--ui-border) !important;
+    border-bottom: 0 !important;
+    border-radius: 10px 10px 0 0 !important;
+    background: rgba(16,43,67,.99) !important;
+    color: #f2f8fc !important;
+    box-shadow: 0 -5px 16px rgba(2,14,27,.28) !important;
+  }
+
+  .trail-drawer-handle svg,
+  .trail-drawer-handle.open svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .trail-drawer-handle.open svg {
+    transform: rotate(180deg);
+  }
+
+  .td-undock,
+  .td-resize-grip {
+    display: none !important;
+  }
+
+  .td-body {
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .td-tabs {
+    flex: 0 0 auto;
+    overflow-x: auto;
+  }
+}

@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.7.5';
+    private const VERSION = '0.7.6';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -478,7 +478,7 @@ final class Panachaiko_Trails_Admin_UI {
           <main class="pt-private-card">
             <div class="pt-private-visual" style="background-image:url('<?php echo esc_url( $hero ); ?>')" aria-hidden="true"></div>
             <div class="pt-private-body">
-              <span class="pt-eyebrow">PANACHAIKO TRAILS / CONTENT MANAGEMENT</span>
+              
               <h1><span>ΠΑΝΑΧΑΪΚΟ</span><em>TRAILS</em></h1>
               <p>Το βουνό, οι διαδρομές και οι ιστορίες του. Ιδιωτικό περιβάλλον διαχείρισης.</p>
               <div class="pt-private-actions">
@@ -514,7 +514,7 @@ final class Panachaiko_Trails_Admin_UI {
           <header class="pt-hero" role="banner">
             <div class="pt-hero-copy">
               <img class="pt-brand-logo" src="<?php echo esc_url( self::url( 'logo-panachaiko.svg' ) ); ?>" alt="Panachaiko Trails" width="178" height="85">
-              <span class="pt-eyebrow">PANACHAIKO TRAILS / CONTENT MANAGEMENT</span>
+              
               <h1><span>Πίνακας</span><em>διαχείρισης</em></h1>
               <p>Βουνό. Διαδρομές. Άνθρωποι. Ιστορίες.</p>
             </div>

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.7.11
+ * Version: 0.7.12
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.7.11';
+    private const VERSION = '0.7.12';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -43,8 +43,11 @@ final class Panachaiko_Trails_Admin_UI {
         $site_icon = get_site_icon_url( 64 );
         return $site_icon ? $site_icon : self::url( 'panachaiko-favicon.svg' );
     }
+    private static function browser_favicon(): string {
+        return self::url( 'browser-favicon.svg' );
+    }
     public static function render_favicon(): void {
-        $icon = esc_url( self::favicon() );
+        $icon = esc_url( self::browser_favicon() );
         echo '<link rel="icon" type="image/svg+xml" href="' . $icon . '">';
         echo '<link rel="shortcut icon" href="' . $icon . '">';
     }

@@ -116,9 +116,9 @@ const start = async () => {
   const markerById = new Map<string, L.Marker>();
   const rowById = new Map<string, HTMLButtonElement>();
 
-  const iconFor = (spot: RecreationSpot) => L.divIcon({
+  const iconFor = () => L.divIcon({
     className: 'recreation-marker-wrap',
-    html: '<span class="recreation-map-pin ' + (spot.type === 'watchtower_site' ? 'watchtower' : '') + '"><span>' + trailIcon(spot.type === 'watchtower_site' ? 'watch' : 'rest') + '</span></span>',
+    html: '<span class="recreation-map-pin"><span>' + trailIcon('rest') + '</span></span>',
     iconSize: [34, 42],
     iconAnchor: [17, 40],
     popupAnchor: [0, -36]
@@ -126,7 +126,7 @@ const start = async () => {
 
   spots.forEach(spot => {
     const id = String(spot.id);
-    const marker = L.marker([spot.lat, spot.lng], { icon: iconFor(spot), keyboard:true })
+    const marker = L.marker([spot.lat, spot.lng], { icon: iconFor(), keyboard:true })
       .bindPopup(popupHtml(spot), { maxWidth:320, className:'recreation-leaflet-popup' })
       .on('click', () => {
         rowById.forEach(row => row.classList.remove('active'));
@@ -139,7 +139,7 @@ const start = async () => {
     row.type = 'button';
     row.className = 'recreation-row';
     row.innerHTML =
-      '<span class="recreation-row-pin ' + (spot.type === 'watchtower_site' ? 'watchtower' : '') + '">' + trailIcon(spot.type === 'watchtower_site' ? 'watch' : 'rest') + '</span>' +
+      '<span class="recreation-row-pin">' + trailIcon('rest') + '</span>' +
       '<span class="recreation-row-copy">' +
         '<span class="recreation-row-name">' + escapeHtml(spot.title) + '</span>' +
         '<span class="recreation-row-meta">' + escapeHtml(spot.settlement) + (spot.elevation_m !== null ? ' · ' + Math.round(spot.elevation_m) + ' μ.' : '') + '</span>' +

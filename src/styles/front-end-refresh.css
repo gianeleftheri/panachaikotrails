@@ -424,7 +424,7 @@
 .recreation-row-pin,
 .recreation-row-pin.watchtower {
   width: 36px; height: 36px; border-radius: 10px; transform: none;
-  background: #1b4665; border: 1px solid #547e9e; color: #f2f8fc; box-shadow: none;
+  background: #1b4665; border: 1px solid #547e9e; color: #f2f8fc; --pt-icon-accent: currentColor; box-shadow: none;
 }
 .recreation-row-pin .pt-minimal-icon { width: 24px; height: 24px; }
 .recreation-row-pin::first-letter { transform: none; }
@@ -434,7 +434,7 @@
 .recreation-map-pin.watchtower {
   position: relative; width: 34px; height: 34px; box-sizing: border-box;
   transform: none; border-radius: 11px; background: #16324f;
-  border: 2px solid #f2f8fc; color: #fff; --pt-icon-accent: #51d6eb;
+  border: 2px solid #f2f8fc; color: #fff; --pt-icon-accent: currentColor;
   box-shadow: 0 3px 10px rgba(4, 18, 33, .5);
 }
 .recreation-map-pin::after {

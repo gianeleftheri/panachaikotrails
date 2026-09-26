@@ -8,11 +8,13 @@ import NavigationPanel from './NavigationPanel.astro';
 import Navigation3dHudLayer from './Navigation3dHudLayer.astro';
 import RouteNavigationController from './RouteNavigationController.astro';
 import MapLibreTerrainV3 from './MapLibreTerrainV3.astro';
+
+const { allowTrailSubmissions = false } = Astro.props;
 ---
 
 <div class="trail-app" data-trail-app>
   <div id="map" aria-label="Διαδραστικός χάρτης μονοπατιών"></div>
-  <TrailTopbar />
+  <TrailTopbar allowTrailSubmissions={allowTrailSubmissions} />
   <RouteBuilder />
   <RecreationPanel />
 

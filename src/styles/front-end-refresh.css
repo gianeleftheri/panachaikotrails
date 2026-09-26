@@ -258,7 +258,7 @@
     bottom: 0;
     z-index: 600;
     display: grid;
-    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     align-items: stretch;
     gap: 2px;
     min-height: calc(69px + env(safe-area-inset-bottom));
@@ -302,6 +302,7 @@
   .topbar-actions .basemap-toggle svg { flex: none; width: 22px; height: 22px; }
   .topbar-actions .basemap-toggle span { display: block; }
   .topbar-actions .basemap-menu { top: auto; bottom: calc(100% + 8px); right: 0; }
+  .topbar-actions.has-submit-cta { grid-template-columns: repeat(8, minmax(0, 1fr)); }
   .trail-menu-toggle .btn-label,
   .submit-trail-cta span,
   .tool-label { display: block; }

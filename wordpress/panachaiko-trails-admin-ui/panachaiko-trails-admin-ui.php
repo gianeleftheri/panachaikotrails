@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.7.1
+ * Version: 0.7.2
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.7.1';
+    private const VERSION = '0.7.2';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -21,6 +21,7 @@ final class Panachaiko_Trails_Admin_UI {
         add_action( 'login_enqueue_scripts', array( __CLASS__, 'login_assets' ) );
         add_action( 'admin_post_pt_submit_trail', array( __CLASS__, 'submit_trail' ) );
         add_action( 'admin_post_nopriv_pt_register_account', array( __CLASS__, 'register_account' ) );
+        add_filter( 'pre_option_users_can_register', array( __CLASS__, 'public_registration_option' ) );
         add_action( 'admin_post_nopriv_pt_verify_email', array( __CLASS__, 'verify_email' ) );
         add_action( 'admin_post_pt_verify_email', array( __CLASS__, 'verify_email' ) );
         add_action( 'template_redirect', array( __CLASS__, 'cms_home' ) );
@@ -67,6 +68,16 @@ final class Panachaiko_Trails_Admin_UI {
         return add_query_arg( array_merge( array( 'pt_action' => 'submit_trail' ), $args ), home_url( '/' ) );
     }
 
+    private static function public_submissions_enabled(): bool {
+        return class_exists( 'Panachaiko_Site_Settings' )
+            && method_exists( 'Panachaiko_Site_Settings', 'public_trail_submissions_enabled' )
+            && Panachaiko_Site_Settings::public_trail_submissions_enabled();
+    }
+
+    public static function public_registration_option( $pre_option ) {
+        return self::public_submissions_enabled() ? $pre_option : '0';
+    }
+
     public static function login_redirect( string $redirect_to, string $requested_redirect_to, $user ): string {
         if ( ! ( $user instanceof WP_User ) ) { return $redirect_to; }
         if ( user_can( $user, 'edit_posts' ) ) {
@@ -98,6 +109,7 @@ final class Panachaiko_Trails_Admin_UI {
     }
 
     public static function register_account(): void {
+        if ( ! self::public_submissions_enabled() ) { wp_die( 'Η δημόσια εγγραφή για υποβολή μονοπατιών είναι προσωρινά κλειστή.', '', array( 'response' => 403 ) ); }
         if ( is_user_logged_in() ) { wp_safe_redirect( self::submission_url( array( 'pt_status' => 'signed_in' ) ) ); exit; }
         if ( 'POST' !== strtoupper( (string) ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) { wp_die( 'Μη επιτρεπτό αίτημα.', '', array( 'response' => 405 ) ); }
         check_admin_referer( 'pt_register_account' );
@@ -237,6 +249,7 @@ final class Panachaiko_Trails_Admin_UI {
     }
 
     public static function submit_trail(): void {
+        if ( ! self::public_submissions_enabled() ) { wp_die( 'Οι δημόσιες υποβολές μονοπατιών είναι προσωρινά κλειστές.', '', array( 'response' => 403 ) ); }
         if ( ! is_user_logged_in() || ! current_user_can( 'read' ) ) { auth_redirect(); }
         check_admin_referer( 'pt_submit_trail' );
         $user_id = get_current_user_id();
@@ -289,6 +302,25 @@ final class Panachaiko_Trails_Admin_UI {
     }
 
     private static function render_submission_portal(): void {
+        if ( ! self::public_submissions_enabled() ) {
+            status_header( 200 ); nocache_headers();
+            ?>
+            <!doctype html><html <?php language_attributes(); ?>><head>
+              <meta charset="<?php bloginfo( 'charset' ); ?>"><meta name="viewport" content="width=device-width,initial-scale=1">
+              <meta name="robots" content="noindex,nofollow"><title>Υποβολές μονοπατιών — Panachaiko Trails</title>
+              <?php wp_head(); ?><link rel="stylesheet" href="<?php echo esc_url( self::url( 'admin.css' ) ); ?>">
+            </head><body class="pt-private pt-account"><main class="pt-account-shell">
+              <div class="pt-account-visual" style="background-image:url('<?php echo esc_url( self::hero() ); ?>')" aria-hidden="true"></div>
+              <section class="pt-account-card">
+                <a class="pt-account-back" href="https://panachaikotrails.gr/">← Επιστροφή στον χάρτη</a>
+                <span class="pt-eyebrow">PANACHAIKO TRAILS</span>
+                <h1>Υποβολές μονοπατιών</h1>
+                <p>Η εγγραφή και η υποβολή νέων μονοπατιών από επισκέπτες δεν είναι διαθέσιμες προς το παρόν.</p>
+              </section>
+            </main><?php wp_footer(); ?></body></html>
+            <?php
+            exit;
+        }
         $status = sanitize_key( wp_unslash( $_GET['pt_status'] ?? '' ) );
         $messages = array(
             'check_email' => array( 'ok', 'Ο λογαριασμός δημιουργήθηκε. Ελέγξτε το email σας για επιβεβαίωση.' ),
@@ -518,6 +550,7 @@ final class Panachaiko_Trails_Admin_UI {
               <a href="<?php echo esc_url( admin_url( 'post-new.php' ) ); ?>"><span class="dashicons dashicons-edit"></span> Νέο άρθρο <span>→</span></a>
               <a href="<?php echo esc_url( admin_url( 'upload.php' ) ); ?>"><span class="dashicons dashicons-format-image"></span> Πολυμέσα <span>→</span></a>
               <?php if ( current_user_can( 'manage_options' ) ) : ?><a href="<?php echo esc_url( admin_url( 'tools.php?page=panachaiko-trails-import' ) ); ?>"><span class="dashicons dashicons-upload"></span> Εισαγωγή διαδρομών <span>→</span></a><?php endif; ?>
+              <?php if ( current_user_can( 'manage_options' ) ) : ?><a href="<?php echo esc_url( admin_url( 'admin.php?page=panachaiko-site-status' ) ); ?>"><span class="dashicons dashicons-admin-settings"></span> Ρυθμίσεις υποβολών <span>→</span></a><?php endif; ?>
             </nav></section>
             <section class="pt-panel pt-routes"><div class="pt-panel-head"><h2>Διαδρομές</h2><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=trail' ) ); ?>">Όλες οι διαδρομές →</a></div>
               <?php if ( $routes ) : ?><div class="pt-route-list"><?php foreach ( $routes as $route ) : ?><a href="<?php echo esc_url( get_edit_post_link( $route->ID ) ); ?>"><span class="dashicons dashicons-location-alt"></span><span><?php echo esc_html( get_the_title( $route ) ?: '(Χωρίς τίτλο)' ); ?></span><small><?php echo esc_html( 'publish' === $route->post_status ? 'Δημοσιευμένη' : 'Προσχέδιο' ); ?><?php $km = get_post_meta( $route->ID, 'length_km', true ); $elevation = get_post_meta( $route->ID, 'elev_max', true ); if ( is_numeric( $km ) ) : ?> · <?php echo esc_html( number_format_i18n( (float) $km, 1 ) ); ?> χλμ.<?php endif; ?><?php if ( is_numeric( $elevation ) ) : ?> · υψ. <?php echo esc_html( number_format_i18n( (float) $elevation ) ); ?> μ.<?php endif; ?></small></a><?php endforeach; ?></div>

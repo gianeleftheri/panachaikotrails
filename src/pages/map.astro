@@ -33,7 +33,7 @@ const title = isPrivatePreview ? 'Ιδιωτική προεπισκόπηση | 
     <title>{title}</title>
   </head>
   <body>
-    <TrailExplorer />
+    <TrailExplorer allowTrailSubmissions={siteStatus.public_trail_submissions} />
     {isPrivatePreview && (
       <aside class="preview-bar">
         <span><i></i> ΙΔΙΩΤΙΚΗ ΠΡΟΕΠΙΣΚΟΠΗΣΗ</span>

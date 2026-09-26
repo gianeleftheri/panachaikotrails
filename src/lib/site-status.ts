@@ -1,5 +1,6 @@
 export type PanachaikoSiteStatus = {
   under_construction: boolean;
+  public_trail_submissions: boolean;
 };
 
 const SITE_STATUS_URL =
@@ -18,10 +19,13 @@ export async function getPanachaikoSiteStatus(): Promise<PanachaikoSiteStatus> {
     });
     if (!response.ok) throw new Error(`Site status HTTP ${response.status}`);
     const payload = await response.json();
-    return { under_construction: payload?.under_construction !== false };
+    return {
+      under_construction: payload?.under_construction !== false,
+      public_trail_submissions: payload?.public_trail_submissions === true,
+    };
   } catch {
     // Fail closed: if the CMS cannot be reached, keep the public site protected.
-    return { under_construction: true };
+    return { under_construction: true, public_trail_submissions: false };
   } finally {
     clearTimeout(timeout);
   }

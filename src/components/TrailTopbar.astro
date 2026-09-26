@@ -1,5 +1,6 @@
 ---
 import { trailIcon } from '../lib/trail-icons';
+const { allowTrailSubmissions = false } = Astro.props;
 ---
 <header class="topbar">
   <div class="brand">
@@ -13,7 +14,7 @@ import { trailIcon } from '../lib/trail-icons';
     </div>
   </div>
 
-  <div class="topbar-actions">
+  <div class:list={['topbar-actions', { 'has-submit-cta': allowTrailSubmissions }]}>
     <button class="trail-menu-toggle" id="trailMenuToggle" type="button" aria-expanded="false">
       <Fragment set:html={trailIcon('hike')} />
       <span class="btn-label">Μονοπάτια</span>
@@ -26,10 +27,12 @@ import { trailIcon } from '../lib/trail-icons';
       <Fragment set:html={trailIcon('compass')} />
       <span class="btn-label">Διαδρομή</span>
     </button>
-    <a class="submit-trail-cta" href="https://cms.panachaikotrails.gr/?pt_action=submit_trail" aria-label="Πρόσθεσε το δικό σου μονοπάτι">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-      <span>Πρόσθεσε μονοπάτι</span>
-    </a>
+    {allowTrailSubmissions && (
+      <a class="submit-trail-cta" href="https://cms.panachaikotrails.gr/?pt_action=submit_trail" aria-label="Πρόσθεσε το δικό σου μονοπάτι">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        <span>Πρόσθεσε μονοπάτι</span>
+      </a>
+    )}
     <button class="locate-btn" id="locateBtn" type="button" title="Η θέση μου (GPS)" aria-label="Η θέση μου (GPS)" disabled>
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg><span class="tool-label">GPS</span>
     </button>

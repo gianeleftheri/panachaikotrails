@@ -1077,3 +1077,47 @@
     overflow: auto;
   }
 }
+
+
+/* Closed trail-info grab: a soft red pulse draws attention only while the panel is rolled up. */
+@keyframes trail-grab-attention {
+  0%, 100% {
+    background: rgba(16,43,67,.99);
+    border-color: rgba(117,161,191,.38);
+    color: #f2f8fc;
+    box-shadow: 0 7px 18px rgba(2,14,27,.28);
+  }
+  45% {
+    background: rgba(148,35,42,.96);
+    border-color: rgba(255,116,116,.95);
+    color: #fff;
+    box-shadow:
+      0 7px 18px rgba(2,14,27,.30),
+      0 0 0 3px rgba(239,68,68,.14),
+      0 0 22px rgba(239,68,68,.46);
+  }
+  70% {
+    background: rgba(90,34,45,.94);
+    border-color: rgba(226,91,99,.66);
+    color: #fff;
+    box-shadow:
+      0 7px 18px rgba(2,14,27,.29),
+      0 0 12px rgba(239,68,68,.24);
+  }
+}
+
+.trail-drawer-handle:not([hidden]):not(.open) {
+  animation: trail-grab-attention 2.6s ease-in-out infinite;
+}
+
+.trail-drawer-handle.open {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trail-drawer-handle:not([hidden]):not(.open) {
+    animation: none;
+    background: rgba(122,38,46,.96) !important;
+    border-color: rgba(239,104,110,.72) !important;
+  }
+}

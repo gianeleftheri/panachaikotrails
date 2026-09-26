@@ -171,7 +171,7 @@ if (app) {
         routeBuilderToggle?.classList.remove('open');
         setTrailPanelOpen(false);
         if (!selectedCode && codes.length) selectTrail(codes[0]);
-        view3dOverlay?.classList.add('open');
+        document.dispatchEvent(new CustomEvent('panachaiko:open-3d'));
         control.classList.remove('open');
         toggle?.setAttribute('aria-expanded', 'false');
       });

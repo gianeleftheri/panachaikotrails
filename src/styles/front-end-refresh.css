@@ -945,3 +945,19 @@
     overflow-x: auto;
   }
 }
+
+
+/* Center the docked trail popup and give it more horizontal room on desktop. */
+@media (min-width: 761px) {
+  .trail-drawer:not(.detached) {
+    left: 50% !important;
+    right: auto !important;
+    width: min(var(--td-preferred-width, 1080px), calc(100vw - 48px)) !important;
+    max-width: 1420px !important;
+    transform: translate(-50%, calc(100% + 28px)) !important;
+  }
+
+  .trail-drawer:not(.detached).open {
+    transform: translate(-50%, 0) !important;
+  }
+}

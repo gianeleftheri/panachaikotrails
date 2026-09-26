@@ -694,7 +694,7 @@ if (app) {
     const elevationRange = trail.elev_min === null || trail.elev_max === null ? '—' : `${trail.elev_min}–${trail.elev_max} μ`;
     const hasElevationSamples = trail.segments.some(segment => segment.some(point => typeof point[2] === 'number'));
     const contentVolume = trail.notes.length + trail.photos.length + trail.videos.length + (trail.description ? 1 : 0);
-    const preferredWidth = contentVolume >= 10 ? 1280 : contentVolume >= 6 ? 1120 : contentVolume >= 3 ? 940 : 760;
+    const preferredWidth = contentVolume >= 10 ? 1420 : contentVolume >= 6 ? 1260 : contentVolume >= 3 ? 1080 : 920;
     trailDrawer.style.setProperty('--td-preferred-width', preferredWidth + 'px');
     trailDrawer.dataset.contentVolume = contentVolume >= 10 ? 'large' : contentVolume >= 6 ? 'medium' : contentVolume >= 3 ? 'small' : 'compact';
     trailDrawer.classList.toggle('no-elevation', !hasElevationSamples);

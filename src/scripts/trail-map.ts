@@ -465,29 +465,25 @@ if (app) {
       return;
     }
 
-    if (drawerDetached) {
-      const rect = trailDrawer.getBoundingClientRect();
-      const left = Math.min(window.innerWidth - 40, Math.max(8, rect.right - 120));
-      const top = Math.min(window.innerHeight - 40, Math.max(76, rect.top + 12));
-      trailDrawerHandle.style.left = left + 'px';
-      trailDrawerHandle.style.top = top + 'px';
+    const rect = trailDrawer.getBoundingClientRect();
+    const earWidth = 58;
+    const centeredLeft = Math.min(
+      window.innerWidth - earWidth - 8,
+      Math.max(8, rect.left + rect.width / 2 - earWidth / 2)
+    );
+
+    if (drawerDetached || trailDrawer.classList.contains('open')) {
+      trailDrawerHandle.style.left = centeredLeft + 'px';
+      trailDrawerHandle.style.top = Math.max(72, rect.top - 28) + 'px';
       trailDrawerHandle.style.right = 'auto';
       trailDrawerHandle.style.bottom = 'auto';
       return;
     }
 
-    if (trailDrawer.classList.contains('open')) {
-      const rect = trailDrawer.getBoundingClientRect();
-      trailDrawerHandle.style.left = Math.min(window.innerWidth - 40, Math.max(8, rect.right - 120)) + 'px';
-      trailDrawerHandle.style.top = Math.max(76, rect.top + 12) + 'px';
-      trailDrawerHandle.style.right = 'auto';
-      trailDrawerHandle.style.bottom = 'auto';
-    } else {
-      trailDrawerHandle.style.left = 'auto';
-      trailDrawerHandle.style.top = 'auto';
-      trailDrawerHandle.style.right = '24px';
-      trailDrawerHandle.style.bottom = '14px';
-    }
+    trailDrawerHandle.style.left = centeredLeft + 'px';
+    trailDrawerHandle.style.top = 'auto';
+    trailDrawerHandle.style.right = 'auto';
+    trailDrawerHandle.style.bottom = '6px';
   };
 
   const syncDrawerEar = () => {

@@ -824,3 +824,32 @@
     padding-right: 134px;
   }
 }
+
+
+/* Make the popup ear a real visible tab, separate from the action buttons. */
+@media (min-width: 761px) {
+  .trail-drawer-handle,
+  .trail-drawer-handle.open {
+    width: 58px !important;
+    height: 28px !important;
+    border-radius: 10px 10px 0 0 !important;
+    border: 1px solid var(--ui-border) !important;
+    border-bottom: 0 !important;
+    background: rgba(16,43,67,.99) !important;
+    box-shadow: 0 -5px 16px rgba(2,14,27,.28) !important;
+    color: #f2f8fc !important;
+  }
+  .trail-drawer-handle:hover,
+  .trail-drawer-handle.open:hover {
+    background: #245174 !important;
+    border-color: var(--ui-accent) !important;
+  }
+  .trail-drawer-handle svg,
+  .trail-drawer-handle.open svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  .trail-drawer-handle.open svg {
+    transform: rotate(180deg);
+  }
+}

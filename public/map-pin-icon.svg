@@ -1,8 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-hidden="true">
   <g fill="none" stroke="#ffffff" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round">
     <path d="M7 24 20 18l12 5 12-5 13 6v27l-13-6-12 5-12-5-13 6V24Z"/>
-    <path d="M20 18v27M32 23v27M44 18v13"/>
-    <path d="M45 9c7 0 12 5 12 12 0 9-12 20-12 20S33 30 33 21c0-7 5-12 12-12Z"/>
-    <circle cx="45" cy="21" r="3.5"/>
+    <path d="M20 18v27M32 23v27M44 18v27"/>
   </g>
 </svg>

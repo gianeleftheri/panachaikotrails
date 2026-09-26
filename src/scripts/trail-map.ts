@@ -125,7 +125,7 @@ if (app) {
       const control = L.DomUtil.create('div', 'basemap-control');
       control.innerHTML = `
         <button class="basemap-toggle" type="button" aria-label="Χάρτες" aria-expanded="false">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15m6-12v15"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 8 4l5 2.5L18 4l3 1.5v12L16 20l-5-2.5L6 20l-3-1.5v-12Z"/><path d="M8 4v13.5M13 6.5v11M18 4v6.2"/><path d="M18.5 10.2a3.2 3.2 0 1 1 0 6.4c-1.7 0-3.2-3.2-3.2-3.2s1.5-3.2 3.2-3.2Z"/><circle cx="18.5" cy="13.4" r=".9"/></svg>
           <span>Χάρτες</span>
         </button>
         <div class="basemap-menu" role="group" aria-label="Επιλογή τύπου χάρτη">

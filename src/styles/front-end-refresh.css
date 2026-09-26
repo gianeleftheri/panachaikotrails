@@ -568,3 +568,20 @@
     padding-inline: 14px !important;
   }
 }
+
+/* Make the full GPS caption explicit and impossible to clip on desktop. */
+@media (min-width: 761px) {
+  #locateBtn {
+    min-width: 150px !important;
+    width: auto !important;
+    padding: 0 16px !important;
+    overflow: visible !important;
+  }
+  #locateBtn .tool-label {
+    display: inline-block !important;
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+  }
+}

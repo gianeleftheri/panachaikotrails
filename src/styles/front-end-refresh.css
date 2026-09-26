@@ -800,3 +800,27 @@
     transform: rotate(180deg);
   }
 }
+
+
+/* Align minimize, undock and close controls in one clean row. */
+@media (min-width: 761px) {
+  .trail-drawer-handle.open {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    box-shadow: none;
+    background: rgba(255,255,255,.045);
+    border-color: rgba(117,161,191,.28);
+  }
+  .trail-drawer-handle.open:hover {
+    background: rgba(81,214,235,.13);
+    border-color: rgba(81,214,235,.58);
+  }
+  .trail-drawer-handle.open svg {
+    width: 16px;
+    height: 16px;
+  }
+  .td-titleblock.selected {
+    padding-right: 134px;
+  }
+}

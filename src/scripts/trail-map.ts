@@ -467,8 +467,8 @@ if (app) {
 
     if (drawerDetached) {
       const rect = trailDrawer.getBoundingClientRect();
-      const left = Math.min(window.innerWidth - 58, Math.max(8, rect.right - 56));
-      const top = Math.min(window.innerHeight - 52, Math.max(76, rect.top - 23));
+      const left = Math.min(window.innerWidth - 40, Math.max(8, rect.right - 120));
+      const top = Math.min(window.innerHeight - 40, Math.max(76, rect.top + 12));
       trailDrawerHandle.style.left = left + 'px';
       trailDrawerHandle.style.top = top + 'px';
       trailDrawerHandle.style.right = 'auto';
@@ -478,8 +478,8 @@ if (app) {
 
     if (trailDrawer.classList.contains('open')) {
       const rect = trailDrawer.getBoundingClientRect();
-      trailDrawerHandle.style.left = Math.min(window.innerWidth - 58, Math.max(8, rect.right - 56)) + 'px';
-      trailDrawerHandle.style.top = Math.max(76, rect.top - 23) + 'px';
+      trailDrawerHandle.style.left = Math.min(window.innerWidth - 40, Math.max(8, rect.right - 120)) + 'px';
+      trailDrawerHandle.style.top = Math.max(76, rect.top + 12) + 'px';
       trailDrawerHandle.style.right = 'auto';
       trailDrawerHandle.style.bottom = 'auto';
     } else {

@@ -162,9 +162,11 @@ const start = async () => {
     toggle.setAttribute('aria-expanded', String(open));
 
     if (open) {
-      document.getElementById('trailPanel')?.classList.remove('open');
-      document.getElementById('trailMenuToggle')?.classList.remove('open');
-      document.getElementById('trailMenuToggle')?.setAttribute('aria-expanded', 'false');
+      if (!desktopPanelQuery.matches) {
+        document.getElementById('trailPanel')?.classList.remove('open');
+        document.getElementById('trailMenuToggle')?.classList.remove('open');
+        document.getElementById('trailMenuToggle')?.setAttribute('aria-expanded', 'false');
+      }
       document.getElementById('routeBuilderPanel')?.classList.remove('open');
       document.getElementById('routeBuilderToggle')?.classList.remove('open');
       document.getElementById('shelterPanel')?.classList.remove('show');
@@ -209,7 +211,7 @@ const start = async () => {
   close?.addEventListener('click', () => setOpen(false));
 
   document.getElementById('trailMenuToggle')?.addEventListener('click', () => {
-    if (panel.classList.contains('open')) setOpen(false);
+    if (!desktopPanelQuery.matches && panel.classList.contains('open')) setOpen(false);
   });
   document.getElementById('routeBuilderToggle')?.addEventListener('click', () => {
     if (panel.classList.contains('open')) setOpen(false);

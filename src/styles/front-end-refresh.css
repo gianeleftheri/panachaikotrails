@@ -605,3 +605,27 @@
   opacity: 1;
   filter: none;
 }
+
+
+/* Draggable desktop panel headers. Position resets whenever a panel is reopened. */
+@media (min-width: 761px) {
+  #trailPanel .left-panel-head,
+  #recreationPanel .left-panel-head {
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+  }
+  #trailPanel.panel-dragging .left-panel-head,
+  #recreationPanel.panel-dragging .left-panel-head {
+    cursor: grabbing;
+  }
+  #trailPanel .left-panel-actions,
+  #recreationPanel .left-panel-actions {
+    cursor: default;
+  }
+  #trailPanel.panel-dragging,
+  #recreationPanel.panel-dragging {
+    transition: none !important;
+    z-index: 760;
+  }
+}

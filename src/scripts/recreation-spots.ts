@@ -106,6 +106,7 @@ const start = async () => {
   const list = document.getElementById('recreation-list');
   const count = document.getElementById('recreation-count');
   const toggle = document.getElementById('recreationMenuToggle') as HTMLButtonElement | null;
+  const pin = document.getElementById('recreationPanelPin') as HTMLButtonElement | null;
   const close = document.getElementById('recreationPanelClose') as HTMLButtonElement | null;
   if (!panel || !list || !toggle) return;
 
@@ -149,12 +150,13 @@ const start = async () => {
       row.classList.add('active');
       map.flyTo([spot.lat, spot.lng], 15, { animate:true, duration:.7 });
       marker.openPopup();
+      closeRecreationPanelAfterSelection();
     });
     list.appendChild(row);
     rowById.set(id, row);
   });
 
-  const setOpen = (open: boolean) => {
+  const setOpen = (open: boolean, keepLayer = false) => {
     panel.classList.toggle('open', open);
     toggle.classList.toggle('open', open);
     toggle.setAttribute('aria-expanded', String(open));
@@ -167,10 +169,38 @@ const start = async () => {
       document.getElementById('routeBuilderToggle')?.classList.remove('open');
       document.getElementById('shelterPanel')?.classList.remove('show');
       if (!map.hasLayer(layer)) layer.addTo(map);
-    } else if (map.hasLayer(layer)) {
+    } else if (!keepLayer && map.hasLayer(layer)) {
       map.removeLayer(layer);
     }
   };
+
+  const desktopPanelQuery = window.matchMedia('(min-width: 761px)');
+  const panelPinStorageKey = 'panachaiko-recreation-panel-pinned';
+  let recreationPanelPinned = false;
+
+  const syncRecreationPanelPin = (openWhenPinned = false) => {
+    const storedPinned = window.localStorage.getItem(panelPinStorageKey) === '1';
+    recreationPanelPinned = desktopPanelQuery.matches && storedPinned;
+    panel.classList.toggle('pinned', recreationPanelPinned);
+    pin?.classList.toggle('active', recreationPanelPinned);
+    pin?.setAttribute('aria-pressed', String(recreationPanelPinned));
+    pin?.setAttribute('title', recreationPanelPinned ? 'Το παράθυρο μένει ανοιχτό' : 'Κράτησε το παράθυρο ανοιχτό');
+    if (openWhenPinned && recreationPanelPinned) setOpen(true);
+  };
+
+  const closeRecreationPanelAfterSelection = () => {
+    if (!recreationPanelPinned || !desktopPanelQuery.matches) setOpen(false, true);
+  };
+
+  syncRecreationPanelPin(true);
+  desktopPanelQuery.addEventListener('change', () => syncRecreationPanelPin(false));
+
+  pin?.addEventListener('click', event => {
+    event.stopPropagation();
+    const nextPinned = !(desktopPanelQuery.matches && window.localStorage.getItem(panelPinStorageKey) === '1');
+    window.localStorage.setItem(panelPinStorageKey, nextPinned ? '1' : '0');
+    syncRecreationPanelPin(true);
+  });
 
   toggle.addEventListener('click', event => {
     event.preventDefault();

@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.7.6';
+    private const VERSION = '0.7.7';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {

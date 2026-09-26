@@ -114,3 +114,29 @@ body.toplevel_page_panachaiko-trails-home #wpcontent{background:#f5f8fd}
 .pt-site-status{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:0 0 14px;padding:20px 22px;border:1px solid var(--pt-line);border-radius:13px;background:#fff;box-shadow:0 2px 11px rgba(27,54,94,.05)}
 .pt-site-status-copy{min-width:0}.pt-site-status-kicker{display:block;margin-bottom:7px;color:#61758c;font-size:10px;font-weight:800;letter-spacing:.14em}.pt-site-status-title{display:flex;align-items:center;gap:9px}.pt-site-status-title strong{font-size:18px}.pt-site-status-dot{width:10px;height:10px;border-radius:50%;flex:none}.pt-site-status p{max-width:760px;margin:7px 0 0;color:#61758c;line-height:1.5}.pt-site-status.is-maintenance{border-color:#ffd5bf;background:#fffaf7}.pt-site-status.is-maintenance .pt-site-status-dot{background:var(--pt-orange);box-shadow:0 0 0 5px rgba(255,96,31,.12)}.pt-site-status.is-live{border-color:#c8e4c8;background:#f8fff8}.pt-site-status.is-live .pt-site-status-dot{background:#28a745;box-shadow:0 0 0 5px rgba(40,167,69,.12)}.pt-site-status-form{margin:0;flex:none}.pt-site-status-button{min-height:44px;padding:10px 16px;border:0;border-radius:9px;color:#fff;font-weight:800;cursor:pointer}.is-maintenance .pt-site-status-button{background:#18743a}.is-live .pt-site-status-button{background:var(--pt-orange)}.pt-site-status-button:hover{filter:brightness(.94)}.pt-site-status-saved{display:inline-block;margin-top:9px;padding:5px 9px;border-radius:999px;background:#e6f6ea;color:#176b35;font-size:11px;font-weight:800}
 @media(max-width:782px){.pt-site-status{align-items:stretch;flex-direction:column}.pt-site-status-form,.pt-site-status-button{width:100%}}
+
+
+/* Sidebar brand sits at the bottom instead of occupying a menu-icon slot. */
+@media (min-width:783px){
+  body.wp-admin #adminmenuwrap:after{
+    content:"";
+    position:fixed;
+    left:18px;
+    bottom:42px;
+    width:124px;
+    height:104px;
+    background-image:var(--pt-sidebar-brand);
+    background-repeat:no-repeat;
+    background-position:center;
+    background-size:contain;
+    opacity:.96;
+    pointer-events:none;
+    z-index:2;
+  }
+  body.wp-admin.folded #adminmenuwrap:after{
+    left:4px;
+    width:28px;
+    height:28px;
+    bottom:42px;
+  }
+}

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.7.10
+ * Version: 0.7.11
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.7.10';
+    private const VERSION = '0.7.11';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -49,11 +49,11 @@ final class Panachaiko_Trails_Admin_UI {
         echo '<link rel="shortcut icon" href="' . $icon . '">';
     }
     public static function register_menu(): void {
-        add_menu_page( 'Panachaiko Trails', 'Panachaiko Trails', 'edit_posts', self::PAGE, array( __CLASS__, 'render_dashboard' ), self::favicon(), 2 );
+        add_menu_page( 'Panachaiko Trails', 'Panachaiko Trails', 'edit_posts', self::PAGE, array( __CLASS__, 'render_dashboard' ), 'dashicons-admin-site-alt3', 2 );
     }
     public static function admin_assets(): void {
         wp_enqueue_style( 'panachaiko-admin-ui', self::url( 'admin.css' ), array(), self::VERSION );
-        wp_add_inline_style( 'panachaiko-admin-ui', '.pt-hero{background-image:url("' . esc_url( self::hero() ) . '")}' );
+        wp_add_inline_style( 'panachaiko-admin-ui', ':root{--pt-sidebar-brand:url("' . esc_url( self::favicon() ) . '")}.pt-hero{background-image:url("' . esc_url( self::hero() ) . '")}' );
         if ( current_user_can( 'manage_options' ) ) {
             wp_enqueue_script( 'panachaiko-admin-tools', self::url( 'admin-tools.js' ), array(), self::VERSION, true );
         }

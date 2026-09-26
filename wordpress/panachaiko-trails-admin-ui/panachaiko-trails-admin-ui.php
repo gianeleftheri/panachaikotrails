@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.7.7
+ * Version: 0.7.8
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.7.7';
+    private const VERSION = '0.7.8';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -19,6 +19,9 @@ final class Panachaiko_Trails_Admin_UI {
         add_filter( 'admin_body_class', array( __CLASS__, 'admin_body_classes' ) );
         add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_assets' ) );
         add_action( 'login_enqueue_scripts', array( __CLASS__, 'login_assets' ) );
+        add_action( 'admin_head', array( __CLASS__, 'render_favicon' ) );
+        add_action( 'login_head', array( __CLASS__, 'render_favicon' ) );
+        add_action( 'wp_head', array( __CLASS__, 'render_favicon' ), 1 );
         add_filter( 'login_headerurl', array( __CLASS__, 'login_header_url' ) );
         add_filter( 'login_headertext', array( __CLASS__, 'login_header_text' ) );
         add_action( 'admin_post_pt_submit_trail', array( __CLASS__, 'submit_trail' ) );
@@ -36,8 +39,16 @@ final class Panachaiko_Trails_Admin_UI {
     private static function hero(): string {
         return self::url( 'cms-hero-provided.svg' );
     }
+    private static function favicon(): string {
+        return self::url( 'panachaiko-favicon.svg' );
+    }
+    public static function render_favicon(): void {
+        $icon = esc_url( self::favicon() );
+        echo '<link rel="icon" type="image/svg+xml" href="' . $icon . '">';
+        echo '<link rel="shortcut icon" href="' . $icon . '">';
+    }
     public static function register_menu(): void {
-        add_menu_page( 'Panachaiko Trails', 'Panachaiko Trails', 'edit_posts', self::PAGE, array( __CLASS__, 'render_dashboard' ), 'dashicons-location-alt', 2 );
+        add_menu_page( 'Panachaiko Trails', 'Panachaiko Trails', 'edit_posts', self::PAGE, array( __CLASS__, 'render_dashboard' ), self::favicon(), 2 );
     }
     public static function admin_assets(): void {
         wp_enqueue_style( 'panachaiko-admin-ui', self::url( 'admin.css' ), array(), self::VERSION );

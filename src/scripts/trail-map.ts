@@ -460,14 +460,14 @@ if (app) {
 
     if (drawerDetached && drawerDesktopQuery.matches) {
       const rect = trailDrawer.getBoundingClientRect();
-      const earWidth = 58;
+      const earWidth = 78;
       const left = Math.min(
         window.innerWidth - earWidth - 8,
         Math.max(8, rect.left + rect.width / 2 - earWidth / 2)
       );
       const top = Math.min(
-        window.innerHeight - 30,
-        Math.max(72, rect.top - 28)
+        window.innerHeight - 36,
+        Math.max(8, rect.top - 34)
       );
       trailDrawerHandle.style.left = left + 'px';
       trailDrawerHandle.style.top = top + 'px';
@@ -478,7 +478,7 @@ if (app) {
 
     // Docked mode: the grab tab always touches the lower edge of the main toolbar.
     const toolbarHeight = drawerDesktopQuery.matches ? 70 : 60;
-    const earWidth = 58;
+    const earWidth = 78;
     trailDrawerHandle.style.left = Math.max(8, window.innerWidth / 2 - earWidth / 2) + 'px';
     trailDrawerHandle.style.top = toolbarHeight + 'px';
     trailDrawerHandle.style.right = 'auto';
@@ -515,6 +515,7 @@ if (app) {
     }
 
     tdUndock?.classList.toggle('active', drawerDetached);
+    trailDrawerHandle?.classList.toggle('detached', drawerDetached);
     tdUndock?.setAttribute('aria-pressed', String(drawerDetached));
     tdUndock?.setAttribute('title', drawerDetached ? 'Επαναφορά παραθύρου κάτω από τη μπάρα' : 'Αποδέσμευση παραθύρου');
     syncDrawerEar();

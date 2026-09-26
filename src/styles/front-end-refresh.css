@@ -1121,3 +1121,77 @@
     border-color: rgba(239,104,110,.72) !important;
   }
 }
+
+
+/* Final grab-handle treatment: cyan grip + chevron, attached to toolbar/window. */
+.trail-drawer-handle:not([hidden]),
+.trail-drawer-handle.open:not([hidden]) {
+  width: 78px !important;
+  height: 34px !important;
+  padding: 4px 0 3px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 1px !important;
+  background: rgba(16,43,67,.99) !important;
+  color: #f4fbfd !important;
+  border-color: rgba(81,214,235,.62) !important;
+}
+
+.trail-drawer-handle:not(.detached) {
+  border-top: 0 !important;
+  border-bottom: 1px solid rgba(81,214,235,.62) !important;
+  border-radius: 0 0 12px 12px !important;
+}
+
+.trail-drawer-handle.detached {
+  border-top: 1px solid rgba(81,214,235,.62) !important;
+  border-bottom: 0 !important;
+  border-radius: 12px 12px 0 0 !important;
+}
+
+.trail-grab-line {
+  display: block;
+  width: 32px;
+  height: 3px;
+  flex: none;
+  border-radius: 999px;
+  background: #51d6eb;
+  box-shadow: 0 0 8px rgba(81,214,235,.34);
+  opacity: .95;
+  transition: width .18s ease, opacity .18s ease, box-shadow .18s ease;
+}
+
+.trail-grab-chevron {
+  display: block;
+  width: 18px !important;
+  height: 18px !important;
+  flex: none;
+  transition: transform .22s ease, color .18s ease;
+}
+
+/* Closed = down chevron (open panel). Open = up chevron (roll panel up). */
+.trail-drawer-handle.open .trail-grab-chevron {
+  transform: rotate(180deg) !important;
+}
+
+.trail-drawer-handle:hover .trail-grab-line,
+.trail-drawer-handle:focus-visible .trail-grab-line {
+  width: 38px;
+  box-shadow: 0 0 12px rgba(81,214,235,.52);
+}
+
+/* Keep the cyan grip visible while the closed handle softly pulses red. */
+.trail-drawer-handle:not([hidden]):not(.open) .trail-grab-line {
+  background: #51d6eb;
+  box-shadow: 0 0 10px rgba(81,214,235,.52);
+}
+
+@media (max-width: 760px) {
+  .trail-drawer-handle:not([hidden]),
+  .trail-drawer-handle.open:not([hidden]) {
+    width: 78px !important;
+    height: 34px !important;
+  }
+}

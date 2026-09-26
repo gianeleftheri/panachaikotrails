@@ -44,8 +44,10 @@
   transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
 .topbar-actions .basemap-toggle .basemap-icon {
-  width: 27px;
-  height: 27px;
+  width: 30px;
+  height: 30px;
+  opacity: 1;
+  filter: brightness(1.2);
 }
 .topbar-actions .basemap-toggle:hover,
 .topbar-actions .basemap-control.open .basemap-toggle {
@@ -311,7 +313,7 @@
     font-size: 10px; line-height: 1.1; box-shadow: none;
   }
   .topbar-actions .basemap-toggle svg { flex: none; width: 22px; height: 22px; }
-  .topbar-actions .basemap-toggle .basemap-icon { width: 27px; height: 27px; }
+  .topbar-actions .basemap-toggle .basemap-icon { width: 30px; height: 30px; }
   .topbar-actions .basemap-toggle span { display: block; }
   .topbar-actions .basemap-menu { top: auto; bottom: calc(100% + 8px); right: 0; }
   .topbar-actions.has-submit-cta { grid-template-columns: repeat(8, minmax(0, 1fr)); }

@@ -554,3 +554,17 @@
 .basemap-3d-option .traffic-copy { display:flex; flex-direction:column; gap:2px; }
 .basemap-3d-option .traffic-copy strong { font-size:12px; }
 .basemap-3d-option .traffic-copy small { color:#637e93; font-size:10px; }
+
+/* Keep desktop GPS label visible inside its button. */
+@media (min-width: 761px) {
+  #locateBtn .tool-label {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  #locateBtn {
+    width: auto !important;
+    min-width: 88px !important;
+    padding-inline: 14px !important;
+  }
+}

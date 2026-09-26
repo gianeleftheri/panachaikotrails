@@ -585,3 +585,23 @@
     white-space: nowrap !important;
   }
 }
+
+/* Inactive follow-location state until GPS or a route is started. */
+#recenterBtn:disabled {
+  opacity: .52 !important;
+  background: rgba(180, 190, 200, .10) !important;
+  border-color: rgba(180, 190, 200, .24) !important;
+  color: #9eabb6 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  filter: grayscale(.75);
+}
+#recenterBtn:disabled:hover {
+  background: rgba(180, 190, 200, .10) !important;
+  border-color: rgba(180, 190, 200, .24) !important;
+  color: #9eabb6 !important;
+}
+#recenterBtn:not(:disabled) {
+  opacity: 1;
+  filter: none;
+}

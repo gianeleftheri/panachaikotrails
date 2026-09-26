@@ -658,8 +658,15 @@ if (app) {
     maybeCalculateAfterGps();
   };
 
+  const enableRecenter = () => {
+    if (!recenterBtn) return;
+    recenterBtn.disabled = false;
+    recenterBtn.classList.add('show');
+  };
+
   const startGps = () => {
     if (!navigator.geolocation) { if (rbGpsStatus) rbGpsStatus.textContent = 'Το GPS δεν είναι διαθέσιμο.'; return; }
+    enableRecenter();
     autoCalculateAfterGps = true;
     if (rbCalcBtn) rbCalcBtn.disabled = true;
     if (rbGpsStatus) { rbGpsStatus.textContent = 'Αναζήτηση θέσης…'; rbGpsStatus.className = 'rb-status warn'; }
@@ -674,6 +681,7 @@ if (app) {
   locateBtn?.addEventListener('click', startGps); rbGpsBtn?.addEventListener('click', startGps);
   recenterBtn?.addEventListener('click', () => { if (userPosition) { map.flyTo([userPosition.lat, userPosition.lng], 16); recenterBtn.classList.add('following'); } });
   map.on('dragstart', () => recenterBtn?.classList.remove('following'));
+  document.addEventListener('panachaiko:navigation-start', enableRecenter);
 
   rbTrailSelect?.addEventListener('change', () => {
     syncRouteCalculationState();
@@ -685,6 +693,7 @@ if (app) {
     const nearest = nearestPoint(trails[code], userPosition); if (!nearest) return;
     if (routeLine) map.removeLayer(routeLine);
     routeLine = L.polyline([[userPosition.lat, userPosition.lng], [nearest.point[1], nearest.point[0]]], { color: '#cf5a34', weight: 4, dashArray: '7 7' }).addTo(map);
+    enableRecenter();
     const mode = (document.querySelector<HTMLInputElement>('input[name="rbMode"]:checked')?.value ?? 'straight');
     if (rbResultStatus) { rbResultStatus.textContent = mode === 'straight' ? 'Έτοιμο — εμφανίζεται η ευθεία προσέγγιση προς το μονοπάτι.' : 'Το interface είναι έτοιμο· η εξωτερική μηχανή routing θα συνδεθεί στην επόμενη φάση.'; rbResultStatus.className = 'rb-status ok'; }
     routeBuilderPanel?.classList.remove('open'); routeBuilderToggle?.classList.remove('open');

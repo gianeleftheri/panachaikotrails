@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.7.3
+ * Version: 0.7.7
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui

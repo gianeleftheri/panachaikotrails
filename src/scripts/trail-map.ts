@@ -253,10 +253,9 @@ if (app) {
   const formatDuration = (minutes: number) => `${Math.floor(minutes / 60)}ω ${String(minutes % 60).padStart(2, '0')}′`;
 
   const styleFor = (trail: Trail, active = false): L.PathOptions => ({
-    color: trail.color || (trail.existing ? '#84a06e' : '#9c917c'),
+    color: trail.color || '#84a06e',
     weight: active ? 6 : 3.5,
-    opacity: active ? .98 : trail.existing ? .82 : .62,
-    dashArray: trail.existing ? undefined : '2 8',
+    opacity: active ? .98 : .82,
     lineCap: 'round',
     lineJoin: 'round'
   });

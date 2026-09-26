@@ -1,9 +1,12 @@
+---
+import { trailIcon } from '../lib/trail-icons';
+---
 <section class="route-builder-panel" id="routeBuilderPanel" aria-label="Σχεδιασμός πεζοπορικής διαδρομής">
   <div class="rb-title">Σχεδιασμός πεζοπορίας</div>
 
   <div class="rb-step">
     <div class="rb-step-label"><span class="rb-step-num">1</span>Αφετηρία</div>
-    <button class="rb-gps-btn" id="rbGpsBtn" type="button">📍 Χρήση της θέσης μου (GPS)</button>
+    <button class="rb-gps-btn" id="rbGpsBtn" type="button"><span set:html={trailIcon('pin')} />Χρήση της θέσης μου (GPS)</button>
     <div class="rb-status" id="rbGpsStatus"></div>
   </div>
 
@@ -20,15 +23,15 @@
     <div class="rb-mode-grid" role="radiogroup" aria-label="Τρόπος προσέγγισης στην αρχή του μονοπατιού">
       <label class="rb-mode-option">
         <input type="radio" name="rbMode" value="ors" checked />
-        <span><b>🥾 Πραγματική πεζοπορική</b><small>Δρόμοι και πεζοπορικό δίκτυο μέχρι την αρχή</small></span>
+        <span><b class="rb-option-title"><span set:html={trailIcon('hike')} />Πραγματική πεζοπορική</b><small>Δρόμοι και πεζοπορικό δίκτυο μέχρι την αρχή</small></span>
       </label>
       <label class="rb-mode-option">
         <input type="radio" name="rbMode" value="straight" />
-        <span><b>📏 Ευθεία προσέγγιση</b><small>Μόνο για γρήγορη εκτίμηση απόστασης</small></span>
+        <span><b class="rb-option-title"><span set:html={trailIcon('compass')} />Ευθεία προσέγγιση</b><small>Μόνο για γρήγορη εκτίμηση απόστασης</small></span>
       </label>
       <label class="rb-mode-option">
         <input type="radio" name="rbMode" value="ai" />
-        <span><b>⛰️ Έδαφος</b><small>Πειραματική άμεση προσέγγιση — όχι πλήρες terrain routing ακόμα</small></span>
+        <span><b class="rb-option-title"><span set:html={trailIcon('mountain')} />Έδαφος</b><small>Πειραματική άμεση προσέγγιση — όχι πλήρες terrain routing ακόμα</small></span>
       </label>
     </div>
   </div>
@@ -44,6 +47,9 @@
   .rb-mode-option input{position:absolute;opacity:0;pointer-events:none}
   .rb-mode-option>span{display:flex;flex-direction:column;gap:2px;padding:9px 10px;border:1px solid var(--brass);border-radius:6px;background:rgba(255,255,255,.025);color:var(--parchment-dim);transition:.15s ease;user-select:none}
   .rb-mode-option b{font-size:12.5px;font-weight:600;color:var(--parchment)}
+  .rb-gps-btn,.rb-option-title{display:flex;align-items:center;gap:9px}
+  .rb-gps-btn .pt-minimal-icon,.rb-option-title .pt-minimal-icon{width:19px;height:19px}
+  .rb-option-title .pt-minimal-icon{color:var(--parchment);flex:none}
   .rb-mode-option small,.rb-help{font-size:10px;line-height:1.4;color:var(--parchment-faint)}
   .rb-help{margin-top:6px}
   .rb-mode-option:hover>span{background:rgba(255,255,255,.055);border-color:var(--brass-solid)}

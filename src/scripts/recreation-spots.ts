@@ -1,3 +1,4 @@
+import { trailIcon } from '../lib/trail-icons';
 import L from 'leaflet';
 
 type RecreationSpot = {
@@ -117,7 +118,7 @@ const start = async () => {
 
   const iconFor = (spot: RecreationSpot) => L.divIcon({
     className: 'recreation-marker-wrap',
-    html: '<span class="recreation-map-pin ' + (spot.type === 'watchtower_site' ? 'watchtower' : '') + '"><span>⌖</span></span>',
+    html: '<span class="recreation-map-pin ' + (spot.type === 'watchtower_site' ? 'watchtower' : '') + '"><span>' + trailIcon(spot.type === 'watchtower_site' ? 'watch' : 'rest') + '</span></span>',
     iconSize: [34, 42],
     iconAnchor: [17, 40],
     popupAnchor: [0, -36]
@@ -138,7 +139,7 @@ const start = async () => {
     row.type = 'button';
     row.className = 'recreation-row';
     row.innerHTML =
-      '<span class="recreation-row-pin ' + (spot.type === 'watchtower_site' ? 'watchtower' : '') + '">⌖</span>' +
+      '<span class="recreation-row-pin ' + (spot.type === 'watchtower_site' ? 'watchtower' : '') + '">' + trailIcon(spot.type === 'watchtower_site' ? 'watch' : 'rest') + '</span>' +
       '<span class="recreation-row-copy">' +
         '<span class="recreation-row-name">' + escapeHtml(spot.title) + '</span>' +
         '<span class="recreation-row-meta">' + escapeHtml(spot.settlement) + (spot.elevation_m !== null ? ' · ' + Math.round(spot.elevation_m) + ' μ.' : '') + '</span>' +

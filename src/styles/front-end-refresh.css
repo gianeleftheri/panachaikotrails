@@ -1,9 +1,9 @@
 /* Visual refresh of the existing map controls. Behaviour lives in the original scripts. */
 .trail-app {
-  --ui-surface: rgba(16, 34, 28, .96);
-  --ui-border: rgba(178, 197, 156, .32);
-  --ui-accent: #aaca74;
-  --ui-accent-text: #e5f0c6;
+  --ui-surface: rgba(16,43,67, .96);
+  --ui-border: rgba(117,161,191, .32);
+  --ui-accent: #51d6eb;
+  --ui-accent-text: #d9f7fc;
   --ui-drawer-width: min(42vw, clamp(390px, 31vw, 450px));
 }
 
@@ -24,21 +24,21 @@
 .view3d-btn {
   background: rgba(255, 255, 255, .035);
   border-color: var(--ui-border);
-  color: #e9eee6;
+  color: #f2f8fc;
   transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
 
 .trail-menu-toggle { border-radius: 10px; min-height: 38px; }
 .trail-menu-toggle.open,
 .locate-btn.active {
-  background: #244634;
+  background: #245174;
   border-color: var(--ui-accent);
   color: var(--ui-accent-text);
 }
-.shelter-btn { color: #e9eee6; }
+.shelter-btn { color: #f2f8fc; background: #1b4665; border-color: var(--ui-border); }
 .view3d-btn { font-size: inherit; }
 .submit-trail-cta {
-  background: #294735;
+  background: #1b4665;
   border-color: var(--ui-border);
   box-shadow: none;
   border-radius: 10px;
@@ -50,7 +50,7 @@
 .shelter-btn:hover,
 .view3d-btn:hover,
 .submit-trail-cta:hover {
-  background: #305440;
+  background: #245a7c;
   border-color: var(--ui-accent);
   color: #fff;
 }
@@ -70,7 +70,7 @@
 .shelter-panel {
   background: var(--ui-surface);
   border-color: var(--ui-border);
-  box-shadow: 0 18px 48px rgba(2, 14, 12, .48);
+  box-shadow: 0 18px 48px rgba(2,14,27, .48);
 }
 
 .left-panel {
@@ -85,7 +85,7 @@
 .count-row strong { color: var(--ui-accent-text); font: 700 20px/1.2 var(--sans); }
 .trail-list { border-top-color: var(--ui-border); }
 .trail-row { min-height: 58px; padding: 11px 15px; }
-.trail-row.active { background: rgba(170, 202, 116, .12); }
+.trail-row.active { background: rgba(81,214,235, .12); }
 .trail-row-name { font-size: 13px; font-weight: 600; }
 .trail-panel-pin { filter: none; }
 .trail-panel-pin.active { color: var(--ui-accent-text); }
@@ -101,7 +101,7 @@
 .rb-gps-btn,
 .rb-calc-btn,
 .rb-select { min-height: 42px; border-radius: 9px; }
-.rb-calc-btn:not(:disabled) { background: #2f6345; }
+.rb-calc-btn:not(:disabled) { background: #166d8b; }
 .shelter-panel { top: 80px; border-radius: 14px; }
 
 .trail-drawer {
@@ -150,7 +150,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.trail-row.active { background: color-mix(in srgb, var(--trail-color, #aaca74) 16%, #16271e); }
+.trail-row.active { background: color-mix(in srgb, var(--trail-color, #51d6eb) 16%, #102b43); }
 .trail-row.active .trail-row-code { color: var(--trail-color); }
 .trail-row-dist { align-self: center; font-size: 11px; }
 
@@ -201,7 +201,7 @@
 .elevation-plot { min-width: 0; }
 .elevation-chart-visual { position: relative; height: 103px; }
 .elevation-chart-svg { display: block; width: 100%; height: 100%; }
-.elevation-grid { stroke: rgba(199, 216, 193, .17); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.elevation-grid { stroke: rgba(183,205,221, .17); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
 .elevation-endpoint {
   position: absolute;
   display: grid;
@@ -251,9 +251,9 @@
     gap: 2px;
     min-height: calc(69px + env(safe-area-inset-bottom));
     padding: 5px 6px calc(5px + env(safe-area-inset-bottom));
-    background: #10231c;
+    background: #102b43;
     border-top: 1px solid var(--ui-border);
-    box-shadow: 0 -8px 28px rgba(2, 16, 12, .35);
+    box-shadow: 0 -8px 28px rgba(2,16,28, .35);
   }
 
   .topbar-actions > :is(button, a):not(.recenter-btn) {
@@ -264,7 +264,7 @@
     border: 1px solid transparent;
     border-radius: 9px;
     background: transparent;
-    color: #e5ece5;
+    color: #f2f8fc;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -286,10 +286,10 @@
   .topbar-actions > :is(button, a).open,
   .topbar-actions > .locate-btn.active {
     color: var(--ui-accent-text);
-    border-color: rgba(170, 202, 116, .5);
-    background: #213b2d;
+    border-color: rgba(81,214,235, .5);
+    background: #1b4665;
   }
-  .topbar-actions > :is(button, a):not(.recenter-btn):hover { background: #263d31; }
+  .topbar-actions > :is(button, a):not(.recenter-btn):hover { background: #245174; }
   .topbar-actions > :is(button, a):disabled { opacity: .42; }
   .topbar-actions > .recenter-btn.show {
     display: flex;
@@ -413,4 +413,56 @@
   }
   .recreation-panel.open { max-height: min(54dvh, 530px); }
   .recreation-row { min-height: 56px; }
+}
+
+
+/* One icon system for toolbar, list and map. Keep glyphs upright. */
+.trail-app { --pt-icon-accent: #51d6eb; }
+.pt-minimal-icon { display: block; flex: none; }
+.topbar-actions .pt-minimal-icon { width: 24px; height: 24px; }
+.recreation-row { grid-template-columns: 38px minmax(0, 1fr); gap: 12px; }
+.recreation-row-pin,
+.recreation-row-pin.watchtower {
+  width: 36px; height: 36px; border-radius: 10px; transform: none;
+  background: #1b4665; border: 1px solid #547e9e; color: #f2f8fc; box-shadow: none;
+}
+.recreation-row-pin .pt-minimal-icon { width: 24px; height: 24px; }
+.recreation-row-pin::first-letter { transform: none; }
+.recreation-row-name { font-size: 13px; line-height: 1.4; }
+.recreation-row-meta { font-size: 11px; line-height: 1.4; }
+.recreation-map-pin,
+.recreation-map-pin.watchtower {
+  position: relative; width: 34px; height: 34px; box-sizing: border-box;
+  transform: none; border-radius: 11px; background: #16324f;
+  border: 2px solid #f2f8fc; color: #fff; --pt-icon-accent: #51d6eb;
+  box-shadow: 0 3px 10px rgba(4, 18, 33, .5);
+}
+.recreation-map-pin::after {
+  content: ''; position: absolute; left: 11px; bottom: -6px;
+  width: 8px; height: 8px; background: #16324f;
+  border-right: 2px solid #f2f8fc; border-bottom: 2px solid #f2f8fc;
+  transform: rotate(45deg); border-radius: 0 0 2px 0;
+}
+.recreation-map-pin span { position: relative; z-index: 1; transform: none; }
+.recreation-map-pin .pt-minimal-icon { width: 23px; height: 23px; }
+.recreation-row:focus-visible { outline: 2px solid #51d6eb; outline-offset: -3px; }
+
+/* Keep recreation details legible over satellite imagery and aligned with the panels. */
+.recreation-leaflet-popup .leaflet-popup-content-wrapper {
+  background: #102b43;
+  color: #f2f8fc;
+  border: 1px solid #547e9e;
+  box-shadow: 0 14px 36px rgba(2, 14, 27, .55);
+}
+.recreation-leaflet-popup .leaflet-popup-tip { background: #102b43; }
+.recreation-leaflet-popup .recreation-popup { color: #f2f8fc; }
+.recreation-leaflet-popup .recreation-popup-type,
+.recreation-leaflet-popup .recreation-popup-meta,
+.recreation-leaflet-popup .recreation-popup-coords { color: #b7cddd; }
+.recreation-leaflet-popup .recreation-popup-source { color: #51d6eb; }
+.recreation-leaflet-popup .leaflet-popup-close-button { color: #d9f7fc; }
+.recreation-leaflet-popup .recreation-popup-source:focus-visible,
+.recreation-leaflet-popup .leaflet-popup-close-button:focus-visible {
+  outline: 2px solid #51d6eb;
+  outline-offset: 2px;
 }

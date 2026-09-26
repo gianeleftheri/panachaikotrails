@@ -1,8 +1,11 @@
+---
+import { trailIcon } from '../lib/trail-icons';
+---
 <header class="topbar">
   <div class="brand">
     <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
-      <path d="M3 23L11 9L15.5 16L19 11L27 23H3Z" fill="none" stroke="#cf5a34" stroke-width="1.6" stroke-linejoin="round" />
-      <circle cx="11" cy="6" r="1.4" fill="#cf5a34" />
+      <path d="M3 23L11 9L15.5 16L19 11L27 23H3Z" fill="none" stroke="#38bdda" stroke-width="1.6" stroke-linejoin="round" />
+      <circle cx="11" cy="6" r="1.4" fill="#38bdda" />
     </svg>
     <div class="brand-text">
       <h1>Παναχαϊκό</h1>
@@ -11,21 +14,21 @@
   </div>
 
   <div class="topbar-legend" aria-label="Υπόμνημα">
-    <span class="legend-swatch"><svg width="22" height="8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" stroke="#84a06e" stroke-width="2.5" /></svg>Υπάρχον μονοπάτι</span>
-    <span class="legend-swatch"><svg width="22" height="8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" stroke="#9c917c" stroke-width="2.5" stroke-dasharray="2 4" /></svg>Σχεδιαζόμενο</span>
+    <span class="legend-swatch"><svg width="22" height="8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" stroke="#51cce2" stroke-width="2.5" /></svg>Υπάρχον μονοπάτι</span>
+    <span class="legend-swatch"><svg width="22" height="8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" stroke="#8faec7" stroke-width="2.5" stroke-dasharray="2 4" /></svg>Σχεδιαζόμενο</span>
   </div>
 
   <div class="topbar-actions">
     <button class="trail-menu-toggle" id="trailMenuToggle" type="button" aria-expanded="false">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2zM9 3v16m6-14v16" /></svg>
+      <Fragment set:html={trailIcon('hike')} />
       <span class="btn-label">Μονοπάτια</span>
     </button>
     <button class="trail-menu-toggle recreation-menu-toggle" id="recreationMenuToggle" type="button" aria-expanded="false">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M5 21h14M7 15h10M8 15l-2-5h12l-2 5M9 10l-1.5-4h9L15 10" /></svg>
+      <Fragment set:html={trailIcon('rest')} />
       <span class="btn-label">Χώροι Αναψυχής</span>
     </button>
     <button class="trail-menu-toggle rb-toggle" id="routeBuilderToggle" type="button" aria-expanded="false">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="18" r="2" /><circle cx="18" cy="5" r="2" /><circle cx="18" cy="18" r="2" /><path d="M7 18h7a4 4 0 0 0 0-8h-2a4 4 0 0 1-4-4V5" /></svg>
+      <Fragment set:html={trailIcon('compass')} />
       <span class="btn-label">Διαδρομή</span>
     </button>
     <a class="submit-trail-cta" href="https://cms.panachaikotrails.gr/?pt_action=submit_trail" aria-label="Πρόσθεσε το δικό σου μονοπάτι">
@@ -38,7 +41,7 @@
     <button class="locate-btn recenter-btn" id="recenterBtn" type="button" title="Ακολούθησε τη θέση μου" aria-label="Ακολούθησε τη θέση μου">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l3 6-3-1.5L9 9l3-6Z" /><circle cx="12" cy="12" r="9" /></svg>
     </button>
-    <button class="shelter-btn" id="shelterBtn" type="button" title="Βρες το κοντινότερο καταφύγιο" aria-label="Βρες το κοντινότερο καταφύγιο"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20 12 4l9 16H3Z" /><path d="M12 4v16m-3-1 3-5 3 5" /></svg><span class="tool-label">Καταφύγιο</span></button>
-    <button class="view3d-btn" id="view3dBtn" type="button" title="3D προβολή επιλεγμένου μονοπατιού" aria-label="3D προβολή επιλεγμένου μονοπατιού"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 19 8 10l3 4 4-8 7 13H2Z" /><path d="M5 19 8 15m7 4 2-5" /></svg><span class="tool-label">3D</span></button>
+    <button class="shelter-btn" id="shelterBtn" type="button" title="Βρες το κοντινότερο καταφύγιο" aria-label="Βρες το κοντινότερο καταφύγιο"><Fragment set:html={trailIcon('shelter')} /><span class="tool-label">Καταφύγιο</span></button>
+    <button class="view3d-btn" id="view3dBtn" type="button" title="3D προβολή επιλεγμένου μονοπατιού" aria-label="3D προβολή επιλεγμένου μονοπατιού"><Fragment set:html={trailIcon('mountain')} /><span class="tool-label">3D</span></button>
   </div>
 </header>

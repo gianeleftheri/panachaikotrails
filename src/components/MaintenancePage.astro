@@ -1,3 +1,6 @@
+---
+import { trailIcon } from '../lib/trail-icons';
+---
 <section class="maintenance-page" aria-labelledby="maintenance-title">
   <div class="scene" aria-hidden="true">
     <div class="scene-media">
@@ -35,7 +38,7 @@
       </div>
     </main>
 
-    <footer aria-hidden="true"></footer>
+    <footer class="feature-icons" aria-label="Εξερεύνηση Παναχαϊκού"><div><Fragment set:html={trailIcon('hike')} /><span>Διαδρομές</span></div><div><Fragment set:html={trailIcon('mountain')} /><span>Αξιοθέατα</span></div><div><Fragment set:html={trailIcon('rest')} /><span>Αναψυχή</span></div><div><Fragment set:html={trailIcon('view')} /><span>Σημεία θέας</span></div><div><Fragment set:html={trailIcon('shelter')} /><span>Καταφύγια</span></div></footer>
   </div>
 
   <div class="contact-backdrop" data-contact-backdrop hidden></div>
@@ -539,6 +542,11 @@
   }
 
   @media(prefers-reduced-motion:reduce){.pulse{animation:none}}
+
+  .feature-icons{height:auto;display:flex;flex-wrap:wrap;gap:20px 28px;padding-top:22px;color:#f5faff;--pt-icon-accent:#51d6eb}
+  .feature-icons div{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}
+  .feature-icons :global(svg){width:28px;height:28px;flex:none}
+  @media(max-width:560px){.feature-icons{display:grid;grid-template-columns:1fr 1fr;gap:18px}.feature-icons div{font-size:13px}}
 </style>
 
 

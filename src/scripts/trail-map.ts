@@ -20,7 +20,10 @@ if (app) {
   const routeBuilderToggle = document.getElementById('routeBuilderToggle') as HTMLButtonElement | null;
   const routeBuilderPanel = document.getElementById('routeBuilderPanel');
   const trailDrawer = document.getElementById('trailDrawer');
-  const trailDrawerHandle = document.getElementById('trailDrawerHandle');
+  const trailDrawerHandle = document.getElementById('trailDrawerHandle') as HTMLButtonElement | null;
+  const tdUndock = document.getElementById('tdUndock') as HTMLButtonElement | null;
+  const tdResizeGrip = document.getElementById('tdResizeGrip') as HTMLButtonElement | null;
+  const tdDragZone = document.getElementById('tdDragZone') as HTMLElement | null;
   const tdClose = document.getElementById('tdClose');
   const tdTabs = document.getElementById('tdTabs');
   const tdTitleBlock = document.getElementById('tdTitleBlock');
@@ -431,10 +434,209 @@ if (app) {
     return `<div class="elevation-chart" role="img" aria-label="Υψομετρικό προφίλ από ${altitude(pts[0].e)} έως ${altitude(pts[pts.length - 1].e)}"><div class="elevation-y-axis"><span>${altitude(maxE)}</span><span>${altitude((minE + maxE) / 2)}</span><span>${altitude(minE)}</span></div><div class="elevation-plot"><div class="elevation-chart-visual"><svg class="elevation-chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="trail-elevation-fill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f79445" stop-opacity=".33"/><stop offset="1" stop-color="#f79445" stop-opacity=".03"/></linearGradient></defs><g class="elevation-grid">${horizontal}${vertical}</g><polygon points="0,${bottom} ${line} ${W},${bottom}" fill="url(#trail-elevation-fill)"/><polyline points="${line}" fill="none" stroke="#f17c34" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg><span class="elevation-endpoint start" style="top:${startY.toFixed(1)}%">Α</span><span class="elevation-endpoint finish" style="top:${endY.toFixed(1)}%">Τ</span></div><div class="elevation-x-axis"><span>0 χλμ</span><span>${(trail.length_km * .25).toFixed(1)}</span><span>${(trail.length_km * .5).toFixed(1)}</span><span>${(trail.length_km * .75).toFixed(1)}</span><span>${trail.length_km.toFixed(1)} χλμ</span></div></div></div>`;
   };
 
-  const openDrawer = () => { trailDrawer.classList.add('open'); trailDrawerHandle?.classList.add('open'); };
-  const closeDrawer = () => { trailDrawer.classList.remove('open'); trailDrawerHandle?.classList.remove('open'); };
-  trailDrawerHandle?.addEventListener('click', () => trailDrawer.classList.contains('open') ? closeDrawer() : openDrawer());
+  const drawerDesktopQuery = window.matchMedia('(min-width: 761px)');
+  let drawerDetached = false;
+  let drawerPointerMode: 'move' | 'resize' | null = null;
+  let drawerPointerId: number | null = null;
+  let drawerStartX = 0;
+  let drawerStartY = 0;
+  let drawerStartLeft = 0;
+  let drawerStartTop = 0;
+  let drawerStartWidth = 0;
+  let drawerStartHeight = 0;
+
+  const clearDrawerGeometry = () => {
+    trailDrawer.style.removeProperty('left');
+    trailDrawer.style.removeProperty('top');
+    trailDrawer.style.removeProperty('right');
+    trailDrawer.style.removeProperty('bottom');
+    trailDrawer.style.removeProperty('width');
+    trailDrawer.style.removeProperty('height');
+    trailDrawer.style.removeProperty('transform');
+  };
+
+  const positionDrawerEar = () => {
+    if (!trailDrawerHandle || trailDrawerHandle.hidden) return;
+    if (!drawerDesktopQuery.matches) {
+      trailDrawerHandle.style.removeProperty('left');
+      trailDrawerHandle.style.removeProperty('top');
+      trailDrawerHandle.style.removeProperty('right');
+      trailDrawerHandle.style.removeProperty('bottom');
+      return;
+    }
+
+    if (drawerDetached) {
+      const rect = trailDrawer.getBoundingClientRect();
+      const left = Math.min(window.innerWidth - 58, Math.max(8, rect.right - 56));
+      const top = Math.min(window.innerHeight - 52, Math.max(76, rect.top - 23));
+      trailDrawerHandle.style.left = left + 'px';
+      trailDrawerHandle.style.top = top + 'px';
+      trailDrawerHandle.style.right = 'auto';
+      trailDrawerHandle.style.bottom = 'auto';
+      return;
+    }
+
+    if (trailDrawer.classList.contains('open')) {
+      const rect = trailDrawer.getBoundingClientRect();
+      trailDrawerHandle.style.left = Math.min(window.innerWidth - 58, Math.max(8, rect.right - 56)) + 'px';
+      trailDrawerHandle.style.top = Math.max(76, rect.top - 23) + 'px';
+      trailDrawerHandle.style.right = 'auto';
+      trailDrawerHandle.style.bottom = 'auto';
+    } else {
+      trailDrawerHandle.style.left = 'auto';
+      trailDrawerHandle.style.top = 'auto';
+      trailDrawerHandle.style.right = '24px';
+      trailDrawerHandle.style.bottom = '14px';
+    }
+  };
+
+  const syncDrawerEar = () => {
+    const visible = trailDrawer.classList.contains('open') && !trailDrawer.classList.contains('minimized');
+    trailDrawerHandle?.classList.toggle('open', visible);
+    trailDrawerHandle?.setAttribute('aria-expanded', String(visible));
+    trailDrawerHandle?.setAttribute('title', visible ? 'Ελαχιστοποίηση πληροφοριών μονοπατιού' : 'Εμφάνιση πληροφοριών μονοπατιού');
+    trailDrawerHandle?.setAttribute('aria-label', visible ? 'Ελαχιστοποίηση πληροφοριών μονοπατιού' : 'Εμφάνιση πληροφοριών μονοπατιού');
+    window.requestAnimationFrame(positionDrawerEar);
+  };
+
+  const setDrawerDetached = (enabled: boolean) => {
+    const next = Boolean(enabled && drawerDesktopQuery.matches);
+    if (next === drawerDetached) return;
+
+    if (next) {
+      const rect = trailDrawer.getBoundingClientRect();
+      drawerDetached = true;
+      trailDrawer.classList.add('detached');
+      trailDrawer.style.left = rect.left + 'px';
+      trailDrawer.style.top = rect.top + 'px';
+      trailDrawer.style.right = 'auto';
+      trailDrawer.style.bottom = 'auto';
+      trailDrawer.style.width = rect.width + 'px';
+      trailDrawer.style.height = rect.height + 'px';
+      trailDrawer.style.transform = 'none';
+    } else {
+      drawerDetached = false;
+      trailDrawer.classList.remove('detached', 'minimized', 'is-moving', 'is-resizing');
+      clearDrawerGeometry();
+    }
+
+    tdUndock?.classList.toggle('active', drawerDetached);
+    tdUndock?.setAttribute('aria-pressed', String(drawerDetached));
+    tdUndock?.setAttribute('title', drawerDetached ? 'Επαναφορά παραθύρου κάτω' : 'Αποδέσμευση παραθύρου');
+    syncDrawerEar();
+  };
+
+  const openDrawer = () => {
+    trailDrawerHandle?.removeAttribute('hidden');
+    trailDrawer.classList.add('open');
+    trailDrawer.classList.remove('minimized');
+    syncDrawerEar();
+  };
+
+  const minimizeDrawer = () => {
+    if (drawerDetached) {
+      trailDrawer.classList.add('minimized');
+    } else {
+      trailDrawer.classList.remove('open');
+    }
+    syncDrawerEar();
+  };
+
+  const closeDrawer = () => {
+    trailDrawer.classList.remove('open', 'minimized');
+    setDrawerDetached(false);
+    if (trailDrawerHandle) trailDrawerHandle.hidden = true;
+    syncDrawerEar();
+  };
+
+  const finishDrawerPointer = () => {
+    if (drawerPointerId !== null && trailDrawer.hasPointerCapture(drawerPointerId)) {
+      trailDrawer.releasePointerCapture(drawerPointerId);
+    }
+    drawerPointerId = null;
+    drawerPointerMode = null;
+    trailDrawer.classList.remove('is-moving', 'is-resizing');
+    positionDrawerEar();
+  };
+
+  const startDrawerPointer = (event: PointerEvent, mode: 'move' | 'resize') => {
+    if (!drawerDetached || !drawerDesktopQuery.matches || trailDrawer.classList.contains('minimized') || event.button !== 0) return;
+    const rect = trailDrawer.getBoundingClientRect();
+    drawerPointerMode = mode;
+    drawerPointerId = event.pointerId;
+    drawerStartX = event.clientX;
+    drawerStartY = event.clientY;
+    drawerStartLeft = rect.left;
+    drawerStartTop = rect.top;
+    drawerStartWidth = rect.width;
+    drawerStartHeight = rect.height;
+    trailDrawer.classList.add(mode === 'move' ? 'is-moving' : 'is-resizing');
+    trailDrawer.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  };
+
+  tdDragZone?.addEventListener('pointerdown', event => {
+    if ((event.target as HTMLElement).closest('button, a, input, select, textarea')) return;
+    startDrawerPointer(event, 'move');
+  });
+  tdResizeGrip?.addEventListener('pointerdown', event => startDrawerPointer(event, 'resize'));
+
+  trailDrawer.addEventListener('pointermove', event => {
+    if (event.pointerId !== drawerPointerId || !drawerPointerMode || !drawerDetached) return;
+    const margin = 8;
+
+    if (drawerPointerMode === 'move') {
+      const maxLeft = Math.max(margin, window.innerWidth - drawerStartWidth - margin);
+      const maxTop = Math.max(76, window.innerHeight - drawerStartHeight - margin);
+      const nextLeft = Math.min(maxLeft, Math.max(margin, drawerStartLeft + event.clientX - drawerStartX));
+      const nextTop = Math.min(maxTop, Math.max(76, drawerStartTop + event.clientY - drawerStartY));
+      trailDrawer.style.left = nextLeft + 'px';
+      trailDrawer.style.top = nextTop + 'px';
+    } else {
+      const minWidth = 420;
+      const minHeight = 280;
+      const maxWidth = Math.max(minWidth, window.innerWidth - drawerStartLeft - margin);
+      const maxHeight = Math.max(minHeight, window.innerHeight - drawerStartTop - margin);
+      const nextWidth = Math.min(maxWidth, Math.max(minWidth, drawerStartWidth + event.clientX - drawerStartX));
+      const nextHeight = Math.min(maxHeight, Math.max(minHeight, drawerStartHeight + event.clientY - drawerStartY));
+      trailDrawer.style.width = nextWidth + 'px';
+      trailDrawer.style.height = nextHeight + 'px';
+    }
+
+    positionDrawerEar();
+    event.preventDefault();
+  });
+
+  trailDrawer.addEventListener('pointerup', finishDrawerPointer);
+  trailDrawer.addEventListener('pointercancel', finishDrawerPointer);
+
+  tdUndock?.addEventListener('click', event => {
+    event.stopPropagation();
+    if (!trailDrawer.classList.contains('open') || trailDrawer.classList.contains('minimized')) return;
+    setDrawerDetached(!drawerDetached);
+  });
+
+  trailDrawerHandle?.addEventListener('click', () => {
+    if (trailDrawer.classList.contains('minimized')) {
+      trailDrawer.classList.remove('minimized');
+      syncDrawerEar();
+      return;
+    }
+    if (trailDrawer.classList.contains('open')) {
+      minimizeDrawer();
+      return;
+    }
+    openDrawer();
+  });
+
   tdClose?.addEventListener('click', closeDrawer);
+
+  drawerDesktopQuery.addEventListener('change', event => {
+    finishDrawerPointer();
+    if (!event.matches) setDrawerDetached(false);
+    syncDrawerEar();
+  });
+  window.addEventListener('resize', () => window.requestAnimationFrame(positionDrawerEar));
 
   tdTabs.addEventListener('click', e => {
     const button = (e.target as HTMLElement).closest<HTMLButtonElement>('.td-tab');

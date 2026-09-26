@@ -1,13 +1,22 @@
-<button class="trail-drawer-handle" id="trailDrawerHandle" type="button" title="Άνοιγμα/κλείσιμο πληροφοριών μονοπατιού" aria-label="Άνοιγμα/κλείσιμο πληροφοριών μονοπατιού">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+<button class="trail-drawer-handle" id="trailDrawerHandle" type="button" title="Εμφάνιση πληροφοριών μονοπατιού" aria-label="Εμφάνιση πληροφοριών μονοπατιού" aria-expanded="false" hidden>
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6" /></svg>
 </button>
 
 <aside class="trail-drawer" id="trailDrawer" aria-live="polite">
-  <button class="td-close" id="tdClose" type="button" title="Κλείσιμο" aria-label="Κλείσιμο">✕</button>
+  <div class="td-window-controls">
+    <button class="td-undock" id="tdUndock" type="button" title="Αποδέσμευση παραθύρου" aria-label="Αποδέσμευση παραθύρου για μετακίνηση και αλλαγή μεγέθους" aria-pressed="false">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 4h11v11"/><path d="m20 4-7 7"/><path d="M15 20H4V9"/><path d="m4 20 7-7"/>
+      </svg>
+    </button>
+    <button class="td-close" id="tdClose" type="button" title="Κλείσιμο" aria-label="Κλείσιμο">✕</button>
+  </div>
   <div class="card-bar" id="tdCardBar"></div>
-  <div class="td-titleblock" id="tdTitleBlock">
-    <div class="big">Κανένα μονοπάτι επιλεγμένο</div>
-    <p>Επιλέξτε ένα μονοπάτι στον χάρτη ή στη λίστα για να δείτε αναλυτικές πληροφορίες.</p>
+  <div class="td-drag-zone" id="tdDragZone">
+    <div class="td-titleblock" id="tdTitleBlock">
+      <div class="big">Κανένα μονοπάτι επιλεγμένο</div>
+      <p>Επιλέξτε ένα μονοπάτι στον χάρτη ή στη λίστα για να δείτε αναλυτικές πληροφορίες.</p>
+    </div>
   </div>
   <div class="td-tabs" id="tdTabs" hidden>
     <button class="td-tab active" data-tab="info" type="button">Πληροφορίες</button>
@@ -21,4 +30,5 @@
     <div class="td-panel" data-panel="photos" hidden></div>
     <div class="td-panel" data-panel="videos" hidden></div>
   </div>
+  <button class="td-resize-grip" id="tdResizeGrip" type="button" tabindex="-1" aria-hidden="true" title="Σύρε για αλλαγή μεγέθους"></button>
 </aside>

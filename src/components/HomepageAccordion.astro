@@ -316,6 +316,7 @@ button{font:inherit;color:inherit}
 .panel-feed-item{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;gap:10px;min-height:44px;padding:6px 8px;border:1px solid rgba(69,215,223,.18);border-radius:10px;background:rgba(3,35,42,.34)}
 .panel-feed-item.no-thumb{grid-template-columns:1fr}
 .panel-feed-thumb{width:44px;height:34px;border-radius:7px;object-fit:cover;background:#073943}
+.panel-feed-video-thumb{display:grid;place-items:center;color:#f4fafb;font-size:15px;line-height:1;background:linear-gradient(145deg,#073943,#0a5863);border:1px solid rgba(69,215,223,.24)}
 .panel-feed-title{font-size:12.5px;line-height:1.25;font-weight:750;color:#f4fafb}
 .panel-feed-meta{display:block;margin-top:2px;font-size:10px;color:var(--muted)}
 .panel-feed-loading{font-size:11px;color:var(--muted)}
@@ -586,10 +587,18 @@ button{font:inherit;color:inherit}
     const host = document.getElementById('feed-' + id);
     if (!host || !panel || !Array.isArray(panel.items)) return;
     host.innerHTML = panel.items.map(item => {
-      const image = item.image ? '<img class="panel-feed-thumb" src="' + esc(item.image) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">' : '';
-      const cls = image ? 'panel-feed-item' : 'panel-feed-item no-thumb';
+      const imageUrl = item.image ? String(item.image) : '';
+      const isYoutubeThumb = /(^|\\.)i\\.ytimg\\.com$/i.test((() => {
+        try { return new URL(imageUrl).hostname; } catch { return ''; }
+      })());
+      const media = isYoutubeThumb
+        ? '<span class="panel-feed-thumb panel-feed-video-thumb" aria-hidden="true">▶</span>'
+        : imageUrl
+          ? '<img class="panel-feed-thumb" src="' + esc(imageUrl) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">'
+          : '';
+      const cls = media ? 'panel-feed-item' : 'panel-feed-item no-thumb';
       const meta = item.meta ? '<span class="panel-feed-meta">' + esc(item.meta) + '</span>' : '';
-      return '<div class="' + cls + '">' + image + '<div><div class="panel-feed-title">' + esc(item.title) + '</div>' + meta + '</div></div>';
+      return '<div class="' + cls + '">' + media + '<div><div class="panel-feed-title">' + esc(item.title) + '</div>' + meta + '</div></div>';
     }).join('');
   };
 

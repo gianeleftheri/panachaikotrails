@@ -1,0 +1,229 @@
+---
+interface PanelItem {
+  id?: number;
+  title?: string;
+  meta?: string;
+  image?: string | null;
+}
+interface Panel {
+  count?: number;
+  background_image?: string;
+  items?: PanelItem[];
+}
+interface Props {
+  panels?: Record<string, Panel>;
+  heroAvif480?: string;
+  heroAvif768?: string;
+  heroAvif1024?: string;
+  heroWebp?: string;
+}
+const {
+  panels = {},
+  heroAvif480 = '',
+  heroAvif768 = '',
+  heroAvif1024 = '',
+  heroWebp = '',
+} = Astro.props;
+
+const fallback = {
+  trails:'https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=1024&q=72',
+  poi:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1024&q=72',
+  shelter:'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1024&q=72',
+  photos:'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1024&q=72',
+  video:'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1024&q=72',
+};
+const bg = (id:string) => {
+  const raw = panels[id]?.background_image || fallback[id as keyof typeof fallback] || '';
+  return raw
+    .replace(/([?&])w=(?:1800|1440)(?=&|$)/, '$1w=1024')
+    .replace(/([?&])q=(?:90|78)(?=&|$)/, '$1q=72');
+};
+const first = (id:string) => panels[id]?.items?.[0];
+---
+<style is:global>
+:root{
+  --ink:#f5fbfc;--muted:#b7d3d6;--petrol:#073b43;--petrol-2:#0a4b55;
+  --cyan:#43dbe3;--cyan-strong:#22c8d2;--line:rgba(83,224,232,.26);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:#052f36}
+body{margin:0;min-width:320px;background:
+  radial-gradient(circle at 74% 8%,rgba(49,143,151,.26),transparent 32%),
+  linear-gradient(180deg,#073b43 0%,#052f36 100%);
+  color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+
+.bento-shell{min-height:100svh;padding:18px}
+.bento-header{height:64px;max-width:1500px;margin:0 auto 14px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.bento-brand{display:flex;align-items:center;gap:12px}
+.bento-logo{position:relative;width:44px;height:40px;flex:none}
+.bento-logo::before,.bento-logo::after{content:"";position:absolute;bottom:2px;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:31px solid #21c9db;filter:drop-shadow(0 0 10px rgba(67,219,227,.18))}
+.bento-logo::before{left:0}.bento-logo::after{left:16px;transform:scale(.72);border-bottom-color:#1688a3}
+.bento-brand strong{display:block;font-size:17px;letter-spacing:.07em}
+.bento-brand small{display:block;margin-top:2px;font-size:9px;letter-spacing:.16em;color:#a8cdd0}
+.header-map{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(67,219,227,.38);border-radius:12px;background:rgba(5,48,56,.62);font-size:12px;font-weight:800}
+.header-map:hover{background:rgba(13,78,87,.82)}
+.header-map svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8}
+
+.bento-grid{max-width:1500px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(270px,.72fr) minmax(270px,.72fr);grid-template-rows:minmax(360px,1.15fr) minmax(220px,.72fr);gap:12px;min-height:calc(100svh - 114px)}
+.bento-card{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:22px;background:#0a4650;isolation:isolate;box-shadow:0 18px 50px rgba(0,20,25,.17);transition:transform .24s ease,border-color .24s ease,box-shadow .24s ease}
+.bento-card:hover{transform:translateY(-2px);border-color:rgba(83,224,232,.48);box-shadow:0 24px 60px rgba(0,20,25,.25)}
+.card-bg{position:absolute;inset:0;z-index:-3;background-position:center;background-size:cover;transition:transform .5s cubic-bezier(.16,1,.3,1)}
+.bento-card:hover .card-bg{transform:scale(1.025)}
+.card-shade{position:absolute;inset:0;z-index:-2;background:linear-gradient(180deg,rgba(3,30,36,.06),rgba(3,30,36,.76))}
+.card-body{position:relative;z-index:2;height:100%;padding:22px;display:flex;flex-direction:column;justify-content:flex-end}
+.card-kicker{display:flex;align-items:center;gap:9px;margin-bottom:9px;color:#d5eff0;font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+.card-kicker svg{width:22px;height:22px;fill:none;stroke:#61edf3;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.card-title{margin:0;font-size:clamp(24px,2.1vw,38px);line-height:.98;letter-spacing:-.045em}
+.card-copy{margin:9px 0 0;color:#d5e8e9;font-size:13px;line-height:1.45;max-width:38ch}
+.card-meta{display:flex;align-items:center;gap:7px;margin-top:12px;color:#b8d1d3;font-size:11px}
+.card-arrow{position:absolute;right:18px;bottom:18px;display:grid;place-items:center;width:43px;height:43px;border:1px solid rgba(73,226,234,.52);border-radius:50%;background:rgba(4,52,60,.72);font-size:22px}
+
+.hero-card{grid-row:1 / span 2;min-height:650px}
+.hero-media{position:absolute;inset:0;z-index:-4}
+.hero-media picture,.hero-media img{width:100%;height:100%;display:block}
+.hero-media img{object-fit:cover;object-position:57% center}
+.hero-card::after{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(90deg,rgba(3,36,43,.80) 0%,rgba(3,36,43,.22) 55%,rgba(3,36,43,.10) 100%),linear-gradient(180deg,transparent 45%,rgba(3,29,35,.54) 100%)}
+.hero-route{position:absolute;z-index:-1;right:1%;top:8%;width:58%;height:76%;opacity:.78;filter:drop-shadow(0 0 8px rgba(67,219,227,.38))}
+.hero-route path{fill:none;stroke:#55e8ef;stroke-width:3;stroke-linecap:round;stroke-dasharray:9 8}
+.hero-route circle{fill:#073b43;stroke:#62eef5;stroke-width:3}
+.hero-body{height:100%;padding:30px;display:flex;flex-direction:column;justify-content:space-between}
+.weather-mini{width:min(550px,72%);padding:16px;border:1px solid rgba(72,222,230,.42);border-radius:18px;background:linear-gradient(155deg,rgba(5,58,67,.93),rgba(4,44,52,.88));box-shadow:0 18px 50px rgba(0,18,23,.24);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.wx-head{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;color:#bed8da}
+.wx-place{font-weight:800;color:#f6fbfc}.wx-place small{font-weight:500;color:#b8d1d3}
+.wx-live{display:flex;align-items:center;gap:6px;white-space:nowrap}.wx-dot{width:7px;height:7px;border-radius:50%;background:#3ee07f;box-shadow:0 0 0 0 rgba(62,224,127,.58);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(62,224,127,0)}}
+.wx-main{display:flex;align-items:center;gap:12px;margin:7px 0 8px}.wx-icon{width:58px;height:58px;flex:none}.wx-icon svg{width:100%;height:100%;display:block}.wx-temp{font-size:58px;font-weight:900;line-height:.86;letter-spacing:-.05em}.wx-temp sup{font-size:.38em;color:#62e7ed}.wx-cond{font-size:17px;font-weight:800}.wx-sub{font-size:11px;color:#c7dcde;margin-top:3px}.wx-sub b{color:#fff}
+.wx-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:0}.wx-stat{padding:7px;border:1px solid rgba(255,255,255,.06);border-radius:10px;background:rgba(255,255,255,.045)}.wx-stat dt{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#abc9cc}.wx-stat dd{margin:3px 0 0;font-size:16px;font-weight:850;white-space:nowrap}.wx-stat dd small{font-size:.52em;color:#abc9cc;margin-left:2px}.wx-stat .wx-note{font-size:8px;font-weight:500;line-height:1.2;white-space:normal;color:#abc9cc}
+.wx-hours,.wx-foot,.wx-alert{display:none}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.hero-copy{max-width:650px}
+.hero-eyebrow{font-size:10px;font-weight:900;letter-spacing:.27em;color:#62e7ed}
+.hero-title{margin:12px 0 10px;font-size:clamp(50px,5.1vw,80px);line-height:.9;letter-spacing:-.06em;text-wrap:balance}
+.hero-copy p{margin:0;max-width:570px;color:#dceced;font-size:15px;line-height:1.5}
+.hero-actions{display:flex;align-items:center;gap:12px;margin-top:18px;flex-wrap:wrap}
+.primary-map{display:inline-flex;align-items:center;gap:10px;min-height:50px;padding:0 17px;border-radius:10px;background:#37d9e1;color:#033038;font-size:13px;font-weight:900}
+.primary-map:hover{background:#5be7ed}
+.primary-map svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9}
+.hero-stats{display:flex;gap:0;margin-top:18px;flex-wrap:wrap}
+.stat{min-width:115px;padding:0 16px;border-right:1px solid rgba(255,255,255,.17)}.stat:first-child{padding-left:0}.stat:last-child{border-right:0}.stat strong{display:block;font-size:17px}.stat small{display:block;margin-top:2px;font-size:9px;color:#b8d0d2}
+
+.weather-card{background:linear-gradient(155deg,#0a525c,#073f48)}
+.weather-card .card-body{justify-content:flex-start;padding:20px}
+.weather-card .weather-big{display:flex;align-items:center;gap:14px;margin-top:12px}
+.weather-big .wx-icon{width:70px;height:70px}.weather-big .wx-temp{font-size:68px}
+.weather-card .wx-stats{margin-top:14px}
+.weather-card .wx-stat{padding:9px}
+.weather-card .wx-stat dt{font-size:8.5px}.weather-card .wx-stat dd{font-size:18px}
+
+.trails-card{grid-column:2;grid-row:1}
+.poi-card{grid-column:3;grid-row:1}
+.shelter-card{grid-column:2;grid-row:2}
+.media-card{grid-column:3;grid-row:2;display:grid;grid-template-columns:1fr 1fr;gap:8px;background:transparent;border:0;box-shadow:none;overflow:visible}
+.media-card:hover{transform:none;border-color:transparent;box-shadow:none}
+.mini-card{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:20px;background:#0a4650;isolation:isolate;transition:transform .22s ease,border-color .22s ease}
+.mini-card:hover{transform:translateY(-2px);border-color:rgba(83,224,232,.5)}
+.mini-card .card-body{padding:16px}.mini-card .card-title{font-size:20px}.mini-card .card-copy{display:none}.mini-card .card-arrow{width:35px;height:35px;right:12px;bottom:12px;font-size:18px}.mini-card .card-kicker span{display:none}
+
+.latest-line{margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.13);font-size:10px;line-height:1.35;color:#c4dbdd}
+.latest-line b{display:block;color:#fff;font-size:11px;margin-bottom:2px}
+
+@media(max-width:1100px){
+  .bento-grid{grid-template-columns:1.35fr .8fr;grid-template-rows:minmax(520px,1.25fr) 230px 230px}
+  .hero-card{grid-column:1;grid-row:1 / span 3}
+  .trails-card{grid-column:2;grid-row:1}.poi-card{grid-column:2;grid-row:2}.shelter-card{grid-column:2;grid-row:3}.media-card{display:none}
+  .weather-mini{width:min(520px,88%)}
+}
+@media(max-width:760px){
+  .bento-shell{padding:10px}
+  .bento-header{height:56px;margin-bottom:10px}.bento-brand strong{font-size:14px}.bento-brand small{display:none}.bento-logo{transform:scale(.85);transform-origin:left center}
+  .header-map span{display:none}.header-map{padding:9px}
+  .bento-grid{display:flex;flex-direction:column;min-height:auto;gap:10px}
+  .hero-card{min-height:720px}
+  .hero-body{padding:16px}.weather-mini{width:100%;padding:12px}.weather-mini .wx-main{margin:4px 0 7px}.weather-mini .wx-icon{width:46px;height:46px}.weather-mini .wx-temp{font-size:48px}.weather-mini .wx-cond{font-size:14px}.weather-mini .wx-stats{grid-template-columns:repeat(4,minmax(0,1fr))}.weather-mini .wx-stat{padding:6px 5px}.weather-mini .wx-stat dd{font-size:14px}.weather-mini .wx-stat .wx-note{display:none}
+  .hero-title{font-size:46px}.hero-copy p{font-size:13px}.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);width:100%}.stat{min-width:0;padding:0 7px;text-align:center}.stat strong{font-size:14px}.stat small{font-size:8px}
+  .hero-route{right:-18%;top:18%;width:92%;height:58%}
+  .bento-card:not(.hero-card){min-height:260px}.card-title{font-size:30px}
+  .media-card{display:grid;min-height:220px!important}
+}
+@media(max-width:460px){
+  .hero-card{min-height:690px}.hero-title{font-size:40px}.hero-copy p{display:none}
+  .hero-stats{grid-template-columns:repeat(2,1fr);row-gap:10px}.stat:nth-child(2){border-right:0}.stat:nth-child(3){padding-left:0}
+  .media-card{grid-template-columns:1fr 1fr}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+</style>
+
+<div class="bento-shell">
+  <header class="bento-header">
+    <a class="bento-brand" href="/home-bento" aria-label="Panachaiko Trails">
+      <span class="bento-logo" aria-hidden="true"></span>
+      <span><strong>PANACHAIKO TRAILS</strong><small>ΦΥΣΗ • ΙΣΤΟΡΙΑ • ΕΜΠΕΙΡΙΕΣ</small></span>
+    </a>
+    <a class="header-map" href="/map">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/></svg>
+      <span>Άνοιγμα Χάρτη →</span>
+    </a>
+  </header>
+
+  <main class="bento-grid">
+    <section class="bento-card hero-card">
+      <div class="hero-media" aria-hidden="true">
+        <picture>
+          <source srcset={[heroAvif480&&heroAvif480+' 480w',heroAvif768&&heroAvif768+' 768w',heroAvif1024&&heroAvif1024+' 1024w'].filter(Boolean).join(', ')} sizes="(max-width:760px) 100vw, 64vw" type="image/avif" />
+          <img src={heroWebp} alt="" width="1440" height="961" loading="eager" decoding="async" fetchpriority="high" />
+        </picture>
+      </div>
+      <svg class="hero-route" viewBox="0 0 760 820" aria-hidden="true"><path d="M610 692 C548 648 516 605 530 554 C542 509 598 488 576 438 C555 392 498 394 478 346 C455 292 512 262 489 213"/><g><circle cx="610" cy="692" r="5"/><circle cx="564" cy="642" r="5"/><circle cx="529" cy="575" r="5"/><circle cx="565" cy="492" r="5"/><circle cx="538" cy="411" r="5"/><circle cx="480" cy="345" r="5"/><circle cx="493" cy="251" r="5"/><circle cx="489" cy="213" r="7"/></g></svg>
+      <div class="hero-body">
+        <section class="weather-mini wx is-loading" id="wx" aria-labelledby="wx-title" aria-busy="true">
+          <div class="wx-head"><span class="wx-place" id="wx-title">Καιρός τώρα · Παναχαϊκό <small id="wx-elev"></small></span><span class="wx-live"><span class="wx-dot" aria-hidden="true"></span><span id="wx-updated">Φόρτωση…</span></span></div>
+          <div class="wx-main"><div class="wx-icon" id="wx-icon" aria-hidden="true"></div><div class="wx-temp" id="wx-temp">--<sup>°C</sup></div><div><div class="wx-cond" id="wx-cond">Καιρός</div><div class="wx-sub" id="wx-sub"></div></div></div>
+          <dl class="wx-stats">
+            <div class="wx-stat"><dt>Υγρασία</dt><dd id="wx-hum">--</dd><dd class="wx-note" id="wx-cloud"></dd></div>
+            <div class="wx-stat" id="wx-wind-box"><dt>Άνεμος</dt><dd id="wx-wind">--</dd><dd class="wx-note" id="wx-wind-note"></dd></div>
+            <div class="wx-stat" id="wx-prec-box"><dt id="wx-prec-label">Βροχή</dt><dd id="wx-prec">--</dd><dd class="wx-note" id="wx-prec-note"></dd></div>
+            <div class="wx-stat"><dt>Πίεση</dt><dd id="wx-pres">--</dd><dd class="wx-note" id="wx-pres-note">hPa</dd></div>
+          </dl>
+          <div class="wx-hours" id="wx-hours"></div><div class="wx-alert" id="wx-alert" hidden></div><div class="wx-foot"><span id="wx-source"></span></div><span class="sr-only" aria-live="polite" id="wx-sr"></span>
+        </section>
+
+        <div class="hero-copy">
+          <div class="hero-eyebrow">ΨΗΦΙΑΚΟΣ ΟΔΗΓΟΣ ΒΟΥΝΟΥ</div>
+          <h1 class="hero-title">Ανακαλύψτε<br/>το Παναχαϊκό</h1>
+          <p>Μονοπάτια, κορυφές, καταφύγια και σημεία ενδιαφέροντος σε έναν σύγχρονο οδηγό για το βουνό της Αχαΐας.</p>
+          <div class="hero-actions"><a class="primary-map" href="/map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/></svg>Άνοιγμα Χάρτη <span aria-hidden="true">→</span></a></div>
+          <div class="hero-stats" aria-label="Στοιχεία Panachaiko Trails">
+            <div class="stat"><strong>13</strong><small>Μονοπάτια</small></div>
+            <div class="stat"><strong>6</strong><small>Σημεία αναψυχής</small></div>
+            <div class="stat"><strong>2</strong><small>Καταφύγια</small></div>
+            <div class="stat"><strong>1.926 μ.</strong><small>Κορυφή</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <a class="bento-card trails-card" href="/map">
+      <div class="card-bg" style={'background-image:url("'+bg('trails').replace(/"/g,'%22')+'")'}></div><div class="card-shade"></div>
+      <div class="card-body"><div class="card-kicker"><svg viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="m11 7-2 5 4 2 2-4 3 3"/><path d="m10 12-4 7M13 14l3 6M8 9l-3 2"/></svg><span>ΠΕΖΟΠΟΡΙΑ</span></div><h2 class="card-title">Μονοπάτια</h2><p class="card-copy">Διαδρομές, υψομετρικά προφίλ και χρήσιμες πληροφορίες για την εξόρμησή σας.</p>{first('trails') && <div class="latest-line"><b>{first('trails')?.title}</b>{first('trails')?.meta}</div>}<span class="card-arrow" aria-hidden="true">→</span></div>
+    </a>
+
+    <a class="bento-card poi-card" href="/map">
+      <div class="card-bg" style={'background-image:url("'+bg('poi').replace(/"/g,'%22')+'")'}></div><div class="card-shade"></div>
+      <div class="card-body"><div class="card-kicker"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg><span>ΑΝΑΚΑΛΥΨΗ</span></div><h2 class="card-title">Σημεία ενδιαφέροντος</h2><p class="card-copy">Φύση, θέα, ιστορία και μικρές στάσεις που αξίζει να γνωρίσετε.</p>{first('poi') && <div class="latest-line"><b>{first('poi')?.title}</b>{first('poi')?.meta}</div>}<span class="card-arrow" aria-hidden="true">→</span></div>
+    </a>
+
+    <a class="bento-card shelter-card" href="/map">
+      <div class="card-bg" style={'background-image:url("'+bg('shelter').replace(/"/g,'%22')+'")'}></div><div class="card-shade"></div>
+      <div class="card-body"><div class="card-kicker"><svg viewBox="0 0 24 24"><path d="m3 11 9-7 9 7"/><path d="M5 10v11h14V10"/><path d="M8 14h8M8 17h8"/></svg><span>ΔΙΑΜΟΝΗ</span></div><h2 class="card-title">Καταφύγια</h2><p class="card-copy">Τα ορειβατικά καταφύγια του Παναχαϊκού και πληροφορίες πρόσβασης.</p>{first('shelter') && <div class="latest-line"><b>{first('shelter')?.title}</b>{first('shelter')?.meta}</div>}<span class="card-arrow" aria-hidden="true">→</span></div>
+    </a>
+
+    <section class="bento-card media-card" aria-label="Πολυμέσα">
+      <a class="mini-card" href="/map"><div class="card-bg" style={'background-image:url("'+bg('photos').replace(/"/g,'%22')+'")'}></div><div class="card-shade"></div><div class="card-body"><div class="card-kicker"><svg viewBox="0 0 24 24"><path d="M4 7h4l2-2h4l2 2h4v13H4Z"/><circle cx="12" cy="13.5" r="4"/></svg><span>MEDIA</span></div><h2 class="card-title">Φωτογραφίες</h2><span class="card-arrow" aria-hidden="true">→</span></div></a>
+      <a class="mini-card" href="/map"><div class="card-bg" style={'background-image:url("'+bg('video').replace(/"/g,'%22')+'")'}></div><div class="card-shade"></div><div class="card-body"><div class="card-kicker"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="4"/><path d="m10 10 5 3-5 3Z"/></svg><span>MEDIA</span></div><h2 class="card-title">Βίντεο</h2><span class="card-arrow" aria-hidden="true">→</span></div></a>
+    </section>
+  </main>
+</div>
+<script src="../scripts/homepage-weather.js"></script>

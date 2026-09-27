@@ -1,14 +1,6 @@
 <style is:global>
 
-/* ============ Φωτογραφίες prototype χωρίς ενσωματωμένο κείμενο ============ */
-:root{
-  --img-home:url('https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1800&q=90');
-  --img-trails:url('https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=1800&q=90');
-  --img-poi:url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1800&q=90');
-  --img-shelter:url('https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1800&q=90');
-  --img-photos:url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1800&q=90');
-  --img-video:url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=90');
-}
+/* ============ Φωτογραφίες panels: φορτώνεται μόνο το ενεργό background ============ */
 /* ============ Tokens ============ */
 :root{
   --bg:#063a43;--navy:#073943;--panel:#0a4650;
@@ -55,13 +47,7 @@ button{font:inherit;color:inherit}
 /* ============ Accordion ============ */
 .accordion{position:absolute;z-index:10;left:calc(18px + var(--side-w));right:var(--gutter);top:var(--top);bottom:22px;display:flex;gap:3px;overflow:hidden}
 .acc-panel{position:relative;flex:1 1 0;min-width:82px;border:1px solid var(--line);border-radius:0 14px 14px 0;overflow:hidden;isolation:isolate;background:var(--panel);transition:flex-grow .72s var(--ease-out),filter .38s ease}
-.acc-panel::before{content:"";position:absolute;inset:0;z-index:-2;background:var(--panel-bg) center/cover;transform:scale(1.05);transition:transform .8s var(--ease-out)}
-.acc-panel[data-panel="home"]{--panel-bg:var(--img-home)}
-.acc-panel[data-panel="trails"]{--panel-bg:var(--img-trails)}
-.acc-panel[data-panel="poi"]{--panel-bg:var(--img-poi)}
-.acc-panel[data-panel="shelter"]{--panel-bg:var(--img-shelter)}
-.acc-panel[data-panel="photos"]{--panel-bg:var(--img-photos)}
-.acc-panel[data-panel="video"]{--panel-bg:var(--img-video)}
+.acc-panel::before{content:"";position:absolute;inset:0;z-index:-2;background-color:var(--panel);background-image:var(--panel-bg,none);background-position:center;background-size:cover;transform:scale(1.05);transition:transform .8s var(--ease-out)}
 .panel-overlay{position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(7,30,46,.85),rgba(7,30,46,.2) 72%,rgba(7,30,46,.56));transition:opacity .35s ease}
 
 /* Ολόκληρο το κλειστό panel είναι ένα κουμπί (πληκτρολόγιο + screen readers) */
@@ -357,7 +343,7 @@ button{font:inherit;color:inherit}
   </nav>
 
   <main class="accordion" id="accordion">
-    <article class="acc-panel" id="panel-home" data-panel="home" aria-labelledby="title-home">
+    <article class="acc-panel" id="panel-home" data-panel="home" aria-labelledby="title-home" data-bg="https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1440&q=78" data-bg-loaded="https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1440&q=78" style="--panel-bg:url('https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1440&q=78')">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-home"><span class="panel-title">Αρχική</span></button>
       <div class="panel-content" id="content-home">
@@ -396,7 +382,7 @@ button{font:inherit;color:inherit}
       </div>
       <div class="panel-index" aria-hidden="true">01</div>
     </article>
-    <article class="acc-panel" id="panel-trails" data-panel="trails" aria-labelledby="title-trails">
+    <article class="acc-panel" id="panel-trails" data-panel="trails" aria-labelledby="title-trails" data-bg="https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=1440&q=78">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-trails"><span class="panel-title">Μονοπάτια</span></button>
       <div class="panel-content" id="content-trails">
@@ -408,7 +394,7 @@ button{font:inherit;color:inherit}
       </div>
       <div class="panel-index" aria-hidden="true">02</div>
     </article>
-    <article class="acc-panel" id="panel-poi" data-panel="poi" aria-labelledby="title-poi">
+    <article class="acc-panel" id="panel-poi" data-panel="poi" aria-labelledby="title-poi" data-bg="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1440&q=78">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-poi"><span class="panel-title">Σημεία Ενδιαφέροντος</span></button>
       <div class="panel-content" id="content-poi">
@@ -420,7 +406,7 @@ button{font:inherit;color:inherit}
       </div>
       <div class="panel-index" aria-hidden="true">03</div>
     </article>
-    <article class="acc-panel" id="panel-shelter" data-panel="shelter" aria-labelledby="title-shelter">
+    <article class="acc-panel" id="panel-shelter" data-panel="shelter" aria-labelledby="title-shelter" data-bg="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1440&q=78">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-shelter"><span class="panel-title">Καταφύγια</span></button>
       <div class="panel-content" id="content-shelter">
@@ -432,7 +418,7 @@ button{font:inherit;color:inherit}
       </div>
       <div class="panel-index" aria-hidden="true">04</div>
     </article>
-    <article class="acc-panel" id="panel-photos" data-panel="photos" aria-labelledby="title-photos">
+    <article class="acc-panel" id="panel-photos" data-panel="photos" aria-labelledby="title-photos" data-bg="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1440&q=78">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-photos"><span class="panel-title">Φωτογραφίες</span></button>
       <div class="panel-content" id="content-photos">
@@ -444,7 +430,7 @@ button{font:inherit;color:inherit}
       </div>
       <div class="panel-index" aria-hidden="true">05</div>
     </article>
-    <article class="acc-panel" id="panel-video" data-panel="video" aria-labelledby="title-video">
+    <article class="acc-panel" id="panel-video" data-panel="video" aria-labelledby="title-video" data-bg="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1440&q=78">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-video"><span class="panel-title">Βίντεο</span></button>
       <div class="panel-content" id="content-video">
@@ -477,9 +463,18 @@ button{font:inherit;color:inherit}
   let locked  = fromHash() || ids[0];
   let current = null;
 
+  const setPanelBackground = panel => {
+    if (!panel) return;
+    const url = panel.dataset.bg;
+    if (!url || panel.dataset.bgLoaded === url) return;
+    panel.style.setProperty('--panel-bg', 'url("' + url.replace(/"/g, '%22') + '")');
+    panel.dataset.bgLoaded = url;
+  };
+
   /** Ενεργοποιεί ένα panel. lock=true: μένει ανοιχτό (click/πληκτρολόγιο). */
   function activate(id, { lock = false } = {}) {
     if (!ids.includes(id)) return;
+    setPanelBackground(panels[ids.indexOf(id)]);
     if (lock) {
       locked = id;
       if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id);
@@ -582,7 +577,15 @@ button{font:inherit;color:inherit}
         const panel = panels[id];
         const el = document.querySelector('.acc-panel[data-panel="' + id + '"]');
         if (el && panel && panel.background_image) {
-          el.style.setProperty('--panel-bg', 'url("' + String(panel.background_image).replace(/"/g, '%22') + '")');
+          let bg = String(panel.background_image);
+          if (bg.includes('images.unsplash.com/')) {
+            bg = bg.replace(/([?&])w=1800(?=&|$)/, '$1w=1440').replace(/([?&])q=90(?=&|$)/, '$1q=78');
+          }
+          el.dataset.bg = bg;
+          if (el.classList.contains('is-active') && el.dataset.bgLoaded !== bg) {
+            el.style.setProperty('--panel-bg', 'url("' + bg.replace(/"/g, '%22') + '")');
+            el.dataset.bgLoaded = bg;
+          }
         }
         renderFeed(id, panel);
       });
@@ -848,6 +851,11 @@ button{font:inherit;color:inherit}
   });
   window.addEventListener('online', load);
   setInterval(tick, 30000);
-  load();
+  const startWeather = () => load();
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(startWeather, { timeout: 1600 });
+  } else {
+    setTimeout(startWeather, 900);
+  }
 })();
 </script>

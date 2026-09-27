@@ -8,8 +8,9 @@
   const ids       = panels.map(p => p.dataset.panel);
   const canHover  = matchMedia('(hover:hover) and (pointer:fine)');
 
-  const fromHash = () => { const h = location.hash.slice(1); return ids.includes(h) ? h : null; };
-  let locked  = fromHash() || ids[0];
+  // Η Αρχική είναι πάντα το default panel σε νέο load / refresh.
+  // Δεν κρατάμε το προηγούμενο panel στο URL, ώστε η σελίδα να ανοίγει σταθερά από την πρώτη καρτέλα.
+  let locked  = ids[0];
   let current = null;
 
   const setPanelBackground = panel => {
@@ -43,7 +44,6 @@
     setPanelBackground(panels[ids.indexOf(id)]);
     if (lock) {
       locked = id;
-      if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id);
     }
     if (id === current) return;
     current = id;
@@ -104,8 +104,6 @@
     const inNav = sidebar.contains(document.activeElement);
     (inNav ? navItems[ids.indexOf(id)] : panels[ids.indexOf(id)].querySelector('.panel-cta')).focus({ preventScroll: true });
   });
-
-  window.addEventListener('hashchange', () => { const h = fromHash(); if (h) activate(h, { lock: true }); });
 
   // Πλοήγηση προς τον υπάρχοντα διαδραστικό χάρτη.
   accordion.addEventListener('click', e => {

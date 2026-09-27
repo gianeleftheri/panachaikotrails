@@ -15,8 +15,8 @@
     refreshMs: 10 * 60 * 1000,
     retryMs: 60 * 1000,
     staleAfterMs: 30 * 60 * 1000,
-    timeoutMs: 5500,
-    metProxy: '/api/weather'
+    timeoutMs: 8000,
+    metProxy: ''
     tz: 'Europe/Athens',
   };
 

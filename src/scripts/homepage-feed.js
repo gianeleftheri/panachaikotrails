@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const endpoint = '/api/homepage';
+  const endpoint = 'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/homepage';
   const ids = ['home','trails','poi','shelter','photos','video'];
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

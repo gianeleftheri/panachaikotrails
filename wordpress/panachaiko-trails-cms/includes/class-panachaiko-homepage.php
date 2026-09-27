@@ -288,6 +288,16 @@ final class Panachaiko_Homepage_Settings {
         }
 
         if ( 'photos' === $panel ) {
+            $media = get_posts( array(
+                'post_type' => 'attachment',
+                'post_status' => 'inherit',
+                'post_mime_type' => 'image',
+                'posts_per_page' => $count,
+                'orderby' => 'date',
+                'order' => 'DESC',
+            ) );
+            if ( $media ) return self::format_media( $media, 'Φωτογραφία' );
+
             return self::format_posts( get_posts( array(
                 'post_type' => 'trail_poi',
                 'post_status' => 'publish',
@@ -301,6 +311,16 @@ final class Panachaiko_Homepage_Settings {
         }
 
         if ( 'video' === $panel ) {
+            $media = get_posts( array(
+                'post_type' => 'attachment',
+                'post_status' => 'inherit',
+                'post_mime_type' => 'video',
+                'posts_per_page' => $count,
+                'orderby' => 'date',
+                'order' => 'DESC',
+            ) );
+            if ( $media ) return self::format_media( $media, 'Βίντεο' );
+
             return self::format_posts( get_posts( array(
                 'post_type' => 'trail_poi',
                 'post_status' => 'publish',
@@ -314,6 +334,25 @@ final class Panachaiko_Homepage_Settings {
         }
 
         return array();
+    }
+
+    private static function format_media( array $posts, string $kind ): array {
+        return array_map( static function( WP_Post $post ) use ( $kind ): array {
+            $title = get_the_title( $post );
+            if ( '' === trim( $title ) ) $title = wp_basename( get_attached_file( $post->ID ) ?: (string) $post->guid );
+
+            $image = wp_attachment_is_image( $post->ID )
+                ? wp_get_attachment_image_url( $post->ID, 'medium' )
+                : null;
+
+            return array(
+                'id' => $post->ID,
+                'title' => $title,
+                'meta' => $kind . ' · ' . get_the_date( 'd/m/Y', $post ),
+                'image' => $image ?: null,
+                'media_url' => wp_get_attachment_url( $post->ID ) ?: null,
+            );
+        }, $posts );
     }
 
     private static function format_posts( array $posts, string $kind ): array {

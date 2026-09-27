@@ -38,6 +38,16 @@
             bg = bg.replace(/([?&])w=(?:1800|1440)(?=&|$)/, '$1w=1024').replace(/([?&])q=(?:90|78)(?=&|$)/, '$1q=72');
           }
           el.dataset.bg = bg;
+          if (id !== 'home') {
+            const preview = bg.includes('images.unsplash.com/')
+              ? bg.replace(/([?&])w=(?:1800|1440|1024)(?=&|$)/, '$1w=360').replace(/([?&])q=(?:90|78|72)(?=&|$)/, '$1q=48')
+              : bg;
+            el.dataset.bgPreview = preview;
+            if (!el.classList.contains('is-active') && el.dataset.bgLoaded !== preview) {
+              el.style.setProperty('--panel-bg', 'url("' + preview.replace(/"/g, '%22') + '")');
+              el.dataset.bgLoaded = preview;
+            }
+          }
 
           const isLegacyHomeDefault = id === 'home' && bg.includes('photo-1551632811-561732d1e306');
           const isDefaultHome = id === 'home' && (el.dataset.defaultBg === bg || isLegacyHomeDefault);

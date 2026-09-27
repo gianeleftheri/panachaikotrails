@@ -20,6 +20,23 @@
     panel.dataset.bgLoaded = url;
   };
 
+  const setPanelPreview = panel => {
+    if (!panel || panel.classList.contains('is-active')) return;
+    const url = panel.dataset.bgPreview;
+    if (!url || panel.dataset.bgLoaded === url) return;
+    panel.style.setProperty('--panel-bg', 'url("' + url.replace(/"/g, '%22') + '")');
+    panel.dataset.bgLoaded = url;
+  };
+
+  // Μετά το πρώτο paint φορτώνουμε μόνο μικρές previews για τα κλειστά panels.
+  // Έτσι οι φωτογραφίες φαίνονται χωρίς να επιβαρύνουν το LCP της αρχικής.
+  const warmPanelPreviews = () => {
+    panels.forEach((panel, index) => {
+      if (panel.dataset.panel === 'home') return;
+      setTimeout(() => setPanelPreview(panel), index * 140);
+    });
+  };
+
   /** Ενεργοποιεί ένα panel. lock=true: μένει ανοιχτό (click/πληκτρολόγιο). */
   function activate(id, { lock = false } = {}) {
     if (!ids.includes(id)) return;
@@ -98,4 +115,17 @@
   document.getElementById('mapCta').addEventListener('click', () => window.location.assign('/map'));
 
   activate(locked, { lock: true });
+
+  const schedulePreviews = () => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(warmPanelPreviews, { timeout: 1800 });
+    } else {
+      setTimeout(warmPanelPreviews, 700);
+    }
+  };
+  if (document.readyState === 'complete') {
+    schedulePreviews();
+  } else {
+    window.addEventListener('load', schedulePreviews, { once: true });
+  }
 })();

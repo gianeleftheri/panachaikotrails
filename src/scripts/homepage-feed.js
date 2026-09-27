@@ -1,7 +1,8 @@
 (() => {
   'use strict';
-  const endpoint = 'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/homepage';
+  const endpoint = '/api/homepage';
   const ids = ['home','trails','poi','shelter','photos','video'];
+  let cachedPanels = {};
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const renderFeed = (id, panel) => {
@@ -27,6 +28,7 @@
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(data => {
       const panels = data && data.panels ? data.panels : {};
+      cachedPanels = panels;
       ids.forEach(id => {
         const panel = panels[id];
         const el = document.querySelector('.acc-panel[data-panel="' + id + '"]');
@@ -49,12 +51,17 @@
             el.dataset.bgLoaded = bg;
           }
         }
-        renderFeed(id, panel);
+        if (el && el.classList.contains('is-active')) renderFeed(id, panel);
       });
     })
     .catch(() => {
       // Keep the static fallback photos/text if the CMS endpoint is unavailable.
     });
+
+  window.addEventListener('panachaiko:panel', event => {
+    const id = event?.detail?.id;
+    if (id && cachedPanels[id]) renderFeed(id, cachedPanels[id]);
+  });
 
   const scheduleHomepageData = () => {
     if ('requestIdleCallback' in window) {

@@ -16,7 +16,7 @@
     retryMs: 60 * 1000,
     staleAfterMs: 30 * 60 * 1000,
     timeoutMs: 8000,
-    metProxy: '',
+    metProxy: '/api/weather',
     tz: 'Europe/Athens',
   };
 
@@ -104,7 +104,7 @@
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), CFG.timeoutMs);
     try {
-      const r = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+      const r = await fetch(url, { signal: ctrl.signal, cache: 'default' });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return await r.json();
     } finally { clearTimeout(t); }

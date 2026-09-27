@@ -44,6 +44,7 @@
       b.classList.toggle('is-active', on);
       if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
     }
+    window.dispatchEvent(new CustomEvent('panachaiko:panel', { detail: { id } }));
   }
 
   const preview = id => { if (canHover.matches) { accordion.classList.add('is-previewing'); activate(id); } };

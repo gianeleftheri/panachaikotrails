@@ -4,6 +4,9 @@ interface Props {
   homeHeroLarge?: string;
   homeHeroMedium?: string;
   homeHeroSmall?: string;
+  homeHeroAvif480?: string;
+  homeHeroAvif768?: string;
+  homeHeroAvif1024?: string;
   defaultHomeBackground?: string;
 }
 
@@ -12,6 +15,9 @@ const {
   homeHeroLarge = '',
   homeHeroMedium = '',
   homeHeroSmall = '',
+  homeHeroAvif480 = '',
+  homeHeroAvif768 = '',
+  homeHeroAvif1024 = '',
   defaultHomeBackground = 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized.webp',
 } = Astro.props;
 ---
@@ -373,6 +379,15 @@ button{font:inherit;color:inherit}
     <article class="acc-panel" id="panel-home" data-panel="home" aria-labelledby="title-home" data-bg={defaultHomeBackground} data-default-bg={defaultHomeBackground} data-bg-loaded={defaultHomeBackground}>
       <div class="panel-home-media" aria-hidden="true">
         <picture>
+          <source
+            srcset={[
+              homeHeroAvif480 && `${homeHeroAvif480} 480w`,
+              homeHeroAvif768 && `${homeHeroAvif768} 768w`,
+              homeHeroAvif1024 && `${homeHeroAvif1024} 1024w`,
+            ].filter(Boolean).join(', ')}
+            sizes="100vw"
+            type="image/avif"
+          />
           <img
             src={homeHeroLarge || homeHeroFull}
             srcset={[

@@ -15,6 +15,9 @@ const homeHero = !underConstruction ? {
   large: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-1024x683.webp',
   medium: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-768x513.webp',
   small: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-300x200.webp',
+  avif480: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Hero-AVIF-480-Low.avif',
+  avif768: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Hero-AVIF-768-Low.avif',
+  avif1024: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Hero-AVIF-1024-Low.avif',
 } : null;
 const title = underConstruction ? 'Υπό κατασκευή | Panachaiko Trails' : 'Panachaiko Trails';
 const description = underConstruction
@@ -35,10 +38,10 @@ const description = underConstruction
       <link
         rel="preload"
         as="image"
-        href={homeHero.large}
-        imagesrcset={`${homeHero.medium} 768w, ${homeHero.large} 1024w, ${homeHero.full} 1440w`}
+        href={homeHero.avif768}
+        imagesrcset={`${homeHero.avif480} 480w, ${homeHero.avif768} 768w, ${homeHero.avif1024} 1024w`}
         imagesizes="100vw"
-        type="image/webp"
+        type="image/avif"
         fetchpriority="high"
       />
     )}
@@ -52,6 +55,9 @@ const description = underConstruction
         homeHeroLarge={homeHero?.large}
         homeHeroMedium={homeHero?.medium}
         homeHeroSmall={homeHero?.small}
+        homeHeroAvif480={homeHero?.avif480}
+        homeHeroAvif768={homeHero?.avif768}
+        homeHeroAvif1024={homeHero?.avif1024}
         defaultHomeBackground={defaultHomeBackground}
       />
     )}

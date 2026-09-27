@@ -1,0 +1,46 @@
+---
+import MaintenancePage from '../components/MaintenancePage.astro';
+import HomepageAccordionClassic from '../components/HomepageAccordionClassic.astro';
+import { getPanachaikoSiteStatus } from '../lib/site-status';
+
+export const prerender = false;
+
+const siteStatus = await getPanachaikoSiteStatus();
+Astro.response.headers.set('Cache-Control', 'no-store, max-age=0');
+const underConstruction = siteStatus.under_construction;
+const defaultHomeBackground = 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized.webp';
+const homeHero = {
+  full: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized.webp',
+  large: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-1024x683.webp',
+  medium: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-768x513.webp',
+  small: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-300x200.webp',
+  avif480: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Hero-AVIF-480-Low.avif',
+  avif768: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Hero-AVIF-768-Low.avif',
+  avif1024: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Hero-AVIF-1024-Low.avif',
+};
+---
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="theme-color" content="#063a43" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Classic Accordion Preview | Panachaiko Trails</title>
+  </head>
+  <body>
+    {underConstruction ? <MaintenancePage /> : (
+      <HomepageAccordionClassic
+        homeHeroFull={homeHero.full}
+        homeHeroLarge={homeHero.large}
+        homeHeroMedium={homeHero.medium}
+        homeHeroSmall={homeHero.small}
+        homeHeroAvif480={homeHero.avif480}
+        homeHeroAvif768={homeHero.avif768}
+        homeHeroAvif1024={homeHero.avif1024}
+        defaultHomeBackground={defaultHomeBackground}
+      />
+    )}
+  </body>
+</html>

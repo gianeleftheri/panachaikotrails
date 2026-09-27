@@ -288,16 +288,6 @@ final class Panachaiko_Homepage_Settings {
         }
 
         if ( 'photos' === $panel ) {
-            $media = get_posts( array(
-                'post_type' => 'attachment',
-                'post_status' => 'inherit',
-                'post_mime_type' => 'image',
-                'posts_per_page' => $count,
-                'orderby' => 'date',
-                'order' => 'DESC',
-            ) );
-            if ( $media ) return self::format_media( $media, 'Φωτογραφία' );
-
             return self::format_posts( get_posts( array(
                 'post_type' => 'trail_poi',
                 'post_status' => 'publish',
@@ -311,16 +301,6 @@ final class Panachaiko_Homepage_Settings {
         }
 
         if ( 'video' === $panel ) {
-            $media = get_posts( array(
-                'post_type' => 'attachment',
-                'post_status' => 'inherit',
-                'post_mime_type' => 'video',
-                'posts_per_page' => $count,
-                'orderby' => 'date',
-                'order' => 'DESC',
-            ) );
-            if ( $media ) return self::format_media( $media, 'Βίντεο' );
-
             return self::format_posts( get_posts( array(
                 'post_type' => 'trail_poi',
                 'post_status' => 'publish',
@@ -336,25 +316,6 @@ final class Panachaiko_Homepage_Settings {
         return array();
     }
 
-    private static function format_media( array $posts, string $kind ): array {
-        return array_map( static function( WP_Post $post ) use ( $kind ): array {
-            $title = get_the_title( $post );
-            if ( '' === trim( $title ) ) $title = wp_basename( get_attached_file( $post->ID ) ?: (string) $post->guid );
-
-            $image = wp_attachment_is_image( $post->ID )
-                ? wp_get_attachment_image_url( $post->ID, 'medium' )
-                : null;
-
-            return array(
-                'id' => $post->ID,
-                'title' => $title,
-                'meta' => $kind . ' · ' . get_the_date( 'd/m/Y', $post ),
-                'image' => $image ?: null,
-                'media_url' => wp_get_attachment_url( $post->ID ) ?: null,
-            );
-        }, $posts );
-    }
-
     private static function format_posts( array $posts, string $kind ): array {
         return array_map( static function( WP_Post $post ) use ( $kind ): array {
             $image = get_the_post_thumbnail_url( $post, 'medium' );
@@ -367,13 +328,26 @@ final class Panachaiko_Homepage_Settings {
                 }
             }
 
+            if ( ! $image && 'trail_poi' === $post->post_type && 'video' === (string) get_post_meta( $post->ID, 'content_type', true ) ) {
+                $video_url = (string) get_post_meta( $post->ID, 'external_video_url', true );
+                $host = strtolower( (string) wp_parse_url( $video_url, PHP_URL_HOST ) );
+                $video_id = '';
+                if ( in_array( $host, array( 'youtube.com', 'www.youtube.com' ), true ) ) {
+                    parse_str( (string) wp_parse_url( $video_url, PHP_URL_QUERY ), $query );
+                    $video_id = isset( $query['v'] ) ? sanitize_text_field( (string) $query['v'] ) : '';
+                } elseif ( 'youtu.be' === $host ) {
+                    $video_id = trim( (string) wp_parse_url( $video_url, PHP_URL_PATH ), '/' );
+                }
+                if ( $video_id ) $image = 'https://i.ytimg.com/vi/' . rawurlencode( $video_id ) . '/hqdefault.jpg';
+            }
+
             $meta = $kind;
             if ( 'trail' === $post->post_type ) {
                 $length = get_post_meta( $post->ID, 'length_km', true );
                 $meta = $length !== '' ? $kind . ' · ' . number_format_i18n( (float) $length, 1 ) . ' χλμ' : $kind;
             } elseif ( 'trail_poi' === $post->post_type ) {
                 $trail_id = absint( get_post_meta( $post->ID, 'related_trail', true ) );
-                $trail_title = $trail_id ? get_the_title( $trail_id ) : '';
+                $trail_title = $trail_id ? wp_specialchars_decode( get_the_title( $trail_id ), ENT_QUOTES ) : '';
                 if ( $trail_title ) $meta .= ' · ' . $trail_title;
             } elseif ( 'post' === $post->post_type ) {
                 $meta = get_the_date( 'd/m/Y', $post );
@@ -381,7 +355,7 @@ final class Panachaiko_Homepage_Settings {
 
             return array(
                 'id' => $post->ID,
-                'title' => get_the_title( $post ),
+                'title' => wp_specialchars_decode( get_the_title( $post ), ENT_QUOTES ),
                 'meta' => $meta,
                 'image' => $image ?: null,
             );

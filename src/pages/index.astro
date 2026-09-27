@@ -2,13 +2,21 @@
 import MaintenancePage from '../components/MaintenancePage.astro';
 import HomepageAccordion from '../components/HomepageAccordion.astro';
 import { getPanachaikoSiteStatus } from '../lib/site-status';
+import { getImage } from 'astro:assets';
 
 export const prerender = false;
 
 const siteStatus = await getPanachaikoSiteStatus();
-Astro.response.headers.set('Cache-Control', 'no-store, max-age=0');
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=5, stale-while-revalidate=5');
 
 const underConstruction = siteStatus.under_construction;
+const defaultHomeBackground = 'https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1440&q=78';
+const homeHeroAvif = !underConstruction
+  ? await getImage({ src: defaultHomeBackground, width: 1440, height: 960, format: 'avif', quality: 68 })
+  : null;
+const homeHeroWebp = !underConstruction
+  ? await getImage({ src: defaultHomeBackground, width: 1440, height: 960, format: 'webp', quality: 76 })
+  : null;
 const title = underConstruction ? 'Υπό κατασκευή | Panachaiko Trails' : 'Panachaiko Trails';
 const description = underConstruction
   ? 'Το νέο Panachaiko Trails ετοιμάζεται. Σύντομα θα ανακαλύψετε τα μονοπάτια και τις διαδρομές του Παναχαϊκού όρους.'
@@ -23,13 +31,18 @@ const description = underConstruction
     <meta name="description" content={description} />
     <meta name="robots" content={underConstruction ? 'noindex,nofollow' : 'index,follow'} />
     <meta name="theme-color" content={underConstruction ? '#081711' : '#063a43'} />
-    {!underConstruction && <link rel="preconnect" href="https://images.unsplash.com" crossorigin />}
-    {!underConstruction && <link rel="preload" as="image" href="https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1440&q=78" fetchpriority="high" />}
+    {homeHeroAvif && <link rel="preload" as="image" href={homeHeroAvif.src} type="image/avif" fetchpriority="high" />}
     <link rel="preconnect" href="https://cms.panachaikotrails.gr" crossorigin />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
   </head>
   <body>
-    {underConstruction ? <MaintenancePage /> : <HomepageAccordion />}
+    {underConstruction ? <MaintenancePage /> : (
+      <HomepageAccordion
+        homeHeroAvif={homeHeroAvif?.src}
+        homeHeroWebp={homeHeroWebp?.src}
+        defaultHomeBackground={defaultHomeBackground}
+      />
+    )}
   </body>
 </html>

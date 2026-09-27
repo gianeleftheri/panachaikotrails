@@ -1,3 +1,16 @@
+---
+interface Props {
+  homeHeroAvif?: string;
+  homeHeroWebp?: string;
+  defaultHomeBackground?: string;
+}
+
+const {
+  homeHeroAvif = '',
+  homeHeroWebp = '',
+  defaultHomeBackground = 'https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1440&q=78',
+} = Astro.props;
+---
 <style is:global>
 
 /* ============ Φωτογραφίες panels: φορτώνεται μόνο το ενεργό background ============ */
@@ -48,6 +61,10 @@ button{font:inherit;color:inherit}
 .accordion{position:absolute;z-index:10;left:calc(18px + var(--side-w));right:var(--gutter);top:var(--top);bottom:22px;display:flex;gap:3px;overflow:hidden}
 .acc-panel{position:relative;flex:1 1 0;min-width:82px;border:1px solid var(--line);border-radius:0 14px 14px 0;overflow:hidden;isolation:isolate;background:var(--panel);transition:flex-grow .72s var(--ease-out),filter .38s ease}
 .acc-panel::before{content:"";position:absolute;inset:0;z-index:-2;background-color:var(--panel);background-image:var(--panel-bg,none);background-position:center;background-size:cover;transform:scale(1.05);transition:transform .8s var(--ease-out)}
+.panel-home-media{position:absolute;inset:0;z-index:-2;display:block;overflow:hidden}
+.panel-home-media picture,.panel-home-media img{display:block;width:100%;height:100%}
+.panel-home-media img{object-fit:cover;object-position:58% center}
+.acc-panel[data-panel="home"].has-cms-bg .panel-home-media{display:none}
 .panel-overlay{position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(7,30,46,.85),rgba(7,30,46,.2) 72%,rgba(7,30,46,.56));transition:opacity .35s ease}
 
 /* Ολόκληρο το κλειστό panel είναι ένα κουμπί (πληκτρολόγιο + screen readers) */
@@ -343,7 +360,14 @@ button{font:inherit;color:inherit}
   </nav>
 
   <main class="accordion" id="accordion">
-    <article class="acc-panel" id="panel-home" data-panel="home" aria-labelledby="title-home" data-bg="https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1440&q=78" data-bg-loaded="https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1440&q=78" style="--panel-bg:url('https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1440&q=78')">
+    <article class="acc-panel" id="panel-home" data-panel="home" aria-labelledby="title-home" data-bg={defaultHomeBackground} data-default-bg={defaultHomeBackground} data-bg-loaded={defaultHomeBackground}>
+      <div class="panel-home-media" aria-hidden="true">
+        <picture>
+          {homeHeroAvif && <source srcset={homeHeroAvif} type="image/avif" />}
+          {homeHeroWebp && <source srcset={homeHeroWebp} type="image/webp" />}
+          <img src={homeHeroWebp || homeHeroAvif} alt="" width="1440" height="960" loading="eager" decoding="sync" fetchpriority="high" />
+        </picture>
+      </div>
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-home"><span class="panel-title">Αρχική</span></button>
       <div class="panel-content" id="content-home">
@@ -569,7 +593,7 @@ button{font:inherit;color:inherit}
     }).join('');
   };
 
-  fetch(endpoint, { headers:{Accept:'application/json'}, cache:'no-store' })
+  const loadHomepageData = () => fetch(endpoint, { headers:{Accept:'application/json'}, cache:'no-store' })
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(data => {
       const panels = data && data.panels ? data.panels : {};
@@ -582,7 +606,14 @@ button{font:inherit;color:inherit}
             bg = bg.replace(/([?&])w=1800(?=&|$)/, '$1w=1440').replace(/([?&])q=90(?=&|$)/, '$1q=78');
           }
           el.dataset.bg = bg;
-          if (el.classList.contains('is-active') && el.dataset.bgLoaded !== bg) {
+
+          const isDefaultHome = id === 'home' && el.dataset.defaultBg === bg;
+          if (id === 'home') el.classList.toggle('has-cms-bg', !isDefaultHome);
+
+          if (isDefaultHome) {
+            el.style.removeProperty('--panel-bg');
+            el.dataset.bgLoaded = bg;
+          } else if (el.classList.contains('is-active') && el.dataset.bgLoaded !== bg) {
             el.style.setProperty('--panel-bg', 'url("' + bg.replace(/"/g, '%22') + '")');
             el.dataset.bgLoaded = bg;
           }
@@ -593,6 +624,12 @@ button{font:inherit;color:inherit}
     .catch(() => {
       // Keep the static fallback photos/text if the CMS endpoint is unavailable.
     });
+
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(loadHomepageData, { timeout: 1200 });
+  } else {
+    setTimeout(loadHomepageData, 700);
+  }
 })();
 </script>
 

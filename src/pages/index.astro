@@ -2,19 +2,20 @@
 import MaintenancePage from '../components/MaintenancePage.astro';
 import HomepageAccordion from '../components/HomepageAccordion.astro';
 import { getPanachaikoSiteStatus } from '../lib/site-status';
-import { getImage } from 'astro:assets';
 
 export const prerender = false;
 
 const siteStatus = await getPanachaikoSiteStatus();
-Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=5, stale-while-revalidate=5');
+Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=10, stale-while-revalidate=20');
 
 const underConstruction = siteStatus.under_construction;
-const defaultHomeBackground = 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero.webp';
-const homeHeroAvif = null;
-const homeHeroWebp = !underConstruction
-  ? { src: defaultHomeBackground }
-  : null;
+const defaultHomeBackground = 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized.webp';
+const homeHero = !underConstruction ? {
+  full: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized.webp',
+  large: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-1024x683.webp',
+  medium: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-768x513.webp',
+  small: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-300x200.webp',
+} : null;
 const title = underConstruction ? 'Υπό κατασκευή | Panachaiko Trails' : 'Panachaiko Trails';
 const description = underConstruction
   ? 'Το νέο Panachaiko Trails ετοιμάζεται. Σύντομα θα ανακαλύψετε τα μονοπάτια και τις διαδρομές του Παναχαϊκού όρους.'
@@ -29,15 +30,27 @@ const description = underConstruction
     <meta name="description" content={description} />
     <meta name="robots" content={underConstruction ? 'noindex,nofollow' : 'index,follow'} />
     <meta name="theme-color" content={underConstruction ? '#081711' : '#063a43'} />
-    {homeHeroWebp && <link rel="preload" as="image" href={homeHeroWebp.src} type="image/webp" fetchpriority="high" />}
+    {homeHero && (
+      <link
+        rel="preload"
+        as="image"
+        href={homeHero.large}
+        imagesrcset={`${homeHero.medium} 768w, ${homeHero.large} 1024w, ${homeHero.full} 1440w`}
+        imagesizes="100vw"
+        type="image/webp"
+        fetchpriority="high"
+      />
+    )}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
   </head>
   <body>
     {underConstruction ? <MaintenancePage /> : (
       <HomepageAccordion
-        homeHeroAvif={homeHeroAvif?.src}
-        homeHeroWebp={homeHeroWebp?.src}
+        homeHeroFull={homeHero?.full}
+        homeHeroLarge={homeHero?.large}
+        homeHeroMedium={homeHero?.medium}
+        homeHeroSmall={homeHero?.small}
         defaultHomeBackground={defaultHomeBackground}
       />
     )}

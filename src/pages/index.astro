@@ -30,6 +30,7 @@ const description = underConstruction
     <meta name="description" content={description} />
     <meta name="robots" content={underConstruction ? 'noindex,nofollow' : 'index,follow'} />
     <meta name="theme-color" content={underConstruction ? '#081711' : '#063a43'} />
+    {homeHero && <link rel="preconnect" href="https://cms.panachaikotrails.gr" crossorigin />}
     {homeHero && (
       <link
         rel="preload"

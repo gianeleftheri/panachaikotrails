@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const endpoint = 'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/homepage';
+  const endpoint = '/api/homepage';
   const ids = ['home','trails','poi','shelter','photos','video'];
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -37,7 +37,8 @@
           }
           el.dataset.bg = bg;
 
-          const isDefaultHome = id === 'home' && el.dataset.defaultBg === bg;
+          const isLegacyHomeDefault = id === 'home' && bg.includes('photo-1551632811-561732d1e306');
+          const isDefaultHome = id === 'home' && (el.dataset.defaultBg === bg || isLegacyHomeDefault);
           if (id === 'home') el.classList.toggle('has-cms-bg', !isDefaultHome);
 
           if (isDefaultHome) {

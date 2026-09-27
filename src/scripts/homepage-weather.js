@@ -15,8 +15,8 @@
     refreshMs: 10 * 60 * 1000,
     retryMs: 60 * 1000,
     staleAfterMs: 30 * 60 * 1000,
-    timeoutMs: 8000,
-    metProxy: '',                       // π.χ. '/wp-json/panachaiko/v1/weather'
+    timeoutMs: 5500,
+    metProxy: '/api/weather'
     tz: 'Europe/Athens',
   };
 

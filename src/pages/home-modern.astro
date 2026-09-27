@@ -37,7 +37,7 @@ if (!underConstruction) {
   if (trailsResult.status === 'fulfilled' && trailsResult.value.ok) {
     const entries = await trailsResult.value.json();
     if (Array.isArray(entries)) {
-      trailCount = entries.filter((entry:any)=>entry?.trail?.status !== 'investigation').length;
+      trailCount = entries.length;
       const published = entries.filter((entry:any)=>entry?.trail?.existing === true && entry?.trail?.status !== 'investigation');
       const scored = published.map((entry:any,index:number)=>({
         entry,index,

@@ -63,6 +63,12 @@ const duration = (mins?:number) => {
 };
 const fmtKm=(v?:number)=>Number.isFinite(v) ? Number(v).toLocaleString('el-GR',{maximumFractionDigits:1})+' χλμ.' : '';
 const fmtGain=(v?:number)=>Number.isFinite(v) && Number(v)>0 ? '+'+Math.round(Number(v))+' μ.' : '';
+const cleanText=(value?:string)=>String(value||'')
+  .replace(/&amp;#8211;|&#8211;|&ndash;/g,'–')
+  .replace(/&amp;#8212;|&#8212;|&mdash;/g,'—')
+  .replace(/&amp;quot;|&quot;/g,'"')
+  .replace(/&amp;#039;|&#039;|&#39;/g,"'")
+  .replace(/&amp;/g,'&');
 ---
 
 <style is:global>
@@ -209,7 +215,7 @@ button{font:inherit}
               <div class="trail-image" style={'background-image:url("'+trailImage(entry,index).replace(/"/g,'%22')+'")'}></div>
               <div class="trail-body">
                 <div class="trail-code">{entry.key || 'ΜΟΝΟΠΑΤΙ'}</div>
-                <h3 class="trail-title">{entry.trail?.name || entry.key}</h3>
+                <h3 class="trail-title">{cleanText(entry.trail?.name || entry.key)}</h3>
                 <div class="trail-meta">
                   {fmtKm(entry.trail?.length_km) && <span>↝ {fmtKm(entry.trail?.length_km)}</span>}
                   {fmtGain(entry.trail?.gain_m) && <span>↗ {fmtGain(entry.trail?.gain_m)}</span>}

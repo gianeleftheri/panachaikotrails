@@ -355,7 +355,7 @@ button{font:inherit;color:inherit}
   </button>
 
   <nav class="sidebar" id="sidebar" aria-label="Ενότητες">
-    <button class="side-item" type="button" data-open="home" aria-controls="panel-home">
+    <button class="side-item is-active" type="button" data-open="home" aria-controls="panel-home" aria-current="true">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10.5V21h14V10.5"/><path d="M9.5 21v-6h5v6"/></svg><span class="side-label">Αρχική</span>
     </button>
     <button class="side-item" type="button" data-open="trails" aria-controls="panel-trails">
@@ -376,7 +376,7 @@ button{font:inherit;color:inherit}
   </nav>
 
   <main class="accordion" id="accordion">
-    <article class="acc-panel" id="panel-home" data-panel="home" aria-labelledby="title-home" data-bg={defaultHomeBackground} data-default-bg={defaultHomeBackground} data-bg-loaded={defaultHomeBackground}>
+    <article class="acc-panel is-active" id="panel-home" data-panel="home" aria-labelledby="title-home" data-bg={defaultHomeBackground} data-default-bg={defaultHomeBackground} data-bg-loaded={defaultHomeBackground}>
       <div class="panel-home-media" aria-hidden="true">
         <picture>
           <source
@@ -407,7 +407,7 @@ button{font:inherit;color:inherit}
         </picture>
       </div>
       <div class="panel-overlay" aria-hidden="true"></div>
-      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-home"><span class="panel-title">Αρχική</span></button>
+      <button class="panel-toggle" type="button" aria-expanded="true" aria-controls="content-home" tabindex="-1"><span class="panel-title">Αρχική</span></button>
       <div class="panel-content" id="content-home">
         <section class="wx is-loading" id="wx" aria-labelledby="wx-title" aria-busy="true">
           <div class="wx-head">
@@ -447,7 +447,7 @@ button{font:inherit;color:inherit}
     <article class="acc-panel" id="panel-trails" data-panel="trails" aria-labelledby="title-trails" data-bg="https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=1024&q=72">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-trails"><span class="panel-title">Μονοπάτια</span></button>
-      <div class="panel-content" id="content-trails">
+      <div class="panel-content" id="content-trails" inert>
         <div class="eyebrow">PANACHAIKO TRAILS</div>
         <h2 id="title-trails">Μονοπάτια</h2>
         <p>Πεζοπορικές διαδρομές, υψομετρικά προφίλ, βαθμός δυσκολίας και σημεία ενδιαφέροντος.</p>
@@ -459,7 +459,7 @@ button{font:inherit;color:inherit}
     <article class="acc-panel" id="panel-poi" data-panel="poi" aria-labelledby="title-poi" data-bg="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1024&q=72">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-poi"><span class="panel-title">Σημεία Ενδιαφέροντος</span></button>
-      <div class="panel-content" id="content-poi">
+      <div class="panel-content" id="content-poi" inert>
         <div class="eyebrow">PANACHAIKO TRAILS</div>
         <h2 id="title-poi">Σημεία Ενδιαφέροντος</h2>
         <p>Φυσικά αξιοθέατα, ιστορικά σημεία, θέα και μικρές στάσεις στην πορεία.</p>
@@ -471,7 +471,7 @@ button{font:inherit;color:inherit}
     <article class="acc-panel" id="panel-shelter" data-panel="shelter" aria-labelledby="title-shelter" data-bg="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1024&q=72">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-shelter"><span class="panel-title">Καταφύγια</span></button>
-      <div class="panel-content" id="content-shelter">
+      <div class="panel-content" id="content-shelter" inert>
         <div class="eyebrow">PANACHAIKO TRAILS</div>
         <h2 id="title-shelter">Καταφύγια</h2>
         <p>Ορεινά καταφύγια και σημεία προστασίας με χρήσιμες πληροφορίες πρόσβασης.</p>
@@ -483,7 +483,7 @@ button{font:inherit;color:inherit}
     <article class="acc-panel" id="panel-photos" data-panel="photos" aria-labelledby="title-photos" data-bg="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1024&q=72">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-photos"><span class="panel-title">Φωτογραφίες</span></button>
-      <div class="panel-content" id="content-photos">
+      <div class="panel-content" id="content-photos" inert>
         <div class="eyebrow">PANACHAIKO TRAILS</div>
         <h2 id="title-photos">Φωτογραφίες</h2>
         <p>Στιγμές από το Παναχαϊκό, τα μονοπάτια και τις εποχές του βουνού.</p>
@@ -495,7 +495,7 @@ button{font:inherit;color:inherit}
     <article class="acc-panel" id="panel-video" data-panel="video" aria-labelledby="title-video" data-bg="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1024&q=72">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-video"><span class="panel-title">Βίντεο</span></button>
-      <div class="panel-content" id="content-video">
+      <div class="panel-content" id="content-video" inert>
         <div class="eyebrow">PANACHAIKO TRAILS</div>
         <h2 id="title-video">Βίντεο</h2>
         <p>Δείτε το Παναχαϊκό σε κίνηση μέσα από επιλεγμένα βίντεο και μικρές ιστορίες.</p>

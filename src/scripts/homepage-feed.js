@@ -9,7 +9,7 @@
     if (!host || !panel || !Array.isArray(panel.items)) return;
     host.innerHTML = panel.items.map(item => {
       const imageUrl = item.image ? String(item.image) : '';
-      const isYoutubeThumb = /(^|\\.)i\\.ytimg\\.com$/i.test((() => {
+      const isYoutubeThumb = /(^|\.)i\.ytimg\.com$/i.test((() => {
         try { return new URL(imageUrl).hostname; } catch { return ''; }
       })());
       const media = isYoutubeThumb

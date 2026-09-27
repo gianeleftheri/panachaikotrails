@@ -16,7 +16,7 @@
     retryMs: 60 * 1000,
     staleAfterMs: 30 * 60 * 1000,
     timeoutMs: 8000,
-    metProxy: ''
+    metProxy: '',
     tz: 'Europe/Athens',
   };
 

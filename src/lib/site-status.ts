@@ -7,7 +7,7 @@ const SITE_STATUS_URL =
   import.meta.env.PUBLIC_SITE_STATUS_API_URL ||
   'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/site-status';
 
-const STATUS_CACHE_MS = 15_000;
+const STATUS_CACHE_MS = 5_000;
 let cachedStatus: PanachaikoSiteStatus | null = null;
 let cachedAt = 0;
 let refreshPromise: Promise<PanachaikoSiteStatus> | null = null;

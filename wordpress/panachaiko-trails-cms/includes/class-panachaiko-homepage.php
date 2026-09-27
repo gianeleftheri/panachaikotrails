@@ -258,19 +258,30 @@ final class Panachaiko_Homepage_Settings {
         }
 
         if ( 'poi' === $panel ) {
-            $posts = get_posts( array(
+            $recreation = get_posts( array(
+                'post_type' => 'recreation_spot',
+                'post_status' => 'publish',
+                'posts_per_page' => $count,
+                'orderby' => 'date',
+                'order' => 'DESC',
+            ) );
+
+            $trail_pois = get_posts( array(
                 'post_type' => 'trail_poi',
                 'post_status' => 'publish',
-                'posts_per_page' => $count * 3,
+                'posts_per_page' => $count * 2,
                 'orderby' => 'date',
                 'order' => 'DESC',
                 'meta_query' => array(
                     array( 'key' => 'content_type', 'value' => 'note' ),
                 ),
             ) );
-            $posts = array_values( array_filter( $posts, static function( WP_Post $post ): bool {
+            $trail_pois = array_values( array_filter( $trail_pois, static function( WP_Post $post ): bool {
                 return 'shelter' !== (string) get_post_meta( $post->ID, 'poi_type', true );
             } ) );
+
+            $posts = array_merge( $recreation, $trail_pois );
+            usort( $posts, static fn( WP_Post $a, WP_Post $b ): int => strcmp( $b->post_date_gmt ?: $b->post_date, $a->post_date_gmt ?: $a->post_date ) );
             return self::format_posts( array_slice( $posts, 0, $count ), 'Σημείο' );
         }
 
@@ -345,9 +356,12 @@ final class Panachaiko_Homepage_Settings {
             if ( 'trail' === $post->post_type ) {
                 $length = get_post_meta( $post->ID, 'length_km', true );
                 $meta = $length !== '' ? $kind . ' · ' . number_format_i18n( (float) $length, 1 ) . ' χλμ' : $kind;
+            } elseif ( 'recreation_spot' === $post->post_type ) {
+                $settlement = (string) get_post_meta( $post->ID, 'settlement', true );
+                $meta = $settlement ? $kind . ' · ' . $settlement : $kind;
             } elseif ( 'trail_poi' === $post->post_type ) {
                 $trail_id = absint( get_post_meta( $post->ID, 'related_trail', true ) );
-                $trail_title = $trail_id ? wp_specialchars_decode( get_the_title( $trail_id ), ENT_QUOTES ) : '';
+                $trail_title = $trail_id ? html_entity_decode( get_the_title( $trail_id ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) : '';
                 if ( $trail_title ) $meta .= ' · ' . $trail_title;
             } elseif ( 'post' === $post->post_type ) {
                 $meta = get_the_date( 'd/m/Y', $post );
@@ -355,7 +369,7 @@ final class Panachaiko_Homepage_Settings {
 
             return array(
                 'id' => $post->ID,
-                'title' => wp_specialchars_decode( get_the_title( $post ), ENT_QUOTES ),
+                'title' => html_entity_decode( get_the_title( $post ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ),
                 'meta' => $meta,
                 'image' => $image ?: null,
             );

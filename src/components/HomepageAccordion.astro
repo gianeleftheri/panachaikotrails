@@ -8,7 +8,7 @@ interface Props {
 const {
   homeHeroAvif = '',
   homeHeroWebp = '',
-  defaultHomeBackground = 'https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1440&q=78',
+  defaultHomeBackground = 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero.webp',
 } = Astro.props;
 ---
 <style is:global>
@@ -586,7 +586,7 @@ button{font:inherit;color:inherit}
     const host = document.getElementById('feed-' + id);
     if (!host || !panel || !Array.isArray(panel.items)) return;
     host.innerHTML = panel.items.map(item => {
-      const image = item.image ? '<img class="panel-feed-thumb" src="' + esc(item.image) + '" alt="" loading="lazy" decoding="async">' : '';
+      const image = item.image ? '<img class="panel-feed-thumb" src="' + esc(item.image) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">' : '';
       const cls = image ? 'panel-feed-item' : 'panel-feed-item no-thumb';
       const meta = item.meta ? '<span class="panel-feed-meta">' + esc(item.meta) + '</span>' : '';
       return '<div class="' + cls + '">' + image + '<div><div class="panel-feed-title">' + esc(item.title) + '</div>' + meta + '</div></div>';
@@ -625,10 +625,17 @@ button{font:inherit;color:inherit}
       // Keep the static fallback photos/text if the CMS endpoint is unavailable.
     });
 
-  if ('requestIdleCallback' in window) {
-    requestIdleCallback(loadHomepageData, { timeout: 1200 });
+  const scheduleHomepageData = () => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(loadHomepageData, { timeout: 2200 });
+    } else {
+      setTimeout(loadHomepageData, 1200);
+    }
+  };
+  if (document.readyState === 'complete') {
+    scheduleHomepageData();
   } else {
-    setTimeout(loadHomepageData, 700);
+    window.addEventListener('load', scheduleHomepageData, { once: true });
   }
 })();
 </script>
@@ -889,10 +896,17 @@ button{font:inherit;color:inherit}
   window.addEventListener('online', load);
   setInterval(tick, 30000);
   const startWeather = () => load();
-  if ('requestIdleCallback' in window) {
-    requestIdleCallback(startWeather, { timeout: 1600 });
+  const scheduleWeather = () => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(startWeather, { timeout: 2600 });
+    } else {
+      setTimeout(startWeather, 1500);
+    }
+  };
+  if (document.readyState === 'complete') {
+    scheduleWeather();
   } else {
-    setTimeout(startWeather, 900);
+    window.addEventListener('load', scheduleWeather, { once: true });
   }
 })();
 </script>

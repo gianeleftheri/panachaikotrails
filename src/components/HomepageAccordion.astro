@@ -217,6 +217,127 @@ opacity:.92}
   .weather-head span{display:none}.accordion-station{padding:9px}.accordion-station-stats{grid-template-columns:repeat(4,1fr)}.accordion-station-stat{padding:5px}.accordion-station-source{display:none}
   .scene-home .sun{width:110px;height:110px;right:4%;top:10%}.hiker{left:46%;transform:scale(.58)}.hut{display:none}
 }
+/* ============ Raster illustration pass · closer to approved mockup ============ */
+.panel-scene{
+  background-image:url('/art/panachaiko-sprite.webp')!important;
+  background-repeat:no-repeat!important;
+  background-color:#12c8e8!important;
+}
+.panel-scene>*{display:none!important}
+.panel-scene::before,.panel-scene::after{content:none!important}
+
+.scene-home{
+  background-size:221.6% 100%!important;
+  background-position:0 50%!important;
+}
+.panel-trails .panel-scene{
+  background-size:1133.2% 100%!important;
+  background-position:49.85% 50%!important;
+}
+.panel-poi .panel-scene{
+  background-size:1133.2% 100%!important;
+  background-position:59.87% 50%!important;
+}
+.panel-shelter .panel-scene{
+  background-size:1133.2% 100%!important;
+  background-position:69.89% 50%!important;
+}
+.panel-photos .panel-scene{
+  background-size:1133.2% 100%!important;
+  background-position:79.91% 50%!important;
+}
+.panel-video .panel-scene{
+  background-size:1133.2% 100%!important;
+  background-position:89.94% 50%!important;
+}
+.panel-news .panel-scene{
+  background-size:1133.2% 100%!important;
+  background-position:99.96% 50%!important;
+}
+
+.home-copy{
+  left:4.6%!important;
+  top:9.5%!important;
+  width:min(560px,50%)!important;
+}
+.home-copy h2{
+  margin:12px 0 14px!important;
+  font-size:clamp(48px,5.2vw,88px)!important;
+  line-height:.9!important;
+  letter-spacing:-.065em!important;
+  text-shadow:none!important;
+}
+.home-copy h2 span{display:block!important;color:var(--ink)!important}
+.home-copy h2 b{
+  display:block!important;
+  color:#fff!important;
+  white-space:nowrap!important;
+  font-weight:950!important;
+}
+.home-copy p{
+  max-width:460px!important;
+  color:var(--ink)!important;
+  font-size:clamp(14px,1.15vw,18px)!important;
+  line-height:1.42!important;
+  text-shadow:none!important;
+}
+.home-copy .panel-feed,
+.panel-feed[hidden]{display:none!important}
+
+.weather-frame{
+  right:2.4%!important;
+  bottom:2.6%!important;
+  width:min(520px,44%)!important;
+  padding:12px!important;
+  border:1px solid rgba(11,38,51,.08)!important;
+  border-radius:20px!important;
+  box-shadow:0 18px 38px rgba(11,38,51,.16)!important;
+}
+.weather-head{padding:0 3px 9px!important}
+.weather-head strong{font-size:13px!important}
+.weather-head span{font-size:9px!important}
+.weather-grid{gap:8px!important}
+.accordion-station{padding:10px!important;border-radius:14px!important}
+.accordion-station-main{margin:6px 0 7px!important}
+.accordion-station-temp{font-size:34px!important}
+.accordion-station-stats{gap:5px!important}
+.accordion-station-stat{padding:6px!important}
+
+.acc-panel:not(.is-active) .panel-footer{
+  height:118px!important;
+  padding:17px 14px 13px!important;
+}
+.acc-panel:not(.is-active) .panel-title{
+  max-width:calc(100% - 44px)!important;
+  font-size:15px!important;
+}
+.acc-panel:not(.is-active) .panel-arrow{
+  width:36px!important;height:36px!important;
+}
+.acc-panel.is-active{flex-grow:6.2!important}
+.acc-panel{box-shadow:0 12px 32px rgba(11,38,51,.13)!important}
+
+@media (min-width:1300px){
+  .home-copy{width:min(610px,48%)!important}
+  .home-copy h2{font-size:clamp(60px,5.4vw,92px)!important}
+  .weather-frame{width:min(540px,43%)!important}
+}
+@media (max-width:1100px){
+  .home-copy{width:50%!important;left:4%!important}
+  .home-copy h2{font-size:clamp(44px,5.5vw,68px)!important}
+  .weather-frame{width:47%!important}
+}
+@media (max-width:900px){
+  .panel-scene{
+    background-size:cover!important;
+    background-position:center!important;
+  }
+  .home-copy{width:calc(100% - 36px)!important;left:18px!important;top:18px!important}
+  .home-copy h2{font-size:clamp(42px,10vw,66px)!important}
+  .home-copy h2 b{white-space:normal!important}
+  .weather-frame{left:16px!important;right:16px!important;bottom:16px!important;width:auto!important}
+}
+
 </style>
 
 <div class="home-shell">
@@ -256,7 +377,7 @@ opacity:.92}
       <div class="panel-content" id="content-home">
         <div class="home-copy">
           <span class="home-kicker">PANACHAIKO TRAILS</span>
-          <h2 id="title-home"><span>Ανακάλυψε</span>το Παναχαϊκό</h2>
+          <h2 id="title-home"><span>Ανακάλυψε</span><b>το Παναχαϊκό</b></h2>
           <p>Μονοπάτια, καταφύγια, κορυφές και αυθεντικές εμπειρίες στο βουνό της Αχαΐας.</p>
           <div class="panel-feed" id="feed-home" hidden></div>
           <button class="panel-cta" type="button">Δες τα μονοπάτια <b aria-hidden="true">→</b></button>

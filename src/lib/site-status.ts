@@ -12,9 +12,12 @@ let cachedStatus: PanachaikoSiteStatus | null = null;
 let cachedAt = 0;
 let refreshPromise: Promise<PanachaikoSiteStatus> | null = null;
 
+const isTrue = (value: unknown) =>
+  value === true || value === 1 || value === '1' || value === 'true';
+
 async function fetchPanachaikoSiteStatus(): Promise<PanachaikoSiteStatus> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 1800);
+  const timeout = setTimeout(() => controller.abort(), 4500);
 
   try {
     const response = await fetch(SITE_STATUS_URL, {
@@ -24,9 +27,11 @@ async function fetchPanachaikoSiteStatus(): Promise<PanachaikoSiteStatus> {
     });
     if (!response.ok) throw new Error(`Site status HTTP ${response.status}`);
     const payload = await response.json();
+
     return {
-      under_construction: payload?.under_construction !== false,
-      public_trail_submissions: payload?.public_trail_submissions === true,
+      // Maintenance is enabled only when the CMS explicitly says true.
+      under_construction: isTrue(payload?.under_construction),
+      public_trail_submissions: isTrue(payload?.public_trail_submissions),
     };
   } finally {
     clearTimeout(timeout);
@@ -59,8 +64,10 @@ export async function getPanachaikoSiteStatus(): Promise<PanachaikoSiteStatus> {
 
   try {
     return await refreshStatus();
-  } catch {
-    // Fail closed: if the CMS cannot be reached on a cold request, keep the public site protected.
-    return { under_construction: true, public_trail_submissions: false };
+  } catch (error) {
+    console.warn('[site-status] CMS status unavailable; keeping public site visible', error);
+    // Do not show the maintenance page because of a temporary CMS/network timeout.
+    // The maintenance page is shown only when the CMS explicitly returns under_construction=true.
+    return { under_construction: false, public_trail_submissions: false };
   }
 }

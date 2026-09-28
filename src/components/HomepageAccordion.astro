@@ -852,6 +852,25 @@ body{font-family:"Roboto",Arial,sans-serif}
   .news-board .home-news-card:first-child .home-news-title{font-size:12px}
 }
 
+
+/* ============ Text-only accordion menus ============ */
+.panel-icon,.panel-icon-row,.panel-count,.side-icon-row,.side-count{display:none!important}
+.panel-toggle{gap:7px!important}
+.panel-title{margin-top:2px;font-weight:900!important}
+@media (min-width:1301px){
+  .panel-title{font-size:22px!important;line-height:1.08}
+  .panel-summary{max-width:170px;font-size:13px;line-height:1.42}
+}
+@media (min-width:901px) and (max-width:1300px){
+  .panel-title{font-size:18px!important;line-height:1.1}
+}
+@media (max-width:640px){
+  .side-item{justify-content:center!important;gap:0!important}
+  .side-label{font-size:10px!important;font-weight:900!important;line-height:1.1}
+  .panel-title{font-size:15px!important}
+}
+.home-stats{display:none!important}
+
 </style>
 <div class="app">
   <div class="bg" aria-hidden="true"></div>
@@ -864,27 +883,13 @@ body{font-family:"Roboto",Arial,sans-serif}
   </button>
 
   <nav class="sidebar" id="sidebar" aria-label="Ενότητες">
-    <button class="side-item is-active" type="button" data-open="home" aria-controls="panel-home" aria-current="true">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10.5V21h14V10.5"/><path d="M9.5 21v-6h5v6"/></svg><span class="side-label">Αρχική</span>
-    </button>
-    <button class="side-item" type="button" data-open="news" aria-controls="panel-news">
-      <span class="side-icon-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h14v14H4Z"/><path d="M7 8h8M7 11h8M7 14h5"/><path d="M18 8h2v9a2 2 0 0 1-2 2"/></svg><strong class="side-count" data-panel-count="news">5</strong></span><span class="side-label">Νέα</span>
-    </button>
-    <button class="side-item" type="button" data-open="trails" aria-controls="panel-trails">
-      <span class="side-icon-row"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="m11 7-2 5 4 2 2-4 3 3"/><path d="m10 12-4 7M13 14l3 6M8 9l-3 2"/></svg><strong class="side-count" data-panel-count="trails">13</strong></span><span class="side-label">Μονοπάτια</span>
-    </button>
-    <button class="side-item" type="button" data-open="poi" aria-controls="panel-poi">
-      <span class="side-icon-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg><strong class="side-count" data-panel-count="poi">6</strong></span><span class="side-label">Σημεία Ενδιαφέροντος</span>
-    </button>
-    <button class="side-item" type="button" data-open="shelter" aria-controls="panel-shelter">
-      <span class="side-icon-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-7 9 7"/><path d="M5 10v11h14V10"/><path d="M8 14h8M8 17h8"/></svg><strong class="side-count" data-panel-count="shelter">2</strong></span><span class="side-label">Καταφύγια</span>
-    </button>
-    <button class="side-item" type="button" data-open="photos" aria-controls="panel-photos">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4l2-2h4l2 2h4v13H4Z"/><circle cx="12" cy="13.5" r="4"/></svg><span class="side-label">Φωτογραφίες</span>
-    </button>
-    <button class="side-item" type="button" data-open="video" aria-controls="panel-video">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="4"/><path d="m10 10 5 3-5 3Z"/></svg><span class="side-label">Βίντεο</span>
-    </button>
+    <button class="side-item is-active" type="button" data-open="home" aria-controls="panel-home" aria-current="true"><span class="side-label">Αρχική</span></button>
+    <button class="side-item" type="button" data-open="news" aria-controls="panel-news"><span class="side-label">Νέα</span></button>
+    <button class="side-item" type="button" data-open="trails" aria-controls="panel-trails"><span class="side-label">Μονοπάτια</span></button>
+    <button class="side-item" type="button" data-open="poi" aria-controls="panel-poi"><span class="side-label">Σημεία Ενδιαφέροντος</span></button>
+    <button class="side-item" type="button" data-open="shelter" aria-controls="panel-shelter"><span class="side-label">Καταφύγια</span></button>
+    <button class="side-item" type="button" data-open="photos" aria-controls="panel-photos"><span class="side-label">Φωτογραφίες</span></button>
+    <button class="side-item" type="button" data-open="video" aria-controls="panel-video"><span class="side-label">Βίντεο</span></button>
   </nav>
 
   <main class="accordion" id="accordion">
@@ -983,12 +988,6 @@ body{font-family:"Roboto",Arial,sans-serif}
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/></svg>
             <span>Άνοιγμα Χάρτη</span><b aria-hidden="true">→</b>
           </button>
-          <div class="home-stats" aria-label="Βασικά στοιχεία Panachaiko Trails">
-            <div class="home-stat"><strong>13</strong><small>Μονοπάτια</small></div>
-            <div class="home-stat"><strong>6</strong><small>Σημεία</small></div>
-            <div class="home-stat"><strong>2</strong><small>Καταφύγια</small></div>
-            <div class="home-stat"><strong>1.926 μ.</strong><small>Μέγιστο υψόμετρο</small></div>
-          </div>
         </div>
       </div>
       <div class="panel-index" aria-hidden="true">01</div>
@@ -999,10 +998,6 @@ body{font-family:"Roboto",Arial,sans-serif}
       data-bg-preview="https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Νέες-ψηφιακές-διαδρομές-300x225.jpg">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-news">
-        <span class="panel-icon-row">
-          <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h14v14H4Z"/><path d="M7 8h8M7 11h8M7 14h5"/><path d="M18 8h2v9a2 2 0 0 1-2 2"/></svg></span>
-          <strong class="panel-count" data-panel-count="news">5</strong>
-        </span>
         <span class="panel-title">Τελευταία Νέα</span>
         <span class="panel-summary">Τα 5 πιο πρόσφατα άρθρα από το blog</span>
         <span class="panel-arrow" aria-hidden="true">→</span>
@@ -1038,7 +1033,6 @@ body{font-family:"Roboto",Arial,sans-serif}
     <article class="acc-panel" id="panel-trails" data-panel="trails" aria-labelledby="title-trails" data-bg="https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=360&q=48">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-trails">
-        <span class="panel-icon-row"><span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="m11 7-2 5 4 2 2-4 3 3"/><path d="m10 12-4 7M13 14l3 6M8 9l-3 2"/></svg></span><strong class="panel-count" data-panel-count="trails">13</strong></span>
         <span class="panel-title">Μονοπάτια</span>
         <span class="panel-summary">Εξερευνήστε τις διαδρομές του Παναχαϊκού</span>
         <span class="panel-arrow" aria-hidden="true">→</span>
@@ -1055,7 +1049,6 @@ body{font-family:"Roboto",Arial,sans-serif}
     <article class="acc-panel" id="panel-poi" data-panel="poi" aria-labelledby="title-poi" data-bg="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=360&q=48">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-poi">
-        <span class="panel-icon-row"><span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg></span><strong class="panel-count" data-panel-count="poi">6</strong></span>
         <span class="panel-title">Σημεία Ενδιαφέροντος</span>
         <span class="panel-summary">Φύση, θέα και πολιτιστικά σημεία</span>
         <span class="panel-arrow" aria-hidden="true">→</span>
@@ -1072,7 +1065,6 @@ body{font-family:"Roboto",Arial,sans-serif}
     <article class="acc-panel" id="panel-shelter" data-panel="shelter" aria-labelledby="title-shelter" data-bg="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=360&q=48">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-shelter">
-        <span class="panel-icon-row"><span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-7 9 7"/><path d="M5 10v11h14V10"/><path d="M8 14h8M8 17h8"/></svg></span><strong class="panel-count" data-panel-count="shelter">2</strong></span>
         <span class="panel-title">Καταφύγια</span>
         <span class="panel-summary">Πληροφορίες για τα καταφύγια του βουνού</span>
         <span class="panel-arrow" aria-hidden="true">→</span>
@@ -1089,7 +1081,6 @@ body{font-family:"Roboto",Arial,sans-serif}
     <article class="acc-panel" id="panel-photos" data-panel="photos" aria-labelledby="title-photos" data-bg="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=360&q=48">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-photos">
-        <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4l2-2h4l2 2h4v13H4Z"/><circle cx="12" cy="13.5" r="4"/></svg></span>
         <span class="panel-title">Φωτογραφίες</span>
         <span class="panel-summary">Στιγμές από το Παναχαϊκό και τις διαδρομές του</span>
         <span class="panel-arrow" aria-hidden="true">→</span>
@@ -1106,7 +1097,6 @@ body{font-family:"Roboto",Arial,sans-serif}
     <article class="acc-panel" id="panel-video" data-panel="video" aria-labelledby="title-video" data-bg="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=360&q=48">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-video">
-        <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="4"/><path d="m10 10 5 3-5 3Z"/></svg></span>
         <span class="panel-title">Βίντεο</span>
         <span class="panel-summary">Δείτε το Παναχαϊκό σε κίνηση</span>
         <span class="panel-arrow" aria-hidden="true">→</span>

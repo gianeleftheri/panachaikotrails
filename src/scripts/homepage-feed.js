@@ -16,9 +16,6 @@
     const host = document.getElementById('newsPanelBody');
     if (!host) return;
     const items = Array.isArray(blog?.items) ? blog.items.slice(0, 5) : [];
-    document.querySelectorAll('[data-panel-count="news"]').forEach(node => {
-      node.textContent = String(items.length || 0);
-    });
     if (!items.length) return;
 
     const newsPanel = document.querySelector('.acc-panel[data-panel="news"]');
@@ -77,14 +74,6 @@
       cachedPanels = panels;
       renderHomeNews(data && data.blog ? data.blog : { items: [] });
       const totals = data && data.totals ? data.totals : {};
-      ['trails','poi','shelter'].forEach(id => {
-        const count = totals?.[id];
-        if (Number.isFinite(Number(count))) {
-          document.querySelectorAll('[data-panel-count="' + id + '"]').forEach(node => {
-            node.textContent = String(Number(count));
-          });
-        }
-      });
       ids.forEach(id => {
         const panel = panels[id];
         const el = document.querySelector('.acc-panel[data-panel="' + id + '"]');

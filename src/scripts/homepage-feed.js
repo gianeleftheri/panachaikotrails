@@ -68,7 +68,6 @@
         const panel = panels[id];
         const el = document.querySelector('.acc-panel[data-panel="' + id + '"]');
         // Keep the playful vector backgrounds fixed; CMS still provides all content/items.
-        }
         if (el && el.classList.contains('is-active')) renderFeed(id, panel);
       });
     })

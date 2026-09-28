@@ -16,7 +16,9 @@
     if (!value) return '';
     const map = {
       N:'Β', NNE:'ΒΒΑ', NE:'ΒΑ', ENE:'ΑΒΑ', E:'Α', ESE:'ΑΝΑ', SE:'ΝΑ', SSE:'ΝΝΑ',
-      S:'Ν', SSW:'ΝΝΔ', SW:'ΝΔ', WSW:'ΔΝΔ', W:'Δ', WNW:'ΔΒΔ', NW:'ΒΔ', NNW:'ΒΒΔ'
+      S:'Ν', SSW:'ΝΝΔ', SW:'ΝΔ', WSW:'ΔΝΔ', W:'Δ', WNW:'ΔΒΔ', NW:'ΒΔ', NNW:'ΒΒΔ',
+      North:'Β', South:'Ν', East:'Α', West:'Δ',
+      Northeast:'ΒΑ', Northwest:'ΒΔ', Southeast:'ΝΑ', Southwest:'ΝΔ'
     };
     return map[value] || value;
   };

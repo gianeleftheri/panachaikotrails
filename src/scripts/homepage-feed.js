@@ -29,6 +29,14 @@
     .then(data => {
       const panels = data && data.panels ? data.panels : {};
       cachedPanels = panels;
+      ['trails','poi','shelter'].forEach(id => {
+        const count = panels?.[id]?.count;
+        if (Number.isFinite(Number(count))) {
+          document.querySelectorAll('[data-panel-count="' + id + '"]').forEach(node => {
+            node.textContent = String(Number(count));
+          });
+        }
+      });
       ids.forEach(id => {
         const panel = panels[id];
         const el = document.querySelector('.acc-panel[data-panel="' + id + '"]');

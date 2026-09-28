@@ -871,11 +871,183 @@ body{font-family:"Roboto",Arial,sans-serif}
 }
 .home-stats{display:none!important}
 
+
+/* ============ Playful Illustrator theme · minimal graphic pass ============ */
+.playful-theme{
+  --ink:#0b2633;
+  --paper:#fffdf8;
+  --sun:#ffd900;
+  --pink:#ff4fa3;
+  --orange:#ff6a00;
+  --sky:#10c8e8;
+  --teal:#0aa9a6;
+  --violet:#635bff;
+  background:#f5f3ec;
+}
+.playful-theme::before{
+  background:#fffdf8!important;
+  border-bottom:6px solid #10c8e8!important;
+  box-shadow:0 5px 0 rgba(11,38,51,.08)!important;
+}
+.playful-theme .bg{background:#f5f3ec!important}
+.playful-theme .brand{color:var(--ink);top:10px;left:24px;gap:10px}
+.playful-theme .brand-mark{width:58px;height:48px}
+.playful-theme .brand-mark::before,.playful-theme .brand-mark::after{display:none!important}
+.playful-theme .brand-mark svg{display:block;width:100%;height:100%}
+.playful-theme .brand strong{font-size:20px;font-weight:900;letter-spacing:.015em;color:var(--ink)}
+.playful-theme .brand small{margin-top:1px;font-size:9.5px;font-weight:700;letter-spacing:.18em;color:#31515b}
+
+.playful-theme .map-callout{
+  top:14px;right:22px;min-height:48px;padding:8px 17px;
+  border:2px solid var(--ink)!important;border-radius:999px!important;
+  background:var(--sun)!important;color:var(--ink)!important;
+  box-shadow:4px 4px 0 var(--ink)!important;
+}
+.playful-theme .map-callout:hover{transform:translate(-1px,-1px)!important;box-shadow:6px 6px 0 var(--ink)!important}
+.playful-theme .map-callout svg{stroke:var(--ink)!important;stroke-width:2}
+.playful-theme .map-copy strong{font-weight:900}
+.playful-theme .map-copy small{color:#3f4d4f!important}
+
+.playful-theme .accordion{
+  top:82px!important;left:8px!important;right:8px!important;bottom:8px!important;
+  gap:8px!important;background:#f5f3ec!important;border-radius:16px!important;
+}
+.playful-theme .acc-panel{
+  min-width:118px!important;border:2px solid var(--ink)!important;border-radius:18px!important;
+  background:#fff!important;box-shadow:4px 4px 0 rgba(11,38,51,.16)!important;
+}
+.playful-theme .acc-panel::before{
+  background-size:cover!important;background-position:center!important;
+  filter:none!important;transform:scale(1.01)!important;
+}
+.playful-theme .acc-panel[data-panel="home"]::before{
+  background-image:url("/art/playful-home.svg")!important;
+  background-size:cover!important;background-position:center!important;
+}
+.playful-theme .panel-home-media{display:none!important}
+.playful-theme .panel-overlay{
+  background:linear-gradient(180deg,rgba(11,38,51,.08),rgba(11,38,51,.02) 48%,rgba(11,38,51,.58))!important;
+}
+.playful-theme .acc-panel.is-active .panel-overlay{opacity:.30!important}
+.playful-theme .panel-toggle{
+  padding:24px 15px 18px!important;
+  background:linear-gradient(180deg,rgba(11,38,51,.03),rgba(11,38,51,.16))!important;
+}
+.playful-theme .panel-title{
+  color:#fff!important;font-size:21px!important;font-weight:900!important;line-height:1.04!important;
+  letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.28)!important;
+}
+.playful-theme .panel-summary{
+  max-width:160px!important;color:rgba(255,255,255,.92)!important;font-size:12px!important;line-height:1.36!important;
+  text-shadow:0 1px 6px rgba(0,0,0,.28)
+}
+.playful-theme .panel-arrow{
+  width:40px;height:40px;border:2px solid #fff!important;background:rgba(11,38,51,.28)!important;color:#fff!important;
+  box-shadow:3px 3px 0 rgba(11,38,51,.38)
+}
+
+/* Active content: white illustrated card over the bright artwork. */
+.playful-theme .panel-content:not(#content-home){
+  color:var(--ink)!important;background:rgba(255,253,248,.96)!important;
+  border:2px solid var(--ink)!important;border-radius:20px!important;
+  box-shadow:8px 8px 0 var(--sun)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+.playful-theme .panel-content:not(#content-home) h2{color:var(--ink)!important;text-shadow:none!important}
+.playful-theme .panel-content:not(#content-home) p{color:#35505a!important}
+.playful-theme .eyebrow{color:#ef2f86!important}
+.playful-theme .panel-cta{
+  border:2px solid var(--ink)!important;background:var(--sun)!important;color:var(--ink)!important;
+  box-shadow:4px 4px 0 var(--ink)!important;font-weight:900!important;
+}
+.playful-theme .panel-cta:hover{background:#ffe83d!important;transform:translate(-1px,-1px)}
+.playful-theme .panel-feed-item{
+  border:1.5px solid rgba(11,38,51,.18)!important;background:#fff!important;
+}
+.playful-theme .panel-feed-title{color:var(--ink)!important}
+.playful-theme .panel-feed-meta{color:#647a80!important}
+.playful-theme .panel-feed-video-thumb{background:linear-gradient(145deg,#635bff,#ff4fa3)!important;border:0!important}
+
+/* News becomes editorial but still playful. */
+.playful-theme .news-board{
+  border:2px solid var(--ink)!important;background:#fff!important;
+  box-shadow:7px 7px 0 #ff4fa3!important;
+}
+.playful-theme .news-board-head{border-color:rgba(11,38,51,.12)!important}
+.playful-theme .news-board-head span{color:#ef2f86!important}
+.playful-theme .news-board-head h3{color:var(--ink)!important}
+.playful-theme .news-board-badge{
+  color:var(--ink)!important;background:#fff4a8!important;border:1.5px solid var(--ink)!important;
+}
+.playful-theme .news-board .home-news-card{
+  background:#fffdf8!important;border:1.5px solid rgba(11,38,51,.16)!important;
+}
+.playful-theme .news-board .home-news-card:first-child{
+  background:#eafcff!important;border-color:#10c8e8!important;
+}
+.playful-theme .home-news-title{color:var(--ink)!important}
+.playful-theme .home-news-excerpt{color:#486168!important}
+.playful-theme .home-news-date{color:#687d82!important}
+.playful-theme .home-news-read{color:#ef2f86!important}
+
+/* Weather: clean white cards with playful colored accents. */
+.playful-theme .accordion-weather-stack{gap:12px!important}
+.playful-theme .accordion-station{
+  background:#fffdf8!important;color:var(--ink)!important;
+  border:2px solid var(--ink)!important;border-radius:18px!important;
+  box-shadow:7px 7px 0 #10c8e8!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+.playful-theme .accordion-station[data-live-station="panachaiko"]{box-shadow:7px 7px 0 #ff4fa3!important}
+.playful-theme .accordion-station-place,
+.playful-theme .accordion-station-temp,
+.playful-theme .accordion-station-stat dd{color:var(--ink)!important}
+.playful-theme .accordion-station-place small,
+.playful-theme .accordion-station-live,
+.playful-theme .accordion-station-feels,
+.playful-theme .accordion-station-observed,
+.playful-theme .accordion-station-stat dt,
+.playful-theme .accordion-station-stat>span,
+.playful-theme .accordion-station-source{color:#60777e!important}
+.playful-theme .accordion-station-temp sup{color:#00aeca!important}
+.playful-theme .accordion-station-stat{border-color:rgba(11,38,51,.16)!important}
+.playful-theme .accordion-station-source{border-color:rgba(11,38,51,.12)!important}
+.playful-theme .accordion-station-source a{color:#007f92!important}
+.playful-theme .accordion-station-icon{filter:saturate(1.35)}
+.playful-theme .home-copy .eyebrow{color:#ffe13b!important;text-shadow:0 2px 8px rgba(0,0,0,.35)}
+.playful-theme #content-home .home-copy h2{color:#fff!important;text-shadow:0 3px 16px rgba(0,0,0,.42)}
+.playful-theme #content-home .home-copy p{color:#fff!important;text-shadow:0 2px 10px rgba(0,0,0,.38)}
+.playful-theme .home-map-cta{background:var(--sun)!important;color:var(--ink)!important}
+
+/* Route decoration uses the same playful palette. */
+.playful-theme .hero-route path{stroke:#ff4fa3!important;stroke-width:4!important;stroke-dasharray:11 10!important}
+.playful-theme .hero-route circle{fill:#fffdf8!important;stroke:#0b2633!important;stroke-width:3!important}
+.playful-theme .hero-route{opacity:.88!important;filter:drop-shadow(0 0 5px rgba(255,79,163,.20))!important}
+
+/* Hide obsolete desktop sidebar, keep mobile bottom nav minimal. */
+@media (min-width:641px){.playful-theme .sidebar{display:none!important}.playful-theme .accordion{left:8px!important}}
+@media (max-width:900px){
+  .playful-theme .acc-panel{min-width:84px!important}
+  .playful-theme .panel-title{font-size:16px!important}
+  .playful-theme .panel-summary{display:none!important}
+}
+@media (max-width:640px){
+  .playful-theme::before{height:64px!important;border-bottom-width:4px!important}
+  .playful-theme .brand{top:7px;left:10px}
+  .playful-theme .brand-mark{width:42px;height:34px}
+  .playful-theme .brand strong{font-size:13px}
+  .playful-theme .map-callout{top:7px;right:8px;min-height:40px;padding:6px 11px;box-shadow:3px 3px 0 var(--ink)!important}
+  .playful-theme .accordion{top:68px!important}
+  .playful-theme .sidebar{background:#fffdf8!important;border-color:var(--ink)!important}
+  .playful-theme .side-item{color:var(--ink)!important;border-color:rgba(11,38,51,.12)!important}
+  .playful-theme .side-item.is-active{background:#fff3a0!important;box-shadow:inset 0 4px 0 #ff4fa3!important}
+  .playful-theme .panel-title{font-size:15px!important}
+  .playful-theme .panel-content:not(#content-home){box-shadow:5px 5px 0 var(--sun)!important}
+}
+
 </style>
-<div class="app">
+<div class="app playful-theme">
   <div class="bg" aria-hidden="true"></div>
 
-  <h1 class="brand"><span class="brand-mark" aria-hidden="true"></span><span><strong>PANACHAIKO TRAILS</strong><small>ΦΥΣΗ • ΙΣΤΟΡΙΑ • ΕΜΠΕΙΡΙΕΣ</small></span></h1>
+  <h1 class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 74 58"><circle cx="55" cy="12" r="9" fill="#FFD900"/><path d="M3 50 22 18 41 50Z" fill="#0B2633"/><path d="M18 50 38 10 58 50Z" fill="#10C8E8"/><path d="M35 50 49 26 69 50Z" fill="#FF4FA3"/><path d="m35 50 8-14 8 14Z" fill="#FF6A00"/></svg></span><span><strong>PANACHAIKO TRAILS</strong><small>ΦΥΣΗ • ΙΣΤΟΡΙΑ • ΕΜΠΕΙΡΙΕΣ</small></span></h1>
 
   <button class="map-callout" id="mapCta" type="button">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/><circle cx="16.5" cy="9" r="1.8"/></svg>
@@ -994,8 +1166,7 @@ body{font-family:"Roboto",Arial,sans-serif}
     </article>
 
     <article class="acc-panel" id="panel-news" data-panel="news" aria-labelledby="title-news"
-      data-bg="https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Νέες-ψηφιακές-διαδρομές-768x576.jpg"
-      data-bg-preview="https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Νέες-ψηφιακές-διαδρομές-300x225.jpg">
+      data-bg="/art/playful-news.svg" data-bg-preview="/art/playful-news.svg">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-news">
         <span class="panel-title">Τελευταία Νέα</span>
@@ -1030,7 +1201,7 @@ body{font-family:"Roboto",Arial,sans-serif}
       <div class="panel-index" aria-hidden="true">02</div>
     </article>
 
-    <article class="acc-panel" id="panel-trails" data-panel="trails" aria-labelledby="title-trails" data-bg="https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=360&q=48">
+    <article class="acc-panel" id="panel-trails" data-panel="trails" aria-labelledby="title-trails" data-bg="/art/playful-trails.svg" data-bg-preview="/art/playful-trails.svg">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-trails">
         <span class="panel-title">Μονοπάτια</span>
@@ -1046,7 +1217,7 @@ body{font-family:"Roboto",Arial,sans-serif}
       </div>
       <div class="panel-index" aria-hidden="true">03</div>
     </article>
-    <article class="acc-panel" id="panel-poi" data-panel="poi" aria-labelledby="title-poi" data-bg="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=360&q=48">
+    <article class="acc-panel" id="panel-poi" data-panel="poi" aria-labelledby="title-poi" data-bg="/art/playful-poi.svg" data-bg-preview="/art/playful-poi.svg">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-poi">
         <span class="panel-title">Σημεία Ενδιαφέροντος</span>
@@ -1062,7 +1233,7 @@ body{font-family:"Roboto",Arial,sans-serif}
       </div>
       <div class="panel-index" aria-hidden="true">04</div>
     </article>
-    <article class="acc-panel" id="panel-shelter" data-panel="shelter" aria-labelledby="title-shelter" data-bg="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=360&q=48">
+    <article class="acc-panel" id="panel-shelter" data-panel="shelter" aria-labelledby="title-shelter" data-bg="/art/playful-shelter.svg" data-bg-preview="/art/playful-shelter.svg">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-shelter">
         <span class="panel-title">Καταφύγια</span>
@@ -1078,7 +1249,7 @@ body{font-family:"Roboto",Arial,sans-serif}
       </div>
       <div class="panel-index" aria-hidden="true">05</div>
     </article>
-    <article class="acc-panel" id="panel-photos" data-panel="photos" aria-labelledby="title-photos" data-bg="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=360&q=48">
+    <article class="acc-panel" id="panel-photos" data-panel="photos" aria-labelledby="title-photos" data-bg="/art/playful-photos.svg" data-bg-preview="/art/playful-photos.svg">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-photos">
         <span class="panel-title">Φωτογραφίες</span>
@@ -1094,7 +1265,7 @@ body{font-family:"Roboto",Arial,sans-serif}
       </div>
       <div class="panel-index" aria-hidden="true">06</div>
     </article>
-    <article class="acc-panel" id="panel-video" data-panel="video" aria-labelledby="title-video" data-bg="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=360&q=48">
+    <article class="acc-panel" id="panel-video" data-panel="video" aria-labelledby="title-video" data-bg="/art/playful-video.svg" data-bg-preview="/art/playful-video.svg">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-video">
         <span class="panel-title">Βίντεο</span>

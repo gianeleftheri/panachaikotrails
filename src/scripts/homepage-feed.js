@@ -18,16 +18,6 @@
     const items = Array.isArray(blog?.items) ? blog.items.slice(0, 5) : [];
     if (!items.length) return;
 
-    const newsPanel = document.querySelector('.acc-panel[data-panel="news"]');
-    if (newsPanel && items[0]?.image) {
-      const image = String(items[0].image);
-      newsPanel.dataset.bg = image;
-      if (newsPanel.classList.contains('is-active')) {
-        newsPanel.style.setProperty('--panel-bg', 'url("' + image.replace(/"/g, '%22') + '")');
-        newsPanel.dataset.bgLoaded = image;
-      }
-    }
-
     host.innerHTML = items.map(item => {
       const image = item.image
         ? '<img class="home-news-image" src="' + esc(item.image) + '" alt="" loading="lazy" decoding="async">'
@@ -77,34 +67,7 @@
       ids.forEach(id => {
         const panel = panels[id];
         const el = document.querySelector('.acc-panel[data-panel="' + id + '"]');
-        if (el && panel && panel.background_image) {
-          let bg = String(panel.background_image);
-          if (bg.includes('images.unsplash.com/')) {
-            bg = bg.replace(/([?&])w=(?:1800|1440)(?=&|$)/, '$1w=1024').replace(/([?&])q=(?:90|78)(?=&|$)/, '$1q=72');
-          }
-          el.dataset.bg = bg;
-          if (id !== 'home') {
-            const preview = bg.includes('images.unsplash.com/')
-              ? bg.replace(/([?&])w=(?:1800|1440|1024)(?=&|$)/, '$1w=360').replace(/([?&])q=(?:90|78|72)(?=&|$)/, '$1q=48')
-              : bg;
-            el.dataset.bgPreview = preview;
-            if (!el.classList.contains('is-active') && el.dataset.bgLoaded !== preview) {
-              el.style.setProperty('--panel-bg', 'url("' + preview.replace(/"/g, '%22') + '")');
-              el.dataset.bgLoaded = preview;
-            }
-          }
-
-          const isLegacyHomeDefault = id === 'home' && bg.includes('photo-1551632811-561732d1e306');
-          const isDefaultHome = id === 'home' && (el.dataset.defaultBg === bg || isLegacyHomeDefault);
-          if (id === 'home') el.classList.toggle('has-cms-bg', !isDefaultHome);
-
-          if (isDefaultHome) {
-            el.style.removeProperty('--panel-bg');
-            el.dataset.bgLoaded = bg;
-          } else if (el.classList.contains('is-active') && el.dataset.bgLoaded !== bg) {
-            el.style.setProperty('--panel-bg', 'url("' + bg.replace(/"/g, '%22') + '")');
-            el.dataset.bgLoaded = bg;
-          }
+        // Keep the playful vector backgrounds fixed; CMS still provides all content/items.
         }
         if (el && el.classList.contains('is-active')) renderFeed(id, panel);
       });

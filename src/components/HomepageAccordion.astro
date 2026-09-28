@@ -217,43 +217,27 @@ opacity:.92}
   .weather-head span{display:none}.accordion-station{padding:9px}.accordion-station-stats{grid-template-columns:repeat(4,1fr)}.accordion-station-stat{padding:5px}.accordion-station-source{display:none}
   .scene-home .sun{width:110px;height:110px;right:4%;top:10%}.hiker{left:46%;transform:scale(.58)}.hut{display:none}
 }
-/* ============ Raster illustration pass · closer to approved mockup ============ */
+/* ============ Dedicated PNG artwork ============ */
 .panel-scene{
-  background-image:url('/art/panachaiko-sprite.webp')!important;
   background-repeat:no-repeat!important;
+  background-size:cover!important;
+  background-position:center!important;
   background-color:#12c8e8!important;
 }
 .panel-scene>*{display:none!important}
 .panel-scene::before,.panel-scene::after{content:none!important}
 
 .scene-home{
-  background-size:221.6% 100%!important;
-  background-position:0 50%!important;
+  background-image:url('/art/png/home.png')!important;
+  background-size:cover!important;
+  background-position:center!important;
 }
-.panel-trails .panel-scene{
-  background-size:1133.2% 100%!important;
-  background-position:49.85% 50%!important;
-}
-.panel-poi .panel-scene{
-  background-size:1133.2% 100%!important;
-  background-position:59.87% 50%!important;
-}
-.panel-shelter .panel-scene{
-  background-size:1133.2% 100%!important;
-  background-position:69.89% 50%!important;
-}
-.panel-photos .panel-scene{
-  background-size:1133.2% 100%!important;
-  background-position:79.91% 50%!important;
-}
-.panel-video .panel-scene{
-  background-size:1133.2% 100%!important;
-  background-position:89.94% 50%!important;
-}
-.panel-news .panel-scene{
-  background-size:1133.2% 100%!important;
-  background-position:99.96% 50%!important;
-}
+.panel-trails .panel-scene{background-image:url('/art/png/trails.png')!important}
+.panel-poi .panel-scene{background-image:url('/art/png/poi.png')!important}
+.panel-shelter .panel-scene{background-image:url('/art/png/shelter.png')!important}
+.panel-photos .panel-scene{background-image:url('/art/png/photos.png')!important}
+.panel-video .panel-scene{background-image:url('/art/png/video.png')!important}
+.panel-news .panel-scene{background-image:url('/art/png/news.png')!important}
 
 .home-copy{
   left:4.6%!important;

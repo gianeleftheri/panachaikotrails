@@ -397,6 +397,35 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sa
 #content-home .wx-stat{padding:8px 8px 7px}
 #content-home .wx-stat dd{font-size:21px}
 #content-home .wx-hours{margin-top:9px;padding-top:8px}
+.accordion-weather-stack{width:min(610px,56%);display:grid;gap:8px}
+.accordion-station{padding:10px 13px 9px;border:1px solid rgba(69,215,223,.42);border-radius:14px;background:linear-gradient(155deg,rgba(4,58,67,.96),rgba(4,47,56,.94));box-shadow:0 14px 34px rgba(0,18,23,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.accordion-station[data-live-station="panachaiko"]{background:linear-gradient(155deg,rgba(5,70,79,.97),rgba(4,46,54,.94))}
+.accordion-station.is-stale{border-color:rgba(245,183,75,.58)}
+.accordion-station.is-unavailable{opacity:.72}
+.accordion-station-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.accordion-station-place{display:flex;align-items:baseline;gap:6px;font-size:11px;font-weight:900;color:#fff}
+.accordion-station-place small{font-size:8.5px;font-weight:650;color:#b8d7da}
+.accordion-station-live{display:flex;align-items:center;gap:6px;font-size:8.5px;color:#c5dcde;white-space:nowrap}
+.accordion-station-dot{width:7px;height:7px;border-radius:50%;background:#3ee07f;box-shadow:0 0 0 0 rgba(62,224,127,.50);animation:accordionStationPulse 2s infinite}
+.accordion-station.is-stale .accordion-station-dot{background:#f5b74b;animation:none}
+.accordion-station.is-unavailable .accordion-station-dot{background:#ef6a68;animation:none}
+@keyframes accordionStationPulse{70%{box-shadow:0 0 0 7px rgba(62,224,127,0)}}
+.accordion-station-main{display:grid;grid-template-columns:40px auto 1fr;align-items:center;gap:9px;margin:5px 0 6px}
+.accordion-station-icon{width:38px;height:38px}.accordion-station-icon svg{width:100%;height:100%;display:block}
+.accordion-station-temp{font-size:34px;font-weight:900;line-height:.86;letter-spacing:-.05em;color:#fff}
+.accordion-station-temp sup{font-size:.38em;color:#69e8ef;vertical-align:.95em}
+.accordion-station-feels{font-size:9px;font-weight:750;color:#d4e7e8}
+.accordion-station-observed{margin-top:2px;font-size:7px;line-height:1.2;color:#9fbfc2}
+.accordion-station-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0}
+.accordion-station-stat{padding:4px 7px;border-left:1px solid rgba(255,255,255,.12)}
+.accordion-station-stat:first-child{padding-left:0;border-left:0}.accordion-station-stat:last-child{padding-right:0}
+.accordion-station-stat dt{font-size:6.8px;letter-spacing:.04em;text-transform:uppercase;color:#9fbfc2}
+.accordion-station-stat dd{margin:2px 0 0;font-size:11px;font-weight:850;white-space:nowrap;color:#fff}
+.accordion-station-stat dd small{font-size:.54em;margin-left:2px;color:#a9c7ca}
+.accordion-station-stat>span{display:block;margin-top:1px;font-size:6.8px;color:#9fbfc2}
+.accordion-station-source{display:flex;justify-content:space-between;gap:10px;margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.08);font-size:7px;color:#91b6b9}
+.accordion-station-source a{color:#67e6ed;font-weight:700;text-decoration:none}
+.accordion-station-source a:hover{text-decoration:underline}
 .home-copy{width:min(650px,62%);display:flex;flex-direction:column;align-items:flex-start}
 .home-copy .eyebrow{font-size:10px;font-weight:900;letter-spacing:.3em;color:#4de4eb;margin-bottom:12px}
 #content-home .home-copy h2{display:block;margin:0;color:#fff;font-size:clamp(48px,4.9vw,78px);font-weight:900;line-height:.91;letter-spacing:-.055em;text-shadow:0 6px 30px rgba(0,0,0,.28)}
@@ -418,7 +447,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sa
   .panel-icon{width:36px;height:36px}
   .panel-title{font-size:14px}
   .acc-panel{min-width:84px}
-  #content-home .wx{width:min(560px,62%)}
+  .accordion-weather-stack{width:min(560px,62%)}
   .home-copy{width:min(580px,67%)}
   .home-stat{min-width:105px;padding:0 12px}
 }
@@ -429,9 +458,16 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sa
   .panel-summary,.panel-arrow,.panel-icon{display:none}
   .panel-toggle{display:flex;padding:18px 0 0;background:transparent}
   .panel-title{font-size:12px}
-  #content-home .wx{width:min(540px,72%)}
+  .accordion-weather-stack{width:min(540px,72%)}
   .home-copy{width:min(540px,72%)}
   #content-home .home-copy h2{font-size:48px}
+}
+@media (min-width:641px) and (max-height:780px){
+  .accordion-station-source{display:none}
+  .accordion-station{padding-top:8px;padding-bottom:7px}
+  .accordion-station-main{margin:3px 0 4px}
+  .home-copy>p{display:none}
+  .home-stats{margin-top:10px}
 }
 @media (min-width:641px){
   .sidebar{display:none}
@@ -455,12 +491,17 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sa
   .panel-title{writing-mode:horizontal-tb;transform:none!important;margin:0;font-size:13px}
   .acc-panel.is-active .panel-toggle{display:none}
   #content-home{left:12px;right:12px;top:10px;bottom:12px}
-  #content-home .wx{width:100%;padding:11px 12px 9px}
-  #content-home .wx-main{margin:5px 0 7px}
-  #content-home .wx-icon{width:48px;height:48px}
-  #content-home .wx-temp{font-size:54px}
-  #content-home .wx-cond{font-size:15px}
-  #content-home .wx-hours{display:none}
+  .accordion-weather-stack{width:100%;gap:6px}
+  .accordion-station{padding:8px 10px 7px;border-radius:12px}
+  .accordion-station-main{grid-template-columns:32px auto 1fr;gap:7px;margin:3px 0 4px}
+  .accordion-station-icon{width:30px;height:30px}
+  .accordion-station-temp{font-size:28px}
+  .accordion-station-stats{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .accordion-station-stat{padding:3px 4px}
+  .accordion-station-stat dt{font-size:6px}
+  .accordion-station-stat dd{font-size:9px}
+  .accordion-station-source{display:none}
+  .accordion-station-observed{display:none}
   .home-copy{width:100%}
   #content-home .home-copy h2{display:block;font-size:34px;line-height:.94;margin-top:4px}
   .home-copy>p{display:none}
@@ -550,33 +591,50 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sa
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="true" aria-controls="content-home" tabindex="-1"><span class="panel-title">Αρχική</span></button>
       <div class="panel-content" id="content-home">
-        <section class="wx is-loading" id="wx" aria-labelledby="wx-title" aria-busy="true">
-          <div class="wx-head">
-            <span class="wx-place" id="wx-title">Καιρός τώρα · Παναχαϊκό <small id="wx-elev"></small></span>
-            <span class="wx-live"><span class="wx-dot" aria-hidden="true"></span><span id="wx-updated">Φόρτωση…</span></span>
+        <div class="accordion-weather-stack" aria-label="Σύγκριση καιρού Πάτρας και Παναχαϊκού">
+        <section class="accordion-station" data-live-station="patra" aria-label="Ζωντανός καιρός Πάτρα">
+          <div class="accordion-station-head">
+            <div class="accordion-station-place"><span data-station-name>Πάτρα</span><small data-station-elev>· 60 μ.</small></div>
+            <div class="accordion-station-live"><span class="accordion-station-dot" aria-hidden="true"></span><span data-station-status>Φόρτωση…</span></div>
           </div>
-          <div class="wx-main">
-            <div class="wx-icon" id="wx-icon" aria-hidden="true"></div>
-            <div class="wx-temp" id="wx-temp">--<sup>°C</sup></div>
-            <div class="wx-desc">
-              <div class="wx-cond" id="wx-cond">Καιρός</div>
-              <div class="wx-sub" id="wx-sub"></div>
+          <div class="accordion-station-main">
+            <div class="accordion-station-icon" data-station-icon aria-hidden="true"></div>
+            <div class="accordion-station-temp" data-station-temp>–<sup>°C</sup></div>
+            <div>
+              <div class="accordion-station-feels" data-station-feels>Live μέτρηση</div>
+              <div class="accordion-station-observed" data-station-observed></div>
             </div>
           </div>
-          <dl class="wx-stats">
-            <div class="wx-stat"><dt>Υγρασία</dt><dd id="wx-hum">--</dd><dd class="wx-note" id="wx-cloud"></dd></div>
-            <div class="wx-stat" id="wx-wind-box"><dt>Άνεμος</dt><dd id="wx-wind">--</dd><dd class="wx-note" id="wx-wind-note"></dd></div>
-            <div class="wx-stat" id="wx-prec-box"><dt id="wx-prec-label">Βροχή</dt><dd id="wx-prec">--</dd><dd class="wx-note" id="wx-prec-note"></dd></div>
-            <div class="wx-stat"><dt>Πίεση</dt><dd id="wx-pres">--</dd><dd class="wx-note" id="wx-pres-note">hPa</dd></div>
+          <dl class="accordion-station-stats">
+            <div class="accordion-station-stat"><dt>Υγρασία</dt><dd data-station-hum>–</dd></div>
+            <div class="accordion-station-stat"><dt>Άνεμος</dt><dd data-station-wind>–</dd><span data-station-wind-dir></span></div>
+            <div class="accordion-station-stat"><dt>Βροχή σήμερα</dt><dd data-station-rain>–</dd></div>
+            <div class="accordion-station-stat"><dt>Πίεση</dt><dd data-station-pressure>–</dd></div>
           </dl>
-          <div class="wx-hours" id="wx-hours" aria-label="Επόμενες ώρες"></div>
-          <div class="wx-alert" id="wx-alert" role="note" hidden></div>
-          <div class="wx-foot">
-            <span id="wx-source">Πηγή: —</span>
-            <a class="wx-more" href="https://www.ventusky.com/el/38.228;21.788" target="_blank" rel="noopener">Χάρτης καιρού (Ventusky) ↗</a>
-          </div>
-          <span class="sr-only" aria-live="polite" id="wx-sr"></span>
+          <div class="accordion-station-source"><span>Πηγή</span><a data-station-source href="#" target="_blank" rel="noopener">MeteoPatras</a></div>
         </section>
+        <section class="accordion-station" data-live-station="panachaiko" aria-label="Ζωντανός καιρός Παναχαϊκό">
+          <div class="accordion-station-head">
+            <div class="accordion-station-place"><span data-station-name>Παναχαϊκό</span><small data-station-elev>· 1.588 μ.</small></div>
+            <div class="accordion-station-live"><span class="accordion-station-dot" aria-hidden="true"></span><span data-station-status>Φόρτωση…</span></div>
+          </div>
+          <div class="accordion-station-main">
+            <div class="accordion-station-icon" data-station-icon aria-hidden="true"></div>
+            <div class="accordion-station-temp" data-station-temp>–<sup>°C</sup></div>
+            <div>
+              <div class="accordion-station-feels" data-station-feels>Live μέτρηση</div>
+              <div class="accordion-station-observed" data-station-observed></div>
+            </div>
+          </div>
+          <dl class="accordion-station-stats">
+            <div class="accordion-station-stat"><dt>Υγρασία</dt><dd data-station-hum>–</dd></div>
+            <div class="accordion-station-stat"><dt>Άνεμος</dt><dd data-station-wind>–</dd><span data-station-wind-dir></span></div>
+            <div class="accordion-station-stat"><dt>Βροχή σήμερα</dt><dd data-station-rain>–</dd></div>
+            <div class="accordion-station-stat"><dt>Πίεση</dt><dd data-station-pressure>–</dd></div>
+          </dl>
+          <div class="accordion-station-source"><span>Πηγή</span><a data-station-source href="#" target="_blank" rel="noopener">ΕΑΑ / meteo.gr</a></div>
+        </section>
+        </div>
         <div class="home-copy">
           <div class="eyebrow">PANACHAIKO TRAILS</div>
           <h2 id="title-home">Ανακαλύψτε<br/>το Παναχαϊκό</h2>
@@ -688,4 +746,4 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sa
 </div>
 <script src="../scripts/homepage-accordion.js"></script>
 <script src="../scripts/homepage-feed.js"></script>
-<script src="../scripts/homepage-weather.js"></script>
+<script src="../scripts/homepage-dual-weather.js"></script>

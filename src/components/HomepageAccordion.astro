@@ -684,6 +684,174 @@ body{font-family:"Roboto",Arial,sans-serif}
   #content-home .home-news-placeholder p{font-size:9.5px;line-height:1.32}
 }
 
+
+/* ============ Dedicated News panel + wider accordion menu ============ */
+@media (min-width:1301px){
+  .acc-panel{min-width:124px}
+  .panel-toggle{padding:28px 20px 22px;gap:12px}
+  .panel-title{font-size:20px!important;font-weight:900!important;line-height:1.08}
+  .panel-summary{font-size:12.5px;line-height:1.4}
+  .panel-icon{width:46px;height:46px}
+  .panel-icon svg{width:29px;height:29px}
+  .panel-icon-row{gap:11px}
+  .panel-count{min-width:40px;height:40px;padding:0 10px;font-size:23px!important;font-weight:900}
+}
+@media (min-width:901px) and (max-width:1300px){
+  .acc-panel{min-width:100px!important}
+  .panel-toggle{padding:24px 15px 18px!important;gap:9px}
+  .panel-title{font-size:16px!important;font-weight:900!important;line-height:1.08}
+  .panel-icon{display:grid!important;width:38px!important;height:38px!important}
+  .panel-icon svg{width:24px!important;height:24px!important}
+  .panel-count{min-width:34px!important;height:34px!important;padding:0 8px!important;font-size:18px!important;font-weight:900}
+}
+@media (min-width:641px) and (max-width:900px){
+  .panel-title{font-size:14px!important;font-weight:900!important}
+}
+@media (max-width:640px){
+  .panel-title{font-size:15px!important;font-weight:900!important}
+  .panel-count{font-size:16px!important;font-weight:900!important}
+  .side-label{font-size:9px;font-weight:800}
+}
+
+/* Home goes back to its own full-width composition. */
+@media (min-width:641px){
+  .acc-panel[data-panel="home"].is-active{flex-grow:7.8}
+  #content-home{
+    display:flex!important;
+    flex-direction:column;
+    justify-content:space-between;
+    align-items:flex-start;
+  }
+  #content-home .accordion-weather-stack{
+    position:relative;
+    width:min(860px,78%)!important;
+    max-width:860px!important;
+  }
+  #content-home .home-copy{
+    width:min(820px,72%)!important;
+    max-width:820px!important;
+    align-self:flex-start;
+  }
+}
+
+/* News panel. */
+.acc-panel[data-panel="news"]::before{background-position:center 48%}
+.news-panel-content{
+  width:min(1040px,calc(100% - 64px))!important;
+  max-width:none!important;
+}
+.news-board{
+  margin-top:20px;
+  padding:16px;
+  border:1px solid rgba(69,215,223,.34);
+  border-radius:18px;
+  background:linear-gradient(160deg,rgba(4,58,67,.96),rgba(3,42,50,.92));
+  box-shadow:0 18px 48px rgba(0,18,23,.24);
+}
+.news-board-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:12px;
+  padding-bottom:11px;
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+.news-board-head span{
+  display:block;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.18em;
+  color:#55e4eb;
+}
+.news-board-head h3{
+  margin:4px 0 0;
+  font-size:23px;
+  line-height:1.05;
+  color:#fff;
+}
+.news-board-badge{
+  flex:none;
+  padding:7px 10px;
+  border:1px solid rgba(69,215,223,.34);
+  border-radius:999px;
+  font-size:10px;
+  font-weight:800;
+  color:#c8eff1;
+  background:rgba(5,76,85,.48);
+}
+.news-board-body{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:9px;
+  max-height:none!important;
+  overflow:visible!important;
+}
+.news-board .home-news-card{
+  display:grid;
+  grid-template-columns:112px minmax(0,1fr);
+  gap:13px;
+  align-items:center;
+  padding:10px;
+  border:1px solid rgba(69,215,223,.18);
+  border-radius:14px;
+  background:rgba(3,35,42,.34);
+}
+.news-board .home-news-card:first-child{
+  grid-template-columns:150px minmax(0,1fr);
+  padding:12px;
+  border-color:rgba(69,215,223,.34);
+  background:linear-gradient(120deg,rgba(8,83,93,.55),rgba(3,35,42,.38));
+}
+.news-board .home-news-image{
+  width:112px;
+  height:78px;
+  border-radius:11px;
+  object-fit:cover;
+}
+.news-board .home-news-card:first-child .home-news-image{
+  width:150px;
+  height:104px;
+}
+.news-board .home-news-date{font-size:10px}
+.news-board .home-news-title{
+  font-size:15px;
+  line-height:1.25;
+  -webkit-line-clamp:2;
+}
+.news-board .home-news-card:first-child .home-news-title{font-size:18px}
+.news-board .home-news-excerpt{
+  margin-top:5px;
+  font-size:11px;
+  line-height:1.42;
+  -webkit-line-clamp:2;
+}
+.news-board .home-news-read{
+  margin-top:7px;
+  font-size:10px;
+}
+@media (max-width:900px){
+  .news-panel-content{width:calc(100% - 36px)!important}
+  .news-board .home-news-card,
+  .news-board .home-news-card:first-child{grid-template-columns:82px minmax(0,1fr)}
+  .news-board .home-news-image,
+  .news-board .home-news-card:first-child .home-news-image{width:82px;height:64px}
+  .news-board .home-news-card:first-child .home-news-title{font-size:14px}
+  .news-board .home-news-excerpt{display:none}
+}
+@media (max-width:640px){
+  .news-panel-content{width:calc(100% - 24px)!important}
+  .news-board{margin-top:12px;padding:10px;border-radius:14px}
+  .news-board-head h3{font-size:18px}
+  .news-board-badge{font-size:9px;padding:5px 8px}
+  .news-board .home-news-card,
+  .news-board .home-news-card:first-child{grid-template-columns:68px minmax(0,1fr);padding:7px}
+  .news-board .home-news-image,
+  .news-board .home-news-card:first-child .home-news-image{width:68px;height:54px}
+  .news-board .home-news-title,
+  .news-board .home-news-card:first-child .home-news-title{font-size:12px}
+}
+
 </style>
 <div class="app">
   <div class="bg" aria-hidden="true"></div>
@@ -698,6 +866,9 @@ body{font-family:"Roboto",Arial,sans-serif}
   <nav class="sidebar" id="sidebar" aria-label="Ενότητες">
     <button class="side-item is-active" type="button" data-open="home" aria-controls="panel-home" aria-current="true">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10.5V21h14V10.5"/><path d="M9.5 21v-6h5v6"/></svg><span class="side-label">Αρχική</span>
+    </button>
+    <button class="side-item" type="button" data-open="news" aria-controls="panel-news">
+      <span class="side-icon-row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h14v14H4Z"/><path d="M7 8h8M7 11h8M7 14h5"/><path d="M18 8h2v9a2 2 0 0 1-2 2"/></svg><strong class="side-count" data-panel-count="news">5</strong></span><span class="side-label">Νέα</span>
     </button>
     <button class="side-item" type="button" data-open="trails" aria-controls="panel-trails">
       <span class="side-icon-row"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="m11 7-2 5 4 2 2-4 3 3"/><path d="m10 12-4 7M13 14l3 6M8 9l-3 2"/></svg><strong class="side-count" data-panel-count="trails">13</strong></span><span class="side-label">Μονοπάτια</span>
@@ -803,24 +974,6 @@ body{font-family:"Roboto",Arial,sans-serif}
           <div class="accordion-station-source"><span>Πηγή</span><a data-station-source href="#" target="_blank" rel="noopener">ΕΑΑ / meteo.gr</a></div>
         </section>
         </div>
-        <aside class="home-news" id="homeNews" aria-labelledby="home-news-title">
-          <div class="home-news-head">
-            <div>
-              <span class="home-news-kicker">ΤΕΛΕΥΤΑΙΑ ΝΕΑ</span>
-              <h3 id="home-news-title">Από το blog</h3>
-            </div>
-            <span class="home-news-mark" aria-hidden="true">↗</span>
-          </div>
-          <div class="home-news-body" id="homeNewsBody" aria-live="polite">
-            <div class="home-news-placeholder">
-              <div class="home-news-placeholder-media" aria-hidden="true"></div>
-              <div>
-                <strong>Τα νέα του Παναχαϊκού θα εμφανίζονται εδώ</strong>
-                <p>Μόλις δημοσιευτεί νέο άρθρο στο blog, θα εμφανίζεται αυτόματα με φωτογραφία και σύντομη εισαγωγή.</p>
-              </div>
-            </div>
-          </div>
-        </aside>
         <div class="home-copy">
           <div class="eyebrow">PANACHAIKO TRAILS</div>
           <h2 id="title-home">Ανακαλύψτε<br/>το Παναχαϊκό</h2>
@@ -840,6 +993,48 @@ body{font-family:"Roboto",Arial,sans-serif}
       </div>
       <div class="panel-index" aria-hidden="true">01</div>
     </article>
+
+    <article class="acc-panel" id="panel-news" data-panel="news" aria-labelledby="title-news"
+      data-bg="https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Νέες-ψηφιακές-διαδρομές-768x576.jpg"
+      data-bg-preview="https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Νέες-ψηφιακές-διαδρομές-300x225.jpg">
+      <div class="panel-overlay" aria-hidden="true"></div>
+      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-news">
+        <span class="panel-icon-row">
+          <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h14v14H4Z"/><path d="M7 8h8M7 11h8M7 14h5"/><path d="M18 8h2v9a2 2 0 0 1-2 2"/></svg></span>
+          <strong class="panel-count" data-panel-count="news">5</strong>
+        </span>
+        <span class="panel-title">Τελευταία Νέα</span>
+        <span class="panel-summary">Τα 5 πιο πρόσφατα άρθρα από το blog</span>
+        <span class="panel-arrow" aria-hidden="true">→</span>
+      </button>
+
+      <div class="panel-content news-panel-content" id="content-news" inert>
+        <div class="eyebrow">PANACHAIKO TRAILS · BLOG</div>
+        <h2 id="title-news">Τελευταία Νέα</h2>
+        <p>Νέα, ιστορίες, διαδρομές και χρήσιμες πληροφορίες από το Παναχαϊκό.</p>
+
+        <section class="news-board" aria-labelledby="news-board-title">
+          <div class="news-board-head">
+            <div>
+              <span>ΤΕΛΕΥΤΑΙΑ ΝΕΑ</span>
+              <h3 id="news-board-title">Από το blog</h3>
+            </div>
+            <div class="news-board-badge">5 άρθρα</div>
+          </div>
+          <div class="home-news-body news-board-body" id="newsPanelBody" aria-live="polite">
+            <div class="home-news-placeholder">
+              <div class="home-news-placeholder-media" aria-hidden="true"></div>
+              <div>
+                <strong>Φόρτωση τελευταίων άρθρων…</strong>
+                <p>Τα πιο πρόσφατα νέα από το blog θα εμφανιστούν εδώ.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="panel-index" aria-hidden="true">02</div>
+    </article>
+
     <article class="acc-panel" id="panel-trails" data-panel="trails" aria-labelledby="title-trails" data-bg="https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=360&q=48">
       <div class="panel-overlay" aria-hidden="true"></div>
       <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-trails">
@@ -855,7 +1050,7 @@ body{font-family:"Roboto",Arial,sans-serif}
         <div class="panel-feed" id="feed-trails" aria-live="polite"></div>
         <button class="panel-cta" type="button" data-demo="Μονοπάτια">Εξερεύνηση <span aria-hidden="true">→</span></button>
       </div>
-      <div class="panel-index" aria-hidden="true">02</div>
+      <div class="panel-index" aria-hidden="true">03</div>
     </article>
     <article class="acc-panel" id="panel-poi" data-panel="poi" aria-labelledby="title-poi" data-bg="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=360&q=48">
       <div class="panel-overlay" aria-hidden="true"></div>
@@ -872,7 +1067,7 @@ body{font-family:"Roboto",Arial,sans-serif}
         <div class="panel-feed" id="feed-poi" aria-live="polite"></div>
         <button class="panel-cta" type="button" data-demo="Σημεία Ενδιαφέροντος">Εξερεύνηση <span aria-hidden="true">→</span></button>
       </div>
-      <div class="panel-index" aria-hidden="true">03</div>
+      <div class="panel-index" aria-hidden="true">04</div>
     </article>
     <article class="acc-panel" id="panel-shelter" data-panel="shelter" aria-labelledby="title-shelter" data-bg="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=360&q=48">
       <div class="panel-overlay" aria-hidden="true"></div>
@@ -889,7 +1084,7 @@ body{font-family:"Roboto",Arial,sans-serif}
         <div class="panel-feed" id="feed-shelter" aria-live="polite"></div>
         <button class="panel-cta" type="button" data-demo="Καταφύγια">Εξερεύνηση <span aria-hidden="true">→</span></button>
       </div>
-      <div class="panel-index" aria-hidden="true">04</div>
+      <div class="panel-index" aria-hidden="true">05</div>
     </article>
     <article class="acc-panel" id="panel-photos" data-panel="photos" aria-labelledby="title-photos" data-bg="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=360&q=48">
       <div class="panel-overlay" aria-hidden="true"></div>
@@ -906,7 +1101,7 @@ body{font-family:"Roboto",Arial,sans-serif}
         <div class="panel-feed" id="feed-photos" aria-live="polite"></div>
         <button class="panel-cta" type="button" data-demo="Φωτογραφίες">Εξερεύνηση <span aria-hidden="true">→</span></button>
       </div>
-      <div class="panel-index" aria-hidden="true">05</div>
+      <div class="panel-index" aria-hidden="true">06</div>
     </article>
     <article class="acc-panel" id="panel-video" data-panel="video" aria-labelledby="title-video" data-bg="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1024&q=72" data-bg-preview="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=360&q=48">
       <div class="panel-overlay" aria-hidden="true"></div>
@@ -923,7 +1118,7 @@ body{font-family:"Roboto",Arial,sans-serif}
         <div class="panel-feed" id="feed-video" aria-live="polite"></div>
         <button class="panel-cta" type="button" data-demo="Βίντεο">Εξερεύνηση <span aria-hidden="true">→</span></button>
       </div>
-      <div class="panel-index" aria-hidden="true">06</div>
+      <div class="panel-index" aria-hidden="true">07</div>
     </article>
   </main>
 

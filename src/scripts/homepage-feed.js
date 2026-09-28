@@ -13,10 +13,23 @@
   };
 
   const renderHomeNews = blog => {
-    const host = document.getElementById('homeNewsBody');
+    const host = document.getElementById('newsPanelBody');
     if (!host) return;
     const items = Array.isArray(blog?.items) ? blog.items.slice(0, 5) : [];
+    document.querySelectorAll('[data-panel-count="news"]').forEach(node => {
+      node.textContent = String(items.length || 0);
+    });
     if (!items.length) return;
+
+    const newsPanel = document.querySelector('.acc-panel[data-panel="news"]');
+    if (newsPanel && items[0]?.image) {
+      const image = String(items[0].image);
+      newsPanel.dataset.bg = image;
+      if (newsPanel.classList.contains('is-active')) {
+        newsPanel.style.setProperty('--panel-bg', 'url("' + image.replace(/"/g, '%22') + '")');
+        newsPanel.dataset.bgLoaded = image;
+      }
+    }
 
     host.innerHTML = items.map(item => {
       const image = item.image

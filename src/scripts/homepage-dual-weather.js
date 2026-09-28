@@ -12,6 +12,24 @@
     ? '–'
     : Number(value).toLocaleString('el-GR', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
+  const formatObserved = value => {
+    if (!value) return '';
+    const raw = String(value).trim();
+
+    const dm = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}:\d{2})/);
+    if (dm) return dm[1].padStart(2,'0') + '/' + dm[2].padStart(2,'0') + ' · ' + dm[4];
+
+    const parsed = Date.parse(raw);
+    if (Number.isFinite(parsed)) {
+      return new Intl.DateTimeFormat('el-GR', {
+        day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit',
+        hour12:false, timeZone:'Europe/Athens'
+      }).format(new Date(parsed)).replace(',', ' ·');
+    }
+
+    return raw.replace(/\s+[+-]\d{4}$/, '');
+  };
+
   const windName = value => {
     if (!value) return '';
     const map = {
@@ -58,7 +76,7 @@
     status.dataset.state = station.status;
 
     const observed = q('[data-station-observed]');
-    observed.textContent = station.observed ? 'Ενημέρωση: ' + station.observed : '';
+    observed.textContent = station.observed ? 'Ενημέρωση ' + formatObserved(station.observed) : '';
 
     const source = q('[data-station-source]');
     source.href = station.sourceUrl;

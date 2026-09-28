@@ -34,6 +34,9 @@ const description = underConstruction
     <meta name="robots" content={underConstruction ? 'noindex,nofollow' : 'index,follow'} />
     <meta name="theme-color" content={underConstruction ? '#081711' : '#063a43'} />
     {homeHero && <link rel="preconnect" href="https://cms.panachaikotrails.gr" crossorigin />}
+    {!underConstruction && <link rel="preconnect" href="https://fonts.googleapis.com" />}
+    {!underConstruction && <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />}
+    {!underConstruction && <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;900&display=swap" />}
     {homeHero && (
       <link
         rel="preload"

@@ -29,8 +29,9 @@
     .then(data => {
       const panels = data && data.panels ? data.panels : {};
       cachedPanels = panels;
+      const totals = data && data.totals ? data.totals : {};
       ['trails','poi','shelter'].forEach(id => {
-        const count = panels?.[id]?.count;
+        const count = totals?.[id];
         if (Number.isFinite(Number(count))) {
           document.querySelectorAll('[data-panel-count="' + id + '"]').forEach(node => {
             node.textContent = String(Number(count));

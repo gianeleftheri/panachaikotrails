@@ -6,7 +6,6 @@
   const panels    = [...accordion.querySelectorAll('.acc-panel')];
   const navItems  = [...sidebar.querySelectorAll('.side-item')];
   const ids       = panels.map(p => p.dataset.panel);
-  const canHover  = matchMedia('(hover:hover) and (pointer:fine)');
 
   // Η Αρχική είναι πάντα το default panel σε νέο load / refresh.
   // Δεν κρατάμε το προηγούμενο panel στο URL, ώστε η σελίδα να ανοίγει σταθερά από την πρώτη καρτέλα.
@@ -64,22 +63,9 @@
     window.dispatchEvent(new CustomEvent('panachaiko:panel', { detail: { id } }));
   }
 
-  const preview = id => { if (canHover.matches) { accordion.classList.add('is-previewing'); activate(id); } };
-  const restore = () => { accordion.classList.remove('is-previewing'); activate(locked); };
-
-  // Hover: ένα pointerleave στο container (όχι ανά panel) → χωρίς τρεμόπαιγμα ανάμεσα στα panels
-  accordion.addEventListener('pointerover', e => {
-    if (e.pointerType !== 'mouse') return;
-    const p = e.target.closest('.acc-panel'); if (p) preview(p.dataset.panel);
-  });
-  accordion.addEventListener('pointerleave', restore);
-
-  sidebar.addEventListener('pointerover', e => {
-    if (e.pointerType !== 'mouse') return;
-    const b = e.target.closest('.side-item'); if (b) preview(b.dataset.open);
-  });
-  sidebar.addEventListener('pointerleave', restore);
-
+  // Άνοιγμα αποκλειστικά με click / Enter / Space.
+  // Κάθε νέο click ανοίγει το επιλεγμένο panel και κλείνει αυτόματα το προηγούμενο.
+  // Το mouse-over δεν αλλάζει ποτέ το ενεργό panel.
   // Click / Enter / Space
   accordion.addEventListener('click', e => {
     const t = e.target.closest('.panel-toggle');

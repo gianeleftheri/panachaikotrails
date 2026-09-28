@@ -97,7 +97,6 @@ button{font:inherit;color:inherit}
 .acc-panel.is-active .panel-toggle{pointer-events:none}
 .acc-panel.is-active .panel-title{opacity:0;transform:translateY(-8px)}
 .acc-panel.is-active .panel-content{opacity:1;visibility:visible;transform:none;transition:opacity .34s ease .1s,transform .68s var(--ease-out),visibility 0s}
-.accordion.is-previewing .acc-panel:not(.is-active){filter:saturate(.82) brightness(.78)}
 
 /* ============ Καιρός (ζωντανά) ============ */
 .wx{margin-bottom:26px;padding:18px 20px 14px;border:1px solid rgba(66,217,235,.45);border-radius:18px;background:linear-gradient(160deg,rgba(7,32,50,.82),rgba(7,32,50,.62));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 18px 50px rgba(0,0,0,.28)}
@@ -210,7 +209,6 @@ button{font:inherit;color:inherit}
   :root{--top:68px;--nav-h:64px}
   .acc-panel{transition:none}
   .acc-panel::before{transition:transform .35s var(--ease-out)}
-  .accordion.is-previewing .acc-panel:not(.is-active){filter:none}
   .side-item{transition:none}
 
   .brand-mark{width:44px;height:38px;transform:scale(.8);transform-origin:left center}
@@ -283,7 +281,6 @@ button{font:inherit;color:inherit}
   background:linear-gradient(90deg,rgba(4,45,53,.70) 0%,rgba(4,45,53,.20) 56%,rgba(4,45,53,.46) 100%)
 }
 .acc-panel.is-active .panel-overlay{opacity:.34}
-.accordion.is-previewing .acc-panel:not(.is-active){filter:saturate(.84) brightness(.70)}
 
 /* Το κείμενο είναι HTML. Οι φωτογραφίες δεν περιέχουν καθόλου τυπωμένο κείμενο. */
 .panel-content{
@@ -750,7 +747,7 @@ body{font-family:"Roboto",Arial,sans-serif}
     </article>
   </main>
 
-  <div class="hint" aria-hidden="true"><b>Mouse over</b> για προεπισκόπηση • click για να μείνει ανοικτό • <b>← →</b> με το πληκτρολόγιο</div>
+  <div class="hint" aria-hidden="true"><b>Κλικ</b> σε μια ενότητα για άνοιγμα • το προηγούμενο παράθυρο κλείνει αυτόματα • <b>← →</b> με το πληκτρολόγιο</div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 <script src="../scripts/homepage-accordion.js"></script>

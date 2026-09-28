@@ -9,1671 +9,342 @@ interface Props {
   homeHeroAvif1024?: string;
   defaultHomeBackground?: string;
 }
-
-const {
-  homeHeroFull = '',
-  homeHeroLarge = '',
-  homeHeroMedium = '',
-  homeHeroSmall = '',
-  homeHeroAvif480 = '',
-  homeHeroAvif768 = '',
-  homeHeroAvif1024 = '',
-  defaultHomeBackground = 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized.webp',
-} = Astro.props;
 ---
+
 <style is:global>
-
-/* ============ Φωτογραφίες panels: φορτώνεται μόνο το ενεργό background ============ */
-/* ============ Tokens ============ */
 :root{
-  --bg:#063a43;--navy:#073943;--panel:#0a4650;
-  --cyan:#45d7df;--cyan-strong:#0a9eae;--cyan-hover:#12b9c7;
-  --text:#f4fafb;--muted:#bdd6d9;--body:#d8e9ea;
-  --line:rgba(69,215,223,.42);
-  --ease-out:cubic-bezier(.16,1,.3,1);
-  --gutter:20px;--top:92px;--side-w:122px;
-}
-*,*::before,*::after{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:"Roboto",Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-button{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
-.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-
-.app{position:fixed;inset:0;background:var(--bg)}
-.bg{position:absolute;inset:0;background:radial-gradient(circle at 78% 20%,rgba(35,104,111,.36),transparent 34%),linear-gradient(135deg,#052f37 0%,#063a43 46%,#074751 100%)}
-
-/* ============ Brand ============ */
-.brand{position:absolute;z-index:30;left:26px;top:20px;display:flex;align-items:center;gap:13px;margin:0;font:inherit;pointer-events:none}
-.brand-mark{width:58px;height:48px;position:relative;flex:none}
-.brand-mark::before,.brand-mark::after{content:"";position:absolute;bottom:4px;border-left:18px solid transparent;border-right:18px solid transparent;border-bottom:38px solid #16bcd4;filter:drop-shadow(0 0 8px rgba(66,217,235,.28))}
-.brand-mark::before{left:0}
-.brand-mark::after{left:20px;border-bottom-color:#0d759b;transform:scale(.75)}
-.brand strong{display:block;font-size:19px;letter-spacing:.07em}
-.brand small{display:block;font-size:11px;color:var(--muted);letter-spacing:.08em}
-
-/* ============ Map CTA ============ */
-.map-callout{position:absolute;z-index:35;right:26px;top:26px;display:flex;align-items:center;gap:12px;padding:10px 16px;border:1px solid rgba(79,222,237,.65);border-radius:20px;background:linear-gradient(90deg,rgba(16,54,78,.93),rgba(17,76,95,.88));cursor:pointer;text-align:left;box-shadow:0 10px 35px rgba(0,0,0,.24),0 0 20px rgba(66,217,235,.13);transition:transform .25s ease,box-shadow .25s ease}
-.map-callout:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,.28),0 0 28px rgba(66,217,235,.22)}
-.map-callout svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.7;display:block}
-.map-copy strong{display:block;font-size:14px}
-.map-copy small{display:block;color:var(--muted);margin-top:2px}
-
-/* ============ Sidebar ============ */
-.sidebar{position:absolute;z-index:20;left:18px;top:var(--top);bottom:22px;width:var(--side-w);display:flex;flex-direction:column;border:1px solid rgba(66,217,235,.38);border-radius:14px 0 0 14px;background:linear-gradient(180deg,rgba(8,38,58,.93),rgba(8,31,48,.9));overflow:hidden}
-.side-item{flex:1;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:8px 5px;border:0;border-bottom:1px solid rgba(255,255,255,.08);background:transparent;cursor:pointer;transition:background-color .28s ease,box-shadow .28s ease}
-.side-item:last-child{border-bottom:0}
-.side-item:hover,.side-item.is-active{background:linear-gradient(90deg,rgba(0,181,214,.22),rgba(0,181,214,.08));box-shadow:inset 3px 0 0 var(--cyan)}
-.side-item:focus-visible{outline-offset:-3px}
-.side-item svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
-.side-label{font-size:11px;line-height:1.15;text-align:center}
-
-/* ============ Accordion ============ */
-.accordion{position:absolute;z-index:10;left:calc(18px + var(--side-w));right:var(--gutter);top:var(--top);bottom:22px;display:flex;gap:3px;overflow:hidden}
-.acc-panel{position:relative;flex:1 1 0;min-width:82px;border:1px solid var(--line);border-radius:0 14px 14px 0;overflow:hidden;isolation:isolate;background:var(--panel);transition:flex-grow .72s var(--ease-out),filter .38s ease}
-.acc-panel::before{content:"";position:absolute;inset:0;z-index:-2;background-color:var(--panel);background-image:var(--panel-bg,none);background-position:center;background-size:cover;transform:scale(1.05);transition:transform .8s var(--ease-out)}
-.panel-home-media{position:absolute;inset:0;z-index:-2;display:block;overflow:hidden}
-.panel-home-media picture,.panel-home-media img{display:block;width:100%;height:100%}
-.panel-home-media img{object-fit:cover;object-position:58% center}
-.acc-panel[data-panel="home"].has-cms-bg .panel-home-media{display:none}
-.panel-overlay{position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(7,30,46,.85),rgba(7,30,46,.2) 72%,rgba(7,30,46,.56));transition:opacity .35s ease}
-
-/* Ολόκληρο το κλειστό panel είναι ένα κουμπί (πληκτρολόγιο + screen readers) */
-.panel-toggle{position:absolute;inset:0;z-index:2;width:100%;padding:28px 15px 0 18px;border:0;background:transparent;cursor:pointer;text-align:left;display:block}
-.panel-toggle:focus-visible{outline-offset:-4px;border-radius:0 12px 12px 0}
-.panel-title{display:block;font-size:16px;font-weight:750;line-height:1.05;transition:opacity .25s ease,transform .25s ease}
-.panel-index{position:absolute;right:14px;bottom:14px;font:700 11px ui-monospace,SFMono-Regular,Menlo,monospace;color:rgba(255,255,255,.52)}
-
-.panel-content{position:absolute;z-index:3;left:clamp(26px,3vw,52px);right:70px;bottom:clamp(42px,8vh,85px);max-width:610px;opacity:0;visibility:hidden;transform:translateX(38px);transition:opacity .34s ease .1s,transform .68s var(--ease-out),visibility 0s linear .44s}
-.eyebrow{font-size:10px;font-weight:800;letter-spacing:.17em;color:var(--cyan)}
-.panel-content h2{font-family:Georgia,"Times New Roman",serif;font-size:clamp(32px,4vw,62px);line-height:1;margin:12px 0;text-wrap:balance}
-.panel-content p{font-size:clamp(14px,1.2vw,18px);line-height:1.55;color:var(--body);margin:0;max-width:590px}
-.panel-cta{display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:11px 16px;border-radius:10px;border:1px solid rgba(66,217,235,.7);background:var(--cyan-strong);font-weight:700;cursor:pointer;transition:background-color .2s ease}
-.panel-cta:hover{background:var(--cyan-hover)}
-
-/* Ενεργό panel */
-.acc-panel.is-active{flex-grow:4.4;z-index:3}
-.acc-panel.is-active::before{transform:scale(1)}
-.acc-panel.is-active .panel-overlay{opacity:.58}
-.acc-panel.is-active .panel-toggle{pointer-events:none}
-.acc-panel.is-active .panel-title{opacity:0;transform:translateY(-8px)}
-.acc-panel.is-active .panel-content{opacity:1;visibility:visible;transform:none;transition:opacity .34s ease .1s,transform .68s var(--ease-out),visibility 0s}
-
-/* ============ Καιρός (ζωντανά) ============ */
-.wx{margin-bottom:26px;padding:18px 20px 14px;border:1px solid rgba(66,217,235,.45);border-radius:18px;background:linear-gradient(160deg,rgba(7,32,50,.82),rgba(7,32,50,.62));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 18px 50px rgba(0,0,0,.28)}
-.wx-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted)}
-.wx-place{font-weight:700;color:var(--text);letter-spacing:.02em}
-.wx-place small{font-weight:500;color:var(--muted)}
-.wx-live{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.wx-dot{width:8px;height:8px;border-radius:50%;background:#3ee07f;box-shadow:0 0 0 0 rgba(62,224,127,.6);animation:wxPulse 2s infinite}
-.wx.is-stale .wx-dot{background:#f5b041;animation:none}
-.wx.is-error .wx-dot{background:#ef6461;animation:none}
-@keyframes wxPulse{0%{box-shadow:0 0 0 0 rgba(62,224,127,.55)}70%{box-shadow:0 0 0 9px rgba(62,224,127,0)}100%{box-shadow:0 0 0 0 rgba(62,224,127,0)}}
-
-.wx-main{display:flex;align-items:center;gap:16px;margin:10px 0 12px}
-.wx-icon{width:clamp(64px,7vw,92px);height:clamp(64px,7vw,92px);flex:none}
-.wx-icon svg{width:100%;height:100%;display:block}
-.wx-temp{font-size:clamp(64px,7.4vw,108px);font-weight:800;line-height:.9;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
-.wx-temp sup{font-size:.42em;font-weight:700;vertical-align:.95em;margin-left:2px;color:var(--cyan)}
-.wx-desc{flex:1;min-width:130px}
-.wx-main{flex-wrap:wrap}
-.wx-cond{font-size:clamp(18px,1.7vw,24px);font-weight:750;line-height:1.15}
-.wx-sub{margin-top:6px;font-size:13px;color:var(--body);line-height:1.5}
-.wx-sub b{color:var(--text)}
-
-.wx-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0;padding:0;list-style:none}
-.wx-stat{padding:10px 10px 9px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07)}
-.wx-stat dt{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.wx-stat dd{margin:4px 0 0;font-size:clamp(20px,1.9vw,27px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
-.wx-stat dd small{font-size:.5em;font-weight:600;color:var(--muted);margin-left:2px}
-.wx-stat .wx-note{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:4px 0 0;font-size:11px;font-weight:500;line-height:1.3;white-space:normal;color:var(--muted)}
-.wx-stat.is-alert{border-color:rgba(245,176,65,.6);background:rgba(245,176,65,.12)}
-
-.wx-hours{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);text-align:center;font-size:12px}
-.wx-hour time{display:block;color:var(--muted);font-size:11px}
-.wx-hour svg{width:28px;height:28px;display:block;margin:3px auto}
-.wx-hour b{font-size:15px;font-variant-numeric:tabular-nums}
-.wx-hour .wx-p{display:block;font-size:10.5px;color:#7fd6ff;min-height:1.2em}
-
-.wx-alert{margin-top:10px;padding:8px 11px;border-radius:10px;background:rgba(245,176,65,.14);border:1px solid rgba(245,176,65,.45);font-size:12.5px;color:#ffe2b0}
-.wx-alert[hidden]{display:none}
-.wx-alert{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.wx-foot{display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:space-between;margin-top:10px;font-size:10.5px;color:var(--muted)}
-.wx-foot a{color:var(--cyan);text-decoration:none}
-.wx-foot a:hover{text-decoration:underline}
-.wx-retry{border:0;background:none;padding:0;color:var(--cyan);cursor:pointer;font-size:inherit;text-decoration:underline}
-
-/* skeleton πριν έρθουν τα δεδομένα */
-.wx.is-loading .wx-temp,.wx.is-loading .wx-cond,.wx.is-loading .wx-stat dd{color:transparent;background:linear-gradient(90deg,rgba(255,255,255,.08),rgba(255,255,255,.16),rgba(255,255,255,.08));background-size:200% 100%;animation:wxShim 1.2s linear infinite;border-radius:8px}
-@keyframes wxShim{to{background-position:-200% 0}}
-
-/* η Αρχική: λιγότερο κείμενο ώστε να χωράει ο καιρός */
-#content-home{top:clamp(14px,2.6vh,26px);bottom:clamp(26px,4.5vh,56px);right:28px;max-width:640px;display:flex;flex-direction:column;justify-content:space-between}
-#content-home .wx{margin-bottom:18px}
-#content-home .panel-cta{align-self:flex-start}
-#content-home h2{font-size:clamp(30px,3.3vw,54px)}
-@media (max-height:820px){#content-home > p{display:none}}
-@media (max-height:700px){.wx-hours{display:none}}
-@media (max-width:900px){.wx-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:640px){
-  .wx{padding:12px 14px 10px;margin-bottom:14px}
-  .wx-main{margin:6px 0 8px;gap:10px}
-  .wx-icon{width:54px;height:54px}
-  .wx-temp{font-size:60px}
-  .wx-cond{font-size:16px}
-  .wx-sub{font-size:12px;margin-top:3px}
-  .wx-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
-  .wx-stat{padding:7px 6px}
-  .wx-stat dt{font-size:9px;letter-spacing:.04em}
-  .wx-stat dd{font-size:17px}
-  .wx-stat .wx-note{display:none}
-  .wx-hours,.wx-foot a.wx-more{display:none}
-  .wx-alert{display:block;white-space:nowrap;text-overflow:ellipsis;font-size:11px;padding:6px 9px;margin-top:8px}
-  .wx-head{font-size:11px}
-  #content-home h2{display:none}
-  #content-home .panel-cta{margin-top:0}
-  .wx-foot{margin-top:6px}
-  #content-home{top:12px;bottom:18px;right:18px}
-  .acc-panel.is-active{flex-grow:8}
-  .wx-place small{display:none}
-  #content-home > p,#content-home > .eyebrow{display:none}
-}
-@media (max-width:640px) and (max-height:700px){.wx-stats{display:none}}
-@media (prefers-reduced-motion:reduce){.wx-dot,.wx.is-loading *{animation:none!important}}
-
-/* ============ Hint / Toast ============ */
-.hint{position:absolute;z-index:40;left:50%;bottom:4px;transform:translateX(-50%);padding:5px 13px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(5,25,38,.78);font-size:10px;color:var(--body);white-space:nowrap;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.hint b{color:var(--cyan)}
-@media (hover:none){.hint{display:none}}
-.toast{position:absolute;z-index:100;left:50%;top:50%;max-width:min(420px,calc(100vw - 32px));padding:16px 20px;border:1px solid rgba(66,217,235,.55);border-radius:14px;background:rgba(7,31,48,.94);box-shadow:0 20px 60px rgba(0,0,0,.34);font-size:13px;line-height:1.45;text-align:center;opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.94);transition:opacity .22s ease,transform .22s ease}
-.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
-
-/* ============ Tablet ============ */
-@media (max-width:900px){
-  :root{--top:72px;--side-w:80px;--gutter:8px}
-  .brand{left:14px;top:12px}
-  .brand strong{font-size:15px}
-  .map-callout{top:10px;right:10px;padding:8px 10px}
-  .map-copy small{display:none}
-  .sidebar{left:8px;bottom:8px}
-  .accordion{left:calc(8px + var(--side-w));bottom:8px}
-  .acc-panel{min-width:52px}
-  .panel-toggle{padding:22px 0 0}
-  .panel-title{font-size:12px;writing-mode:vertical-rl;transform:rotate(180deg);margin-left:auto;margin-right:13px;width:max-content}
-  .acc-panel.is-active .panel-title{transform:rotate(180deg) translateX(8px)}
-  .panel-content{left:18px;right:18px;top:22px;bottom:auto;width:calc(100% - 36px);max-height:calc(100% - 44px);padding:27px 28px 29px}
-  .panel-content h2{font-size:44px}
-}
-
-/* ============ Κινητό: κάθετο accordion + κάτω μπάρα πλοήγησης ============ */
-@media (max-width:640px){
-  :root{--top:68px;--nav-h:64px}
-  .acc-panel{transition:none}
-  .acc-panel::before{transition:transform .35s var(--ease-out)}
-  .side-item{transition:none}
-
-  .brand-mark{width:44px;height:38px;transform:scale(.8);transform-origin:left center}
-  .brand small{display:none}
-  .brand{gap:6px}
-  .brand strong{font-size:13px;letter-spacing:.05em}
-  .map-copy strong{font-size:0}
-  .map-copy strong::after{content:"Χάρτης →";font-size:13px}
-  .sidebar{top:auto;left:0;right:0;bottom:0;width:auto;height:calc(var(--nav-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);flex-direction:row;border-radius:0;border-width:1px 0 0}
-  .side-item{min-height:0;gap:4px;padding:6px 2px;border-bottom:0;border-right:1px solid rgba(255,255,255,.08)}
-  .side-item:last-child{border-right:0}
-  .side-item:hover,.side-item.is-active{box-shadow:inset 0 3px 0 var(--cyan)}
-  .side-item svg{width:21px;height:21px}
-  .side-label{font-size:9.5px}
-  .accordion{left:8px;right:8px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);flex-direction:column}
-  .acc-panel{min-width:0;min-height:44px;border-radius:12px}
-  .panel-toggle{padding:0 16px;display:flex;align-items:center}
-  .panel-title{writing-mode:horizontal-tb;transform:none;margin:0;font-size:14px}
-  .acc-panel.is-active .panel-title{transform:translateY(-8px)}
-  .panel-index{top:50%;bottom:auto;transform:translateY(-50%)}
-  .acc-panel.is-active .panel-index{top:auto;bottom:12px;transform:none}
-  .panel-content{left:12px;right:12px;top:12px;bottom:auto;width:calc(100% - 24px);max-height:calc(100% - 24px);padding:18px 18px 20px;border-radius:16px;transform:translateY(24px)}
-  .panel-content h2{font-size:38px;margin:9px 0}
-  .panel-content p{font-size:16px;line-height:1.55}
-  .panel-cta{margin-top:16px}
-  .hint{display:none}
-}
-
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{transition-duration:.01ms!important;transition-delay:0s!important}
-}
-
-
-/* ============ Petrol visual pass + clean photographic panels ============ */
-.app{background:#063a43}
-.map-callout{
-  border-color:rgba(69,215,223,.60);
-  background:linear-gradient(90deg,rgba(5,54,63,.96),rgba(7,74,82,.93));
-  box-shadow:0 10px 34px rgba(0,20,24,.30),0 0 18px rgba(69,215,223,.12)
-}
-.sidebar{
-  border-color:rgba(69,215,223,.42);
-  background:linear-gradient(180deg,rgba(5,54,63,.98),rgba(5,45,53,.98));
-  box-shadow:0 18px 45px rgba(0,20,24,.24)
-}
-.side-item:hover,.side-item.is-active{
-  background:linear-gradient(90deg,rgba(69,215,223,.18),rgba(69,215,223,.06));
-  box-shadow:inset 3px 0 0 var(--cyan)
-}
-.accordion{background:rgba(3,39,46,.38);border-radius:0 14px 14px 0}
-.acc-panel{
-  background:#0a4650;
-  border-color:rgba(69,215,223,.36);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)
-}
-.acc-panel::before{
-  background-image:var(--panel-bg);
-  background-repeat:no-repeat;
-  background-size:cover;
-  background-position:center center;
-  filter:saturate(1.04) contrast(1.03);
-}
-.acc-panel[data-panel="home"]::before{background-position:58% center}
-.acc-panel[data-panel="trails"]::before{background-position:50% 56%}
-.acc-panel[data-panel="poi"]::before{background-position:50% center}
-.acc-panel[data-panel="shelter"]::before{background-position:50% 58%}
-.acc-panel[data-panel="photos"]::before{background-position:54% center}
-.acc-panel[data-panel="video"]::before{background-position:58% center}
-.panel-overlay{
-  background:linear-gradient(90deg,rgba(4,45,53,.70) 0%,rgba(4,45,53,.20) 56%,rgba(4,45,53,.46) 100%)
-}
-.acc-panel.is-active .panel-overlay{opacity:.34}
-
-/* Το κείμενο είναι HTML. Οι φωτογραφίες δεν περιέχουν καθόλου τυπωμένο κείμενο. */
-.panel-content{
-  max-width:660px;
-  padding:20px 22px 22px;
-  border:1px solid rgba(69,215,223,.26);
-  border-radius:16px;
-  background:linear-gradient(160deg,rgba(5,55,64,.88),rgba(4,43,51,.80));
-  box-shadow:0 18px 50px rgba(0,20,24,.26);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px)
-}
-.panel-content h2{color:#f7fcfd;text-shadow:0 2px 12px rgba(0,0,0,.24)}
-.panel-content p{color:#d8ebec}
-.panel-title{
-  color:#f6fbfc;
-  text-shadow:0 2px 10px rgba(0,0,0,.72)
-}
-.panel-index{color:rgba(232,247,248,.72)}
-.panel-cta{
-  border-color:rgba(100,231,237,.76);
-  background:#0a9eae;
-  box-shadow:0 8px 22px rgba(0,115,128,.22)
-}
-.panel-cta:hover{background:#12b9c7}
-
-/* Weather / menu / map share the same petrol family. */
-.wx{
-  border-color:rgba(69,215,223,.42);
-  background:linear-gradient(160deg,rgba(5,57,66,.94),rgba(5,46,54,.90));
-  box-shadow:0 18px 50px rgba(0,18,23,.28)
-}
-.wx-stat{background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.075)}
-.hint,.toast{background:rgba(4,45,53,.92);border-color:rgba(69,215,223,.26)}
-
-@media (max-width:640px){
-  .panel-content{padding:14px 15px 16px;border-radius:13px}
-}
-
-
-
-/* ============ WordPress-driven homepage lists ============ */
-.panel-feed{display:grid;gap:7px;margin:15px 0 2px;max-height:none;overflow:visible;padding-right:4px}
-.panel-feed:empty{display:none}
-.panel-feed-item{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;gap:10px;min-height:44px;padding:6px 8px;border:1px solid rgba(69,215,223,.18);border-radius:10px;background:rgba(3,35,42,.34)}
-.panel-feed-item.no-thumb{grid-template-columns:1fr}
-.panel-feed-thumb{width:44px;height:34px;border-radius:7px;object-fit:cover;background:#073943}
-.panel-feed-video-thumb{display:grid;place-items:center;color:#f4fafb;font-size:15px;line-height:1;background:linear-gradient(145deg,#073943,#0a5863);border:1px solid rgba(69,215,223,.24)}
-.panel-feed-title{font-size:12.5px;line-height:1.25;font-weight:750;color:#f4fafb}
-.panel-feed-meta{display:block;margin-top:2px;font-size:10px;color:var(--muted)}
-.panel-feed-loading{font-size:11px;color:var(--muted)}
-@media(max-width:640px){
-  .panel-feed{max-height:none;overflow:visible;gap:5px;margin-top:9px}
-  .panel-feed-item{min-height:38px;padding:4px 6px;grid-template-columns:38px minmax(0,1fr)}
-  .panel-feed-thumb{width:38px;height:30px}
-  .panel-feed-title{font-size:11.5px}
-  .panel-feed-meta{display:none}
-}
-
-
-/* ============ Accordion V2 · generated-concept visual pass ============ */
-:root{--header-h:78px;--side-w:126px;--gutter:10px;--top:82px}
-body{font-family:"Roboto",Arial,sans-serif}
-.app::before{content:"";position:absolute;z-index:12;left:0;right:0;top:0;height:78px;background:linear-gradient(180deg,#073d46 0%,#063740 100%);border-bottom:1px solid rgba(69,215,223,.28);box-shadow:0 8px 30px rgba(0,18,23,.12)}
-.brand{left:30px;top:14px;z-index:50;gap:12px}
-.brand-mark{width:48px;height:44px}
-.brand-mark::before,.brand-mark::after{border-left-width:15px;border-right-width:15px;border-bottom-width:32px}
-.brand-mark::after{left:17px}
-.brand strong{font-size:19px;font-weight:850;letter-spacing:.055em}
-.brand small{font-size:10px;letter-spacing:.15em;color:#a8d7da}
-.map-callout{z-index:50;top:15px;right:24px;min-height:48px;padding:8px 14px;border-radius:12px;border-color:rgba(69,215,223,.38);background:rgba(5,52,61,.82);box-shadow:none}
-.map-callout:hover{transform:none;background:rgba(9,83,93,.92);box-shadow:0 8px 26px rgba(0,0,0,.2)}
-.map-callout svg{width:24px;height:24px}
-.map-copy strong{font-size:13px}
-.map-copy small{font-size:9.5px}
-.sidebar{left:0;top:78px;bottom:0;width:126px;border-radius:0;border-width:0 1px 0 0;background:linear-gradient(180deg,rgba(5,58,67,.99),rgba(4,48,57,.99));box-shadow:none}
-.side-item{gap:7px;min-height:88px;border-color:rgba(255,255,255,.08)}
-.side-icon-row{display:flex;align-items:center;justify-content:center;gap:5px}
-.side-item svg{width:26px;height:26px;stroke-width:1.9}
-.side-count{font-size:11px;font-weight:900;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
-.side-item:hover,.side-item.is-active{background:linear-gradient(90deg,rgba(18,185,199,.24),rgba(18,185,199,.04));box-shadow:inset 5px 0 0 #16d9e2}
-.side-label{font-size:11px;font-weight:650}
-.accordion{left:126px;right:8px;top:78px;bottom:8px;gap:6px;border-radius:0;background:#063a43}
-.acc-panel{min-width:106px;border-radius:12px;border-color:rgba(69,215,223,.36);box-shadow:inset 0 0 0 1px rgba(255,255,255,.025),0 12px 30px rgba(0,20,24,.12);transition:flex-grow .72s var(--ease-out),filter .35s ease}
-.acc-panel.is-active{flex-grow:7.4}
-.acc-panel::before{filter:saturate(1.08) contrast(1.06);transform:scale(1.025)}
-.acc-panel.is-active::before{transform:scale(1)}
-.panel-overlay{background:linear-gradient(180deg,rgba(3,30,36,.12) 0%,rgba(3,31,38,.18) 45%,rgba(2,25,31,.68) 100%)}
-.acc-panel.is-active .panel-overlay{opacity:.48}
-.hero-route{position:absolute;z-index:-1;right:2%;bottom:3%;width:61%;height:82%;pointer-events:none;opacity:.72;filter:drop-shadow(0 0 8px rgba(47,224,238,.42))}
-.hero-route path{fill:none;stroke:#48e3ec;stroke-width:3;stroke-linecap:round;stroke-dasharray:8 8}
-.hero-route circle{fill:#063a43;stroke:#56edf4;stroke-width:3}
-.panel-toggle{padding:28px 18px 22px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:10px;text-align:left;background:linear-gradient(180deg,rgba(5,50,59,.28),rgba(4,37,44,.62))}
-.panel-toggle:hover{background:linear-gradient(180deg,rgba(13,83,93,.18),rgba(4,37,44,.54))}
-.panel-icon-row{display:flex;align-items:center;gap:10px}
-.panel-icon{display:grid;place-items:center;width:42px;height:42px;border:1px solid rgba(69,215,223,.42);border-radius:12px;background:rgba(4,52,61,.64);color:#eefcfd;box-shadow:0 8px 24px rgba(0,20,24,.16)}
-.panel-count{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 9px;border:1px solid rgba(69,215,223,.38);border-radius:10px;background:rgba(4,52,61,.72);color:#fff;font-size:20px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;box-shadow:0 8px 24px rgba(0,20,24,.14)}
-.panel-icon svg{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.panel-title{font-size:16px;font-weight:850;line-height:1.12;text-shadow:0 2px 10px rgba(0,0,0,.64)}
-.panel-summary{display:block;max-width:145px;font-size:11.5px;line-height:1.45;color:rgba(232,247,248,.78)}
-.panel-arrow{position:absolute;right:16px;bottom:18px;display:grid;place-items:center;width:40px;height:40px;border:1px solid rgba(69,215,223,.55);border-radius:50%;background:rgba(4,52,61,.72);font-size:22px;color:#eafcfd}
-.acc-panel.is-active .panel-toggle{opacity:0;visibility:hidden}
-.panel-index{display:none}
-.panel-content{left:32px;right:32px;top:28px;bottom:auto;width:min(900px,calc(100% - 64px));max-width:none;max-height:calc(100% - 56px);padding:32px 34px 34px;border-radius:22px;background:linear-gradient(160deg,rgba(4,53,62,.93),rgba(3,39,46,.88));border-color:rgba(69,215,223,.38);box-shadow:0 26px 64px rgba(0,18,23,.32);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(69,215,223,.72) rgba(255,255,255,.08)}
-.panel-content h2{font-family:"Roboto",Arial,sans-serif;font-size:clamp(42px,4.1vw,68px);font-weight:900;line-height:.98;letter-spacing:-.035em}
-.panel-content p{max-width:790px;font-size:18px;line-height:1.6;color:#d9eff0}
-.panel-content::-webkit-scrollbar{width:9px}
-.panel-content::-webkit-scrollbar-track{background:rgba(255,255,255,.06);border-radius:999px}
-.panel-content::-webkit-scrollbar-thumb{background:rgba(69,215,223,.70);border-radius:999px;border:2px solid rgba(4,53,62,.8)}
-.panel-content::-webkit-scrollbar-thumb:hover{background:rgba(86,233,240,.92)}
-#content-home{left:30px;right:30px;top:22px;bottom:26px;max-width:none;max-height:none;padding:0;border:0;background:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;pointer-events:none;overflow:visible}
-#content-home>*{pointer-events:auto}
-#content-home .wx{width:min(610px,56%);margin:0;padding:15px 17px 12px;border-radius:16px;background:linear-gradient(155deg,rgba(4,58,67,.96),rgba(4,47,56,.94));border-color:rgba(69,215,223,.46);box-shadow:0 18px 45px rgba(0,18,23,.25)}
-#content-home .wx-main{margin:8px 0 9px}
-#content-home .wx-icon{width:70px;height:70px}
-#content-home .wx-temp{font-size:72px}
-#content-home .wx-cond{font-size:19px}
-#content-home .wx-stats{gap:6px}
-#content-home .wx-stat{padding:8px 8px 7px}
-#content-home .wx-stat dd{font-size:21px}
-#content-home .wx-hours{margin-top:9px;padding-top:8px}
-.accordion-weather-stack{width:min(860px,76%);display:grid;gap:14px}
-.accordion-station{padding:19px 22px 17px;border:1px solid rgba(69,215,223,.50);border-radius:21px;background:linear-gradient(155deg,rgba(4,58,67,.97),rgba(4,47,56,.95));box-shadow:0 20px 48px rgba(0,18,23,.28);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-.accordion-station[data-live-station="panachaiko"]{background:linear-gradient(155deg,rgba(5,70,79,.97),rgba(4,46,54,.94))}
-.accordion-station.is-stale{border-color:rgba(245,183,75,.58)}
-.accordion-station.is-unavailable{opacity:.72}
-.accordion-station-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.accordion-station-place{display:flex;align-items:baseline;gap:9px;font-size:18px;font-weight:900;color:#fff}
-.accordion-station-place small{font-size:12px;font-weight:700;color:#b8d7da}
-.accordion-station-live{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#d0e5e7;white-space:nowrap}
-.accordion-station-dot{width:7px;height:7px;border-radius:50%;background:#3ee07f;box-shadow:0 0 0 0 rgba(62,224,127,.50);animation:accordionStationPulse 2s infinite}
-.accordion-station.is-stale .accordion-station-dot{background:#f5b74b;animation:none}
-.accordion-station.is-unavailable .accordion-station-dot{background:#ef6a68;animation:none}
-@keyframes accordionStationPulse{70%{box-shadow:0 0 0 7px rgba(62,224,127,0)}}
-.accordion-station-main{display:grid;grid-template-columns:66px auto 1fr;align-items:center;gap:16px;margin:11px 0 13px}
-.accordion-station-icon{width:64px;height:64px}.accordion-station-icon svg{width:100%;height:100%;display:block}
-.accordion-station-temp{font-size:58px;font-weight:900;line-height:.86;letter-spacing:-.04em;color:#fff;font-variant-numeric:tabular-nums}
-.accordion-station-temp sup{font-size:.38em;color:#69e8ef;vertical-align:.95em}
-.accordion-station-feels{font-size:14px;font-weight:700;color:#e0eef0}
-.accordion-station-observed{margin-top:4px;font-size:11px;line-height:1.25;color:#b6d1d4;font-variant-numeric:tabular-nums}
-.accordion-station-stats{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:0;margin:0}
-.accordion-station-stat{padding:9px 13px;border-left:1px solid rgba(255,255,255,.14)}
-.accordion-station-stat:first-child{padding-left:0;border-left:0}.accordion-station-stat:last-child{padding-right:2px;min-width:132px}
-.accordion-station-stat dt{font-size:10px;font-weight:700;letter-spacing:.045em;text-transform:uppercase;color:#b4d0d2}
-.accordion-station-stat dd{display:flex;align-items:baseline;gap:5px;margin:5px 0 0;font-size:21px;font-weight:900;line-height:1.05;white-space:nowrap;color:#fff;font-variant-numeric:tabular-nums}
-.accordion-station-stat dd small{font-size:11px;font-weight:700;line-height:1;color:#c2d9db;letter-spacing:0}
-.accordion-station-stat>span{display:block;margin-top:3px;font-size:10px;font-weight:600;color:#a9c7ca}
-.accordion-station-source{display:flex;justify-content:space-between;gap:10px;margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.10);font-size:10px;color:#a8c7ca}
-.accordion-station-source a{color:#67e6ed;font-weight:700;text-decoration:none}
-.accordion-station-source a:hover{text-decoration:underline}
-.home-news{position:absolute;right:0;top:2px;bottom:auto;width:min(430px,36%);max-height:calc(100% - 8px);padding:15px;border:1px solid rgba(69,215,223,.40);border-radius:20px;background:linear-gradient(160deg,rgba(4,55,64,.95),rgba(3,40,48,.91));box-shadow:0 22px 52px rgba(0,18,23,.28);backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);overflow:hidden}
-.home-news-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px}
-.home-news-kicker{display:block;font-size:9px;font-weight:900;letter-spacing:.19em;color:#54e6ed}
-.home-news-head h3{margin:4px 0 0;font-size:20px;line-height:1.05;font-weight:900;color:#fff}
-.home-news-mark{display:grid;place-items:center;width:34px;height:34px;flex:none;border:1px solid rgba(69,215,223,.34);border-radius:50%;font-size:18px;color:#c9f3f5}
-.home-news-body{display:grid;gap:7px;max-height:calc(100% - 54px);overflow:auto;padding-right:3px;scrollbar-width:thin;scrollbar-color:rgba(69,215,223,.62) rgba(255,255,255,.06)}
-.home-news-card{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;align-items:center;padding:8px;border:1px solid rgba(69,215,223,.15);border-radius:13px;background:rgba(3,35,42,.28);color:inherit;text-decoration:none;transition:transform .18s ease,background .18s ease,border-color .18s ease}
-.home-news-card:hover{transform:translateY(-1px);background:rgba(5,61,70,.52);border-color:rgba(69,215,223,.34)}
-.home-news-image{width:76px;height:66px;border-radius:10px;object-fit:cover;background:linear-gradient(135deg,#0b5964,#0a3f49)}
-.home-news-copy{min-width:0}
-.home-news-date{display:block;margin-bottom:3px;font-size:8px;font-weight:700;color:#9fc4c7}
-.home-news-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:0;font-size:12.5px;line-height:1.2;font-weight:900;color:#fff}
-.home-news-excerpt{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:4px 0 0;font-size:9.5px;line-height:1.35;color:#c5dcde}
-.home-news-read{display:inline-flex;align-items:center;gap:4px;margin-top:5px;font-size:9px;font-weight:850;color:#5be8ef}
-.home-news-placeholder{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;align-items:center;padding:8px;border:1px solid rgba(69,215,223,.15);border-radius:13px;background:rgba(3,35,42,.28)}
-.home-news-placeholder-media{width:76px;height:66px;border-radius:12px;background:linear-gradient(135deg,rgba(69,215,223,.16),rgba(255,255,255,.05)),url("https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-300x200.webp") center/cover no-repeat;filter:saturate(.8)}
-.home-news-placeholder strong{display:block;font-size:13px;line-height:1.25;color:#fff}
-.home-news-placeholder p{margin:6px 0 0;font-size:10.5px;line-height:1.4;color:#b8d2d5}
-.home-copy{width:min(700px,57%);display:flex;flex-direction:column;align-items:flex-start}
-.home-copy .eyebrow{font-size:10px;font-weight:900;letter-spacing:.3em;color:#4de4eb;margin-bottom:12px}
-#content-home .home-copy h2{display:block;margin:0;color:#fff;font-size:clamp(48px,4.9vw,78px);font-weight:900;line-height:.91;letter-spacing:-.055em;text-shadow:0 6px 30px rgba(0,0,0,.28)}
-.home-copy>p{margin-top:14px;max-width:570px;font-size:16px;line-height:1.45;color:#e0f1f2;text-shadow:0 2px 12px rgba(0,0,0,.34)}
-.home-map-cta{margin-top:18px;min-height:52px;padding:0 20px;gap:12px;border:0;border-radius:10px;background:#29d7df;color:#032d33;box-shadow:0 10px 28px rgba(26,203,214,.2);font-weight:850}
-.home-map-cta:hover{background:#54e5ec}
-.home-map-cta svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.9}
-.home-map-cta b{font-size:22px;margin-left:4px}
-.home-stats{display:flex;align-items:center;gap:0;margin-top:18px;padding:8px 0 0}
-.home-stat{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-width:126px;padding:0 18px;border-right:1px solid rgba(255,255,255,.18)}
-.home-stat:first-child{padding-left:0}
-.home-stat:last-child{border-right:0}
-.home-stat strong{font-size:18px;line-height:1;color:#fff}
-.home-stat small{margin-top:4px;font-size:10px;color:#c5dcde;white-space:nowrap}
-#content-home .panel-feed{display:none}
-@media (min-width:901px) and (max-width:1300px){
-  .home-news{width:min(390px,39%);padding:13px}
-  .home-news-card{grid-template-columns:68px minmax(0,1fr)}
-  .home-news-image{width:68px;height:58px}
-  .panel-summary{display:none}
-  .panel-icon{width:36px;height:36px}
-  .panel-title{font-size:14px}
-  .acc-panel{min-width:84px}
-  .accordion-weather-stack{width:min(790px,82%)}
-  .home-copy{width:min(620px,58%)}
-  .home-stat{min-width:105px;padding:0 12px}
-}
-@media (max-width:900px){
-  .home-news{right:0;top:0;bottom:auto;width:min(340px,44%);padding:12px}
-  .home-news-head h3{font-size:17px}
-  .home-news-card{grid-template-columns:64px minmax(0,1fr);gap:9px}
-  .home-news-image{width:64px;height:56px}
-  .home-news-excerpt{display:none}
-  .app::before{height:72px}
-  .accordion{left:88px;top:72px}
-  .sidebar{top:72px;width:80px}
-  .panel-summary,.panel-arrow,.panel-icon{display:none}
-  .panel-toggle{display:flex;padding:18px 0 0;background:transparent}
-  .panel-title{font-size:12px}
-  .accordion-weather-stack{width:min(720px,94%)}
-  .home-copy{width:min(520px,54%)}
-  #content-home .home-copy h2{font-size:48px}
-}
-@media (min-width:641px) and (max-height:780px){
-  .home-news{width:min(390px,35%);padding:11px}
-  .home-news-excerpt{display:none}
-  .home-news-image{height:54px}
-  .accordion-station-source{display:none}
-  .accordion-station{padding-top:13px;padding-bottom:11px}
-  .accordion-station-main{margin:6px 0 8px}
-  .home-copy>p{display:none}
-  .home-stats{margin-top:10px}
-}
-@media (min-width:641px){
-  .sidebar{display:none}
-  .accordion{left:8px}
-}
-
-@media (max-width:640px){
-  .home-news{position:relative;right:auto;top:auto;bottom:auto;width:100%;max-height:250px;padding:10px 11px;margin-top:7px;border-radius:14px}
-  .home-news-head{margin-bottom:7px}
-  .home-news-head h3{font-size:15px}
-  .home-news-mark{width:28px;height:28px;font-size:15px}
-  .home-news-card{grid-template-columns:64px minmax(0,1fr);gap:8px}
-  .home-news-image{width:64px;height:56px}
-  .home-news-date{font-size:8px}
-  .home-news-title{font-size:12px}
-  .home-news-read{margin-top:5px;font-size:9px}
-  .home-news-placeholder{grid-template-columns:64px minmax(0,1fr)}
-  .home-news-placeholder-media{width:64px;height:56px}
-  .home-news-placeholder p{display:none}
-  .app::before{height:64px}
-  .brand{left:12px;top:10px}
-  .brand-mark{width:38px;height:34px}
-  .brand strong{font-size:13px}
-  .map-callout{top:9px;right:9px;min-height:42px;padding:7px 10px}
-  .map-callout svg{width:21px;height:21px}
-  .map-copy small{display:none}
-  .sidebar{top:auto;width:auto}
-  .accordion{left:8px;top:68px}
-  .panel-icon{display:grid;width:28px;height:28px;border-radius:9px}
-  .panel-icon svg{width:19px;height:19px}
-  .panel-icon-row{gap:7px}
-  .panel-count{min-width:29px;height:29px;padding:0 7px;font-size:15px;border-radius:9px}
-  .side-icon-row{gap:3px}
-  .side-count{font-size:10px}
-  .panel-toggle{flex-direction:row;align-items:center;gap:9px;padding:0 14px;background:linear-gradient(90deg,rgba(4,53,62,.78),rgba(4,43,51,.58))}
-  .panel-summary,.panel-arrow{display:none}
-  .panel-title{writing-mode:horizontal-tb;transform:none!important;margin:0;font-size:13px}
-  .acc-panel.is-active .panel-toggle{display:none}
-  #content-home{left:12px;right:12px;top:10px;bottom:12px}
-  .accordion-weather-stack{width:100%;gap:8px}
-  .accordion-station{padding:12px 14px 11px;border-radius:15px}
-  .accordion-station-main{grid-template-columns:44px auto 1fr;gap:10px;margin:6px 0 7px}
-  .accordion-station-icon{width:42px;height:42px}
-  .accordion-station-temp{font-size:38px}
-  .accordion-station-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 0}
-  .accordion-station-stat{padding:5px 7px}
-  .accordion-station-stat:nth-child(odd){border-left:0;padding-left:0}
-  .accordion-station-stat dt{font-size:8.5px}
-  .accordion-station-stat dd{font-size:15px;gap:4px}
-  .accordion-station-stat dd small{font-size:9px}
-  .accordion-station-stat:last-child{min-width:0;padding-right:0}
-  .accordion-station-source{display:none}
-  .accordion-station-observed{display:none}
-  .home-copy{width:100%}
-  #content-home .home-copy h2{display:block;font-size:34px;line-height:.94;margin-top:4px}
-  .home-copy>p{display:none}
-  .home-map-cta{min-height:44px;margin-top:10px;padding:0 14px;font-size:13px}
-  .home-map-cta svg{width:21px;height:21px}
-  .home-stats{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:10px}
-  .home-stat{display:flex;min-width:0;padding:0 4px;border-right:1px solid rgba(255,255,255,.14);flex-direction:column;gap:2px;text-align:center}
-  .home-stat:first-child{padding-left:4px}
-  .home-stat strong{font-size:13px}
-  .home-stat small{font-size:8px;white-space:normal;line-height:1.1}
-  .hero-route{right:-10%;bottom:13%;width:82%;height:62%;opacity:.58}
-}
-
-
-/* ============ Home layout correction: weather left, blog news right ============ */
-@media (min-width:641px){
-  .acc-panel[data-panel="home"].is-active{flex-grow:10.5}
-
-  #content-home{
-    display:grid;
-    grid-template-columns:minmax(0,1fr) minmax(300px,430px);
-    grid-template-rows:auto 1fr auto;
-    column-gap:24px;
-    row-gap:14px;
-    align-items:start;
-    justify-content:stretch;
-  }
-
-  #content-home .accordion-weather-stack{
-    position:relative;
-    grid-column:1;
-    grid-row:1;
-    width:100%;
-    max-width:820px;
-    align-self:start;
-  }
-
-  #content-home .home-news{
-    position:relative;
-    inset:auto;
-    grid-column:2;
-    grid-row:1 / 4;
-    width:100%;
-    height:auto;
-    max-height:100%;
-    align-self:start;
-    justify-self:stretch;
-    margin:0;
-  }
-
-  #content-home .home-copy{
-    grid-column:1;
-    grid-row:3;
-    width:100%;
-    max-width:760px;
-    align-self:end;
-  }
-
-  #content-home .home-news-body{
-    max-height:calc(100vh - 190px);
-  }
-
-  #content-home .home-news-card{
-    grid-template-columns:84px minmax(0,1fr);
-  }
-
-  #content-home .home-news-image{
-    width:84px;
-    height:68px;
-  }
-
-  #content-home .home-news-title{
-    font-size:13px;
-    line-height:1.22;
-  }
-
-  #content-home .home-news-excerpt{
-    font-size:10.5px;
-    line-height:1.38;
-    margin:4px 0 0;
-    max-width:none;
-  }
-
-  #content-home .home-news-placeholder p{
-    font-size:10.5px;
-    line-height:1.38;
-    margin:5px 0 0;
-    max-width:none;
-  }
-}
-
-@media (min-width:641px) and (max-width:1100px){
-  .acc-panel[data-panel="home"].is-active{flex-grow:12}
-  #content-home{
-    grid-template-columns:minmax(0,1fr) minmax(245px,34%);
-    column-gap:14px;
-  }
-  #content-home .accordion-weather-stack{max-width:none}
-  #content-home .accordion-station-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-  #content-home .accordion-station-stat:nth-child(odd){border-left:0;padding-left:0}
-  #content-home .home-news{padding:11px}
-  #content-home .home-news-head{margin-bottom:8px}
-  #content-home .home-news-head h3{font-size:17px}
-  #content-home .home-news-card{grid-template-columns:62px minmax(0,1fr);gap:8px;padding:7px}
-  #content-home .home-news-image{width:62px;height:54px}
-  #content-home .home-news-excerpt{display:none}
-  #content-home .home-news-title{font-size:11.5px}
-  #content-home .home-news-read{font-size:8.5px}
-}
-
-@media (max-width:640px){
-  #content-home{
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-  }
-  #content-home .home-news{
-    position:relative;
-    inset:auto;
-    order:2;
-    width:100%;
-    max-height:220px;
-    margin-top:8px;
-  }
-  #content-home .home-copy{order:3;width:100%}
-  #content-home .accordion-weather-stack{order:1;width:100%}
-  #content-home .home-news-excerpt{font-size:9.5px;line-height:1.32;margin:3px 0 0}
-  #content-home .home-news-placeholder p{font-size:9.5px;line-height:1.32}
-}
-
-
-/* ============ Dedicated News panel + wider accordion menu ============ */
-@media (min-width:1301px){
-  .acc-panel{min-width:124px}
-  .panel-toggle{padding:28px 20px 22px;gap:12px}
-  .panel-title{font-size:20px!important;font-weight:900!important;line-height:1.08}
-  .panel-summary{font-size:12.5px;line-height:1.4}
-  .panel-icon{width:46px;height:46px}
-  .panel-icon svg{width:29px;height:29px}
-  .panel-icon-row{gap:11px}
-  .panel-count{min-width:40px;height:40px;padding:0 10px;font-size:23px!important;font-weight:900}
-}
-@media (min-width:901px) and (max-width:1300px){
-  .acc-panel{min-width:100px!important}
-  .panel-toggle{padding:24px 15px 18px!important;gap:9px}
-  .panel-title{font-size:16px!important;font-weight:900!important;line-height:1.08}
-  .panel-icon{display:grid!important;width:38px!important;height:38px!important}
-  .panel-icon svg{width:24px!important;height:24px!important}
-  .panel-count{min-width:34px!important;height:34px!important;padding:0 8px!important;font-size:18px!important;font-weight:900}
-}
-@media (min-width:641px) and (max-width:900px){
-  .panel-title{font-size:14px!important;font-weight:900!important}
-}
-@media (max-width:640px){
-  .panel-title{font-size:15px!important;font-weight:900!important}
-  .panel-count{font-size:16px!important;font-weight:900!important}
-  .side-label{font-size:9px;font-weight:800}
-}
-
-/* Home goes back to its own full-width composition. */
-@media (min-width:641px){
-  .acc-panel[data-panel="home"].is-active{flex-grow:7.8}
-  #content-home{
-    display:flex!important;
-    flex-direction:column;
-    justify-content:space-between;
-    align-items:flex-start;
-  }
-  #content-home .accordion-weather-stack{
-    position:relative;
-    width:min(860px,78%)!important;
-    max-width:860px!important;
-  }
-  #content-home .home-copy{
-    width:min(820px,72%)!important;
-    max-width:820px!important;
-    align-self:flex-start;
-  }
-}
-
-/* News panel. */
-.acc-panel[data-panel="news"]::before{background-position:center 48%}
-.news-panel-content{
-  width:min(1040px,calc(100% - 64px))!important;
-  max-width:none!important;
-}
-.news-board{
-  margin-top:20px;
-  padding:16px;
-  border:1px solid rgba(69,215,223,.34);
-  border-radius:18px;
-  background:linear-gradient(160deg,rgba(4,58,67,.96),rgba(3,42,50,.92));
-  box-shadow:0 18px 48px rgba(0,18,23,.24);
-}
-.news-board-head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:16px;
-  margin-bottom:12px;
-  padding-bottom:11px;
-  border-bottom:1px solid rgba(255,255,255,.10);
-}
-.news-board-head span{
-  display:block;
-  font-size:9px;
-  font-weight:900;
-  letter-spacing:.18em;
-  color:#55e4eb;
-}
-.news-board-head h3{
-  margin:4px 0 0;
-  font-size:23px;
-  line-height:1.05;
-  color:#fff;
-}
-.news-board-badge{
-  flex:none;
-  padding:7px 10px;
-  border:1px solid rgba(69,215,223,.34);
-  border-radius:999px;
-  font-size:10px;
-  font-weight:800;
-  color:#c8eff1;
-  background:rgba(5,76,85,.48);
-}
-.news-board-body{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:9px;
-  max-height:none!important;
-  overflow:visible!important;
-}
-.news-board .home-news-card{
-  display:grid;
-  grid-template-columns:112px minmax(0,1fr);
-  gap:13px;
-  align-items:center;
-  padding:10px;
-  border:1px solid rgba(69,215,223,.18);
-  border-radius:14px;
-  background:rgba(3,35,42,.34);
-}
-.news-board .home-news-card:first-child{
-  grid-template-columns:150px minmax(0,1fr);
-  padding:12px;
-  border-color:rgba(69,215,223,.34);
-  background:linear-gradient(120deg,rgba(8,83,93,.55),rgba(3,35,42,.38));
-}
-.news-board .home-news-image{
-  width:112px;
-  height:78px;
-  border-radius:11px;
-  object-fit:cover;
-}
-.news-board .home-news-card:first-child .home-news-image{
-  width:150px;
-  height:104px;
-}
-.news-board .home-news-date{font-size:10px}
-.news-board .home-news-title{
-  font-size:15px;
-  line-height:1.25;
-  -webkit-line-clamp:2;
-}
-.news-board .home-news-card:first-child .home-news-title{font-size:18px}
-.news-board .home-news-excerpt{
-  margin-top:5px;
-  font-size:11px;
-  line-height:1.42;
-  -webkit-line-clamp:2;
-}
-.news-board .home-news-read{
-  margin-top:7px;
-  font-size:10px;
-}
-@media (max-width:900px){
-  .news-panel-content{width:calc(100% - 36px)!important}
-  .news-board .home-news-card,
-  .news-board .home-news-card:first-child{grid-template-columns:82px minmax(0,1fr)}
-  .news-board .home-news-image,
-  .news-board .home-news-card:first-child .home-news-image{width:82px;height:64px}
-  .news-board .home-news-card:first-child .home-news-title{font-size:14px}
-  .news-board .home-news-excerpt{display:none}
-}
-@media (max-width:640px){
-  .news-panel-content{width:calc(100% - 24px)!important}
-  .news-board{margin-top:12px;padding:10px;border-radius:14px}
-  .news-board-head h3{font-size:18px}
-  .news-board-badge{font-size:9px;padding:5px 8px}
-  .news-board .home-news-card,
-  .news-board .home-news-card:first-child{grid-template-columns:68px minmax(0,1fr);padding:7px}
-  .news-board .home-news-image,
-  .news-board .home-news-card:first-child .home-news-image{width:68px;height:54px}
-  .news-board .home-news-title,
-  .news-board .home-news-card:first-child .home-news-title{font-size:12px}
-}
-
-
-/* ============ Text-only accordion menus ============ */
-.panel-icon,.panel-icon-row,.panel-count,.side-icon-row,.side-count{display:none!important}
-.panel-toggle{gap:7px!important}
-.panel-title{margin-top:2px;font-weight:900!important}
-@media (min-width:1301px){
-  .panel-title{font-size:22px!important;line-height:1.08}
-  .panel-summary{max-width:170px;font-size:13px;line-height:1.42}
-}
-@media (min-width:901px) and (max-width:1300px){
-  .panel-title{font-size:18px!important;line-height:1.1}
-}
-@media (max-width:640px){
-  .side-item{justify-content:center!important;gap:0!important}
-  .side-label{font-size:10px!important;font-weight:900!important;line-height:1.1}
-  .panel-title{font-size:15px!important}
-}
-.home-stats{display:none!important}
-
-
-/* ============ Playful Illustrator theme · minimal graphic pass ============ */
-.playful-theme{
   --ink:#0b2633;
   --paper:#fffdf8;
-  --sun:#ffd900;
-  --pink:#ff4fa3;
-  --orange:#ff6a00;
-  --sky:#10c8e8;
-  --teal:#0aa9a6;
-  --violet:#635bff;
-  background:#f5f3ec;
+  --cyan:#11c7e8;
+  --cyan-soft:#72dcf0;
+  --yellow:#ffdf00;
+  --pink:#ff3c98;
+  --orange:#ff7417;
+  --teal:#0aa7a4;
+  --green:#b9e52b;
+  --violet:#6b59f5;
+  --muted:#66777d;
+  --shadow:0 18px 48px rgba(10,38,51,.14);
+  --ease:cubic-bezier(.16,1,.3,1);
 }
-.playful-theme::before{
-  background:#fffdf8!important;
-  border-bottom:6px solid #10c8e8!important;
-  box-shadow:0 5px 0 rgba(11,38,51,.08)!important;
-}
-.playful-theme .bg{background:#f5f3ec!important}
-.playful-theme .brand{color:var(--ink);top:10px;left:24px;gap:10px}
-.playful-theme .brand-mark{width:58px;height:48px}
-.playful-theme .brand-mark::before,.playful-theme .brand-mark::after{display:none!important}
-.playful-theme .brand-mark svg{display:block;width:100%;height:100%}
-.playful-theme .brand strong{font-size:20px;font-weight:900;letter-spacing:.015em;color:var(--ink)}
-.playful-theme .brand small{margin-top:1px;font-size:9.5px;font-weight:700;letter-spacing:.18em;color:#31515b}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f5f6f2;color:var(--ink);font-family:Roboto,Arial,sans-serif}
+button{font:inherit}
+button:focus-visible,a:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+.home-shell{position:fixed;inset:0;background:#f4f5f1;overflow:hidden}
+.site-header{position:absolute;z-index:50;top:0;left:0;right:0;height:76px;background:#fff;display:flex;align-items:center;gap:22px;padding:0 24px 0 26px;border-bottom:1px solid rgba(11,38,51,.08);box-shadow:0 2px 16px rgba(11,38,51,.06)}
+.brand{display:flex;align-items:center;gap:10px;min-width:230px;color:var(--ink)}
+.brand-mark{position:relative;width:54px;height:44px;flex:none}
+.brand-mark .tri{position:absolute;bottom:3px;width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:32px solid var(--ink)}
+.brand-mark .tri:nth-child(1){left:0}
+.brand-mark .tri:nth-child(2){left:15px;border-bottom-color:var(--cyan);transform:scale(.9)}
+.brand-mark .tri:nth-child(3){left:28px;border-bottom-color:var(--pink);transform:scale(.75)}
+.brand-mark .sun-dot{position:absolute;right:2px;top:0;width:16px;height:16px;border-radius:50%;background:var(--yellow)}
+.brand strong{display:block;font-size:18px;line-height:.93;font-weight:950;letter-spacing:-.035em}
+.brand small{display:none}
+.sidebar{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;height:100%;min-width:0}
+.side-item{border:0;background:transparent;color:var(--ink);border-radius:999px;padding:10px 13px;cursor:pointer;font-size:12px;font-weight:800;white-space:nowrap;transition:background .2s ease,transform .2s ease}
+.side-item:hover{background:#f2f4ef}
+.side-item.is-active{background:var(--yellow)}
+.header-actions{display:flex;align-items:center;gap:12px;margin-left:auto}
+.search-dot{width:42px;height:42px;border:0;background:transparent;position:relative}
+.search-dot::before{content:"";position:absolute;width:14px;height:14px;border:3px solid var(--ink);border-radius:50%;left:8px;top:7px}
+.search-dot::after{content:"";position:absolute;width:12px;height:3px;background:var(--ink);transform:rotate(45deg);left:22px;top:24px;border-radius:4px}
+.map-callout{display:flex;align-items:center;gap:9px;min-height:46px;padding:0 18px;border:0;border-radius:999px;background:var(--yellow);color:var(--ink);font-weight:950;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}
+.map-callout:hover{transform:translateY(-2px);box-shadow:0 10px 18px rgba(11,38,51,.12)}
+.map-icon{position:relative;width:22px;height:18px;display:inline-block}
+.map-icon::before,.map-icon::after{content:"";position:absolute;top:1px;width:8px;height:16px;border:2px solid currentColor;transform:skewY(-18deg)}
+.map-icon::before{left:1px}.map-icon::after{right:1px;transform:skewY(18deg)}
+.map-copy small{display:none}
+.accordion{position:absolute;z-index:5;top:88px;left:14px;right:14px;bottom:14px;display:flex;gap:9px;overflow:hidden}
+.acc-panel{position:relative;flex:1 1 0;min-width:112px;overflow:hidden;border-radius:20px;background:#fff;box-shadow:var(--shadow);transition:flex-grow .68s var(--ease),transform .3s ease;isolation:isolate}
+.acc-panel.is-active{flex-grow:6.4}
+.acc-panel:hover{transform:translateY(-1px)}
+.panel-scene{position:absolute;inset:0 0 112px;background:var(--cyan);overflow:hidden}
+.acc-panel.is-active .panel-scene{inset:0}
+.panel-toggle{position:absolute;inset:0;z-index:10;border:0;background:transparent;cursor:pointer;text-align:left;padding:0}
+.acc-panel.is-active .panel-toggle{pointer-events:none}
+.panel-footer{position:absolute;left:0;right:0;bottom:0;height:112px;padding:18px 15px 14px;background:#fff;border-top:1px solid rgba(11,38,51,.08)}
+.panel-title{display:block;color:var(--ink);font-size:15px;font-weight:950;line-height:1.05;letter-spacing:-.03em}
+.panel-summary{display:none}
+.panel-arrow{position:absolute;right:14px;bottom:14px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--accent,var(--yellow));color:var(--ink);font-size:22px;font-weight:900}
+.acc-panel.is-active .panel-footer{opacity:0}
+.panel-content{position:absolute;z-index:8;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,transform .45s var(--ease);transform:translateX(24px)}
+.acc-panel.is-active .panel-content{opacity:1;visibility:visible;pointer-events:auto;transform:none}
+.panel-content:not(#content-home){left:34px;bottom:34px;width:min(560px,calc(100% - 68px));padding:24px 26px 26px;border-radius:22px;background:rgba(255,255,255,.96);box-shadow:0 18px 42px rgba(11,38,51,.20)}
+.panel-content:not(#content-home)::before{content:"";display:block;width:54px;height:7px;border-radius:999px;background:var(--accent,var(--yellow));margin-bottom:14px}
+.eyebrow{font-size:10px;font-weight:950;letter-spacing:.16em;color:var(--pink)}
+.panel-content h2{margin:7px 0 10px;font-size:clamp(34px,4vw,64px);line-height:.95;letter-spacing:-.055em;font-weight:950}
+.panel-content p{margin:0;color:#53676d;line-height:1.5;font-size:15px;max-width:500px}
+.panel-cta{display:inline-flex;align-items:center;gap:8px;margin-top:18px;min-height:46px;padding:0 17px;border:0;border-radius:999px;background:var(--yellow);color:var(--ink);font-weight:950;cursor:pointer}
+.panel-feed{display:grid;gap:8px;margin-top:16px;max-height:180px;overflow:auto}
+.panel-feed-item{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;align-items:center;padding:7px;background:#f6f7f4;border-radius:12px}
+.panel-feed-item.no-thumb{grid-template-columns:1fr}
+.panel-feed-thumb{display:block;width:58px;height:46px;border-radius:9px;object-fit:cover;background:#dde7e8}
+.panel-feed-video-thumb{display:grid;place-items:center;background:linear-gradient(145deg,var(--violet),var(--pink));color:#fff;font-size:20px}
+.panel-feed-title{font-size:12px;font-weight:850;line-height:1.2}
+.panel-feed-meta{display:block;margin-top:3px;font-size:10px;color:var(--muted)}
 
-.playful-theme .map-callout{
-  top:14px;right:22px;min-height:48px;padding:8px 17px;
-  border:2px solid var(--ink)!important;border-radius:999px!important;
-  background:var(--sun)!important;color:var(--ink)!important;
-  box-shadow:4px 4px 0 var(--ink)!important;
-}
-.playful-theme .map-callout:hover{transform:translate(-1px,-1px)!important;box-shadow:6px 6px 0 var(--ink)!important}
-.playful-theme .map-callout svg{stroke:var(--ink)!important;stroke-width:2}
-.playful-theme .map-copy strong{font-weight:900}
-.playful-theme .map-copy small{color:#3f4d4f!important}
+/* Home open panel */
+#content-home{inset:0;padding:0}
+.home-copy{position:absolute;z-index:8;left:5.2%;top:12%;width:min(540px,46%);color:#fff}
+.home-kicker{display:inline-flex;align-items:center;min-height:28px;padding:0 12px;border-radius:999px;background:var(--pink);color:#fff;font-size:10px;font-weight:950;letter-spacing:.11em}
+.home-copy h2{margin:14px 0 15px;font-size:clamp(54px,6.5vw,112px);line-height:.82;letter-spacing:-.075em;color:#fff;text-shadow:0 6px 20px rgba(11,38,51,.16)}
+.home-copy h2 span{display:block;color:var(--ink)}
+.home-copy p{max-width:480px;color:var(--ink);font-size:clamp(15px,1.2vw,20px);font-weight:650;line-height:1.43}
+.home-copy .panel-cta{margin-top:20px;font-size:14px}
+.weather-frame{position:absolute;z-index:9;right:28px;bottom:26px;width:min(560px,47%);padding:14px;border-radius:22px;background:rgba(255,255,255,.96);box-shadow:0 18px 42px rgba(11,38,51,.18)}
+.weather-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:1px 3px 11px}
+.weather-head strong{font-size:14px;font-weight:950}
+.weather-head span{font-size:10px;color:var(--muted);font-weight:700}
+.weather-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.accordion-station{min-width:0;padding:12px;border-radius:16px;background:#f7f8f4;border:1px solid rgba(11,38,51,.08)}
+.accordion-station-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.accordion-station-place{font-size:12px;font-weight:950}.accordion-station-place small{margin-left:3px;color:var(--muted);font-weight:650}
+.accordion-station-live{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--muted);font-weight:800;white-space:nowrap}
+.accordion-station-dot{width:7px;height:7px;border-radius:50%;background:#35d278;box-shadow:0 0 0 3px rgba(53,210,120,.13)}
+.accordion-station.is-stale .accordion-station-dot{background:#f4b840}.accordion-station.is-unavailable .accordion-station-dot{background:#ed6262}
+.accordion-station-main{display:grid;grid-template-columns:42px auto 1fr;align-items:center;gap:8px;margin:8px 0 9px}
+.accordion-station-icon{width:40px;height:40px}.accordion-station-icon svg{width:100%;height:100%}
+.accordion-station-temp{font-size:38px;line-height:.9;font-weight:950;letter-spacing:-.06em}
+.accordion-station-temp sup{font-size:.38em;color:#00aeca}
+.accordion-station-feels{font-size:9px;color:var(--muted);font-weight:800}.accordion-station-observed{margin-top:2px;font-size:8px;color:#8a999d}
+.accordion-station-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0}
+.accordion-station-stat{padding:7px;border-radius:10px;background:#fff}
+.accordion-station-stat dt{font-size:8px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:850}
+.accordion-station-stat dd{margin:2px 0 0;font-size:14px;font-weight:950;white-space:nowrap}.accordion-station-stat dd small{font-size:8px;color:var(--muted);margin-left:2px}
+.accordion-station-stat>span{display:block;margin-top:1px;font-size:8px;color:var(--muted)}
+.accordion-station-source{display:flex;justify-content:space-between;gap:8px;margin-top:7px;padding-top:6px;border-top:1px solid rgba(11,38,51,.07);font-size:8px;color:var(--muted)}.accordion-station-source a{color:#00879a;text-decoration:none}
 
-.playful-theme .accordion{
-  top:82px!important;left:8px!important;right:8px!important;bottom:8px!important;
-  gap:8px!important;background:#f5f3ec!important;border-radius:16px!important;
-}
-.playful-theme .acc-panel{
-  min-width:118px!important;border:2px solid var(--ink)!important;border-radius:18px!important;
-  background:#fff!important;box-shadow:4px 4px 0 rgba(11,38,51,.16)!important;
-}
-.playful-theme .acc-panel::before{
-  background-size:cover!important;background-position:center!important;
-  filter:none!important;transform:scale(1.01)!important;
-}
-.playful-theme .acc-panel[data-panel="home"]::before{
-  background-image:url("/art/playful-home.svg")!important;
-  background-size:cover!important;background-position:center!important;
-}
-.playful-theme .panel-home-media{display:none!important}
-.playful-theme .panel-overlay{
-  background:linear-gradient(180deg,rgba(11,38,51,.08),rgba(11,38,51,.02) 48%,rgba(11,38,51,.58))!important;
-}
-.playful-theme .acc-panel.is-active .panel-overlay{opacity:.30!important}
-.playful-theme .panel-toggle{
-  padding:24px 15px 18px!important;
-  background:linear-gradient(180deg,rgba(11,38,51,.03),rgba(11,38,51,.16))!important;
-}
-.playful-theme .panel-title{
-  color:#fff!important;font-size:21px!important;font-weight:900!important;line-height:1.04!important;
-  letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.28)!important;
-}
-.playful-theme .panel-summary{
-  max-width:160px!important;color:rgba(255,255,255,.92)!important;font-size:12px!important;line-height:1.36!important;
-  text-shadow:0 1px 6px rgba(0,0,0,.28)
-}
-.playful-theme .panel-arrow{
-  width:40px;height:40px;border:2px solid #fff!important;background:rgba(11,38,51,.28)!important;color:#fff!important;
-  box-shadow:3px 3px 0 rgba(11,38,51,.38)
-}
+/* Home cartoon scene */
+.scene-home{background:linear-gradient(#13c8e8 0 58%,#30b8de 58% 66%,#0f8dbc 66% 100%)}
+.scene-home .sun,.mini-sun{position:absolute;border-radius:50%;background:var(--yellow)}
+.scene-home .sun{width:170px;height:170px;right:8%;top:8%}
+.cloud{position:absolute;width:88px;height:24px;border-radius:30px;background:#fff}
+.cloud::before,.cloud::after{content:"";position:absolute;border-radius:50%;background:#fff}
+.cloud::before{width:38px;height:38px;left:14px;bottom:4px}.cloud::after{width:50px;height:50px;right:9px;bottom:2px}
+.scene-home .cloud.a{left:7%;top:13%;transform:scale(.8)}.scene-home .cloud.b{right:31%;top:17%;transform:scale(.65)}
+.mountain{position:absolute;bottom:20%;clip-path:polygon(50% 0,100% 100%,0 100%);transform-origin:bottom}
+.scene-home .m1{left:-3%;width:48%;height:54%;background:#183b59}
+.scene-home .m2{left:23%;width:48%;height:46%;background:#0f6f78}
+.scene-home .m3{right:4%;width:46%;height:58%;background:#fefefe}
+.scene-home .m3::after{content:"";position:absolute;inset:22% 0 0;background:linear-gradient(140deg,var(--pink) 0 22%,transparent 22% 36%,var(--orange) 36% 48%,transparent 48%),linear-gradient(220deg,#10616a 0 30%,transparent 30%);clip-path:inherit}
+.hills{position:absolute;left:-4%;right:-4%;bottom:0;height:44%;background:linear-gradient(165deg,#d9f12d 0 36%,#a9df1d 36% 61%,#f6dc20 61%);clip-path:polygon(0 42%,14% 24%,28% 44%,43% 19%,57% 40%,72% 17%,88% 41%,100% 20%,100% 100%,0 100%)}
+.forest{position:absolute;inset:auto 0 10% 0;height:38%;background:
+  linear-gradient(65deg,transparent 0 46%,#083b43 47% 53%,transparent 54%) 0 20px/62px 90px repeat-x;
+opacity:.92}
+.trail-ribbon{position:absolute;z-index:3;left:43%;bottom:-3%;width:42%;height:44%;border:19px solid #fff6d8;border-left-color:transparent;border-bottom-color:transparent;border-radius:54% 0 0 0;transform:rotate(-8deg)}
+.trail-ribbon::after{content:"";position:absolute;left:36px;top:14px;width:110%;height:100%;border-top:5px dashed var(--pink);border-radius:50%;transform:rotate(-8deg)}
+.hut{position:absolute;z-index:4;right:16%;bottom:22%;width:112px;height:68px;background:#eee4d6;border:4px solid var(--ink);border-top:0}
+.hut::before{content:"";position:absolute;left:-10px;right:-10px;top:-34px;height:38px;background:var(--pink);clip-path:polygon(0 100%,50% 0,100% 100%)}
+.hut::after{content:"";position:absolute;width:20px;height:34px;left:45px;bottom:0;background:var(--ink)}
+.hiker{position:absolute;z-index:6;left:31%;bottom:9%;width:130px;height:190px}
+.hiker .head{position:absolute;left:55px;top:0;width:31px;height:31px;border-radius:50%;background:#ef9f69}
+.hiker .cap{position:absolute;left:48px;top:-5px;width:46px;height:17px;border-radius:16px 20px 7px 7px;background:var(--pink)}
+.hiker .body{position:absolute;left:46px;top:30px;width:50px;height:74px;border-radius:16px;background:var(--orange);transform:rotate(4deg)}
+.hiker .pack{position:absolute;left:17px;top:35px;width:48px;height:72px;border-radius:18px 12px 16px 18px;background:var(--pink);box-shadow:inset -10px 0 0 var(--cyan)}
+.hiker .leg.one,.hiker .leg.two{position:absolute;width:18px;height:85px;background:var(--ink);top:96px;border-radius:10px;transform-origin:top}
+.hiker .leg.one{left:55px;transform:rotate(19deg)}.hiker .leg.two{left:82px;transform:rotate(-20deg)}
+.hiker .boot.one,.hiker .boot.two{position:absolute;width:36px;height:14px;background:var(--pink);bottom:2px;border-radius:14px 18px 6px 6px}
+.hiker .boot.one{left:72px}.hiker .boot.two{left:25px}
+.hiker .pole.one,.hiker .pole.two{position:absolute;width:3px;height:118px;background:var(--ink);top:63px;transform-origin:top}
+.hiker .pole.one{left:103px;transform:rotate(-12deg)}.hiker .pole.two{left:31px;transform:rotate(17deg)}
 
-/* Active content: white illustrated card over the bright artwork. */
-.playful-theme .panel-content:not(#content-home){
-  color:var(--ink)!important;background:rgba(255,253,248,.96)!important;
-  border:2px solid var(--ink)!important;border-radius:20px!important;
-  box-shadow:8px 8px 0 var(--sun)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
-}
-.playful-theme .panel-content:not(#content-home) h2{color:var(--ink)!important;text-shadow:none!important}
-.playful-theme .panel-content:not(#content-home) p{color:#35505a!important}
-.playful-theme .eyebrow{color:#ef2f86!important}
-.playful-theme .panel-cta{
-  border:2px solid var(--ink)!important;background:var(--sun)!important;color:var(--ink)!important;
-  box-shadow:4px 4px 0 var(--ink)!important;font-weight:900!important;
-}
-.playful-theme .panel-cta:hover{background:#ffe83d!important;transform:translate(-1px,-1px)}
-.playful-theme .panel-feed-item{
-  border:1.5px solid rgba(11,38,51,.18)!important;background:#fff!important;
-}
-.playful-theme .panel-feed-title{color:var(--ink)!important}
-.playful-theme .panel-feed-meta{color:#647a80!important}
-.playful-theme .panel-feed-video-thumb{background:linear-gradient(145deg,#635bff,#ff4fa3)!important;border:0!important}
+/* Narrow panel scenes */
+.panel-news{--accent:var(--violet)}.panel-trails{--accent:var(--yellow)}.panel-poi{--accent:var(--pink)}.panel-shelter{--accent:var(--orange)}.panel-photos{--accent:var(--teal)}.panel-video{--accent:#2f9bf4}
+.mini-scene{background:linear-gradient(#18c7e8 0 56%,#d7ef35 56% 100%)}
+.mini-scene::before{content:"";position:absolute;left:-28%;right:-28%;bottom:20%;height:48%;background:#113b57;clip-path:polygon(0 100%,18% 36%,34% 78%,52% 19%,66% 68%,82% 30%,100% 100%)}
+.mini-scene::after{content:"";position:absolute;left:-12%;right:-12%;bottom:0;height:42%;background:#0d6f64;clip-path:polygon(0 72%,20% 34%,39% 70%,59% 20%,77% 58%,100% 30%,100% 100%,0 100%)}
+.mini-sun{width:95px;height:95px;right:-26px;top:12%}
+.mini-cloud{position:absolute;z-index:2;width:70px;height:20px;border-radius:30px;background:#fff;left:10px;top:17%}
+.symbol{position:absolute;z-index:5;left:50%;top:47%;transform:translate(-50%,-50%)}
+.trail-symbol{width:72px;height:180px;border:18px solid #fff;border-left-color:transparent;border-bottom-color:transparent;border-radius:70% 30% 70% 30%;transform:translate(-55%,-46%) rotate(12deg)}
+.trail-symbol::after{content:"";position:absolute;inset:3px -7px;border-top:5px dashed var(--pink);border-radius:50%}
+.pin-symbol{width:64px;height:82px;background:var(--pink);border:8px solid #fff;border-radius:50% 50% 50% 0;transform:translate(-50%,-58%) rotate(-45deg);box-shadow:0 4px 0 rgba(11,38,51,.12)}
+.pin-symbol::after{content:"";position:absolute;width:19px;height:19px;border-radius:50%;background:#fff;left:15px;top:15px}
+.hut-symbol{width:84px;height:62px;background:#efe4d5;border:4px solid var(--ink);border-top:0}
+.hut-symbol::before{content:"";position:absolute;left:-8px;right:-8px;top:-30px;height:34px;background:var(--pink);clip-path:polygon(0 100%,50% 0,100% 100%)}
+.hut-symbol::after{content:"";position:absolute;width:18px;height:31px;background:var(--ink);left:29px;bottom:0}
+.camera-symbol{width:86px;height:62px;border-radius:12px;background:var(--yellow);border:5px solid var(--ink)}
+.camera-symbol::before{content:"";position:absolute;width:44px;height:44px;border-radius:50%;background:var(--pink);border:8px solid var(--ink);left:17px;top:9px}
+.camera-symbol::after{content:"";position:absolute;width:32px;height:14px;border-radius:6px 6px 0 0;background:var(--ink);left:10px;top:-14px}
+.play-symbol{width:94px;height:94px;border-radius:50%;background:var(--pink);border:8px solid #fff;box-shadow:0 5px 0 rgba(11,38,51,.15)}
+.play-symbol::after{content:"";position:absolute;left:37px;top:26px;border-left:32px solid #fff;border-top:21px solid transparent;border-bottom:21px solid transparent}
+.news-symbol{width:78px;height:58px;background:var(--yellow);clip-path:polygon(0 27%,67% 0,67% 100%,0 73%)}
+.news-symbol::before{content:"";position:absolute;width:18px;height:53px;background:var(--ink);right:4px;top:2px;transform:rotate(-12deg)}
+.news-symbol::after{content:"";position:absolute;width:42px;height:8px;border-radius:10px;background:var(--pink);right:-34px;top:3px;box-shadow:7px 20px 0 var(--pink),0 40px 0 var(--pink);transform:rotate(-12deg)}
+.photo-scene{background:linear-gradient(#10c6e6 0 48%,#ffe25d 48% 100%)}
+.video-scene{background:linear-gradient(#ff8b23 0 44%,#6559f5 44% 100%)}
+.news-scene{background:linear-gradient(#17c8e8 0 56%,#ffcf30 56% 100%)}
 
-/* News becomes editorial but still playful. */
-.playful-theme .news-board{
-  border:2px solid var(--ink)!important;background:#fff!important;
-  box-shadow:7px 7px 0 #ff4fa3!important;
-}
-.playful-theme .news-board-head{border-color:rgba(11,38,51,.12)!important}
-.playful-theme .news-board-head span{color:#ef2f86!important}
-.playful-theme .news-board-head h3{color:var(--ink)!important}
-.playful-theme .news-board-badge{
-  color:var(--ink)!important;background:#fff4a8!important;border:1.5px solid var(--ink)!important;
-}
-.playful-theme .news-board .home-news-card{
-  background:#fffdf8!important;border:1.5px solid rgba(11,38,51,.16)!important;
-}
-.playful-theme .news-board .home-news-card:first-child{
-  background:#eafcff!important;border-color:#10c8e8!important;
-}
-.playful-theme .home-news-title{color:var(--ink)!important}
-.playful-theme .home-news-excerpt{color:#486168!important}
-.playful-theme .home-news-date{color:#687d82!important}
-.playful-theme .home-news-read{color:#ef2f86!important}
+/* News board */
+.news-board{margin-top:18px;padding:12px;border-radius:16px;background:#f7f8f4}
+.news-board-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px}
+.news-board-head span{font-size:8px;letter-spacing:.14em;font-weight:950;color:var(--pink)}
+.news-board-head h3{margin:3px 0 0;font-size:18px}
+.news-board-badge{padding:5px 8px;border-radius:999px;background:#fff1a0;font-size:9px;font-weight:850}
+.news-board-body{display:grid;gap:7px;max-height:210px;overflow:auto}
+.home-news-card{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;padding:7px;background:#fff;border-radius:11px;color:inherit;text-decoration:none}
+.home-news-image{width:64px;height:54px;object-fit:cover;border-radius:8px;background:#dbe6e7}
+.home-news-date{font-size:8px;color:var(--muted)}.home-news-title{margin:2px 0 0;font-size:11px;line-height:1.18}.home-news-excerpt{display:none}.home-news-read{display:block;margin-top:4px;font-size:8px;color:var(--pink);font-weight:850}
 
-/* Weather: clean white cards with playful colored accents. */
-.playful-theme .accordion-weather-stack{gap:12px!important}
-.playful-theme .accordion-station{
-  background:#fffdf8!important;color:var(--ink)!important;
-  border:2px solid var(--ink)!important;border-radius:18px!important;
-  box-shadow:7px 7px 0 #10c8e8!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+@media (max-width:1180px){
+  .brand{min-width:190px}.sidebar{gap:0}.side-item{padding:9px 8px;font-size:10px}
+  .acc-panel{min-width:92px}.weather-frame{width:50%}.home-copy{width:47%}
 }
-.playful-theme .accordion-station[data-live-station="panachaiko"]{box-shadow:7px 7px 0 #ff4fa3!important}
-.playful-theme .accordion-station-place,
-.playful-theme .accordion-station-temp,
-.playful-theme .accordion-station-stat dd{color:var(--ink)!important}
-.playful-theme .accordion-station-place small,
-.playful-theme .accordion-station-live,
-.playful-theme .accordion-station-feels,
-.playful-theme .accordion-station-observed,
-.playful-theme .accordion-station-stat dt,
-.playful-theme .accordion-station-stat>span,
-.playful-theme .accordion-station-source{color:#60777e!important}
-.playful-theme .accordion-station-temp sup{color:#00aeca!important}
-.playful-theme .accordion-station-stat{border-color:rgba(11,38,51,.16)!important}
-.playful-theme .accordion-station-source{border-color:rgba(11,38,51,.12)!important}
-.playful-theme .accordion-station-source a{color:#007f92!important}
-.playful-theme .accordion-station-icon{filter:saturate(1.35)}
-.playful-theme .home-copy .eyebrow{color:#ffe13b!important;text-shadow:0 2px 8px rgba(0,0,0,.35)}
-.playful-theme #content-home .home-copy h2{color:#fff!important;text-shadow:0 3px 16px rgba(0,0,0,.42)}
-.playful-theme #content-home .home-copy p{color:#fff!important;text-shadow:0 2px 10px rgba(0,0,0,.38)}
-.playful-theme .home-map-cta{background:var(--sun)!important;color:var(--ink)!important}
-
-/* Route decoration uses the same playful palette. */
-.playful-theme .hero-route path{stroke:#ff4fa3!important;stroke-width:4!important;stroke-dasharray:11 10!important}
-.playful-theme .hero-route circle{fill:#fffdf8!important;stroke:#0b2633!important;stroke-width:3!important}
-.playful-theme .hero-route{opacity:.88!important;filter:drop-shadow(0 0 5px rgba(255,79,163,.20))!important}
-
-/* Hide obsolete desktop sidebar, keep mobile bottom nav minimal. */
-@media (min-width:641px){.playful-theme .sidebar{display:none!important}.playful-theme .accordion{left:8px!important}}
 @media (max-width:900px){
-  .playful-theme .acc-panel{min-width:84px!important}
-  .playful-theme .panel-title{font-size:16px!important}
-  .playful-theme .panel-summary{display:none!important}
+  .site-header{height:66px;padding:0 10px}.brand{min-width:0}.brand strong{font-size:14px}.brand-mark{width:44px;height:36px}
+  .sidebar{position:fixed;z-index:60;left:0;right:0;bottom:0;height:62px;background:#fff;border-top:1px solid rgba(11,38,51,.1);justify-content:space-around}
+  .side-item{padding:7px 5px;font-size:9px}.header-actions{margin-left:auto}.search-dot{display:none}.map-callout{min-height:40px;padding:0 13px}.map-copy strong{font-size:12px}
+  .accordion{top:74px;bottom:70px;left:7px;right:7px;flex-direction:column;gap:7px}
+  .acc-panel{min-width:0;min-height:48px;border-radius:16px;transition:flex-grow .45s var(--ease)}
+  .acc-panel.is-active{flex-grow:8}
+  .panel-scene{inset:0}.panel-footer{height:100%;display:flex;align-items:center;padding:0 54px 0 14px;background:rgba(255,255,255,.95)}
+  .panel-arrow{right:11px;bottom:50%;transform:translateY(50%);width:32px;height:32px}
+  .panel-title{font-size:13px}
+  .acc-panel.is-active .panel-footer{display:none}
+  .home-copy{left:18px;top:20px;width:calc(100% - 36px)}
+  .home-copy h2{font-size:clamp(42px,11vw,70px);max-width:620px}.home-copy p{max-width:520px}
+  .weather-frame{left:16px;right:16px;bottom:16px;width:auto}.weather-grid{grid-template-columns:1fr 1fr}
+  .hiker{transform:scale(.72);transform-origin:bottom left;left:50%}.hut{right:9%;bottom:21%;transform:scale(.82)}
+  .panel-content:not(#content-home){left:16px;right:16px;bottom:16px;width:auto}
 }
-@media (max-width:640px){
-  .playful-theme::before{height:64px!important;border-bottom-width:4px!important}
-  .playful-theme .brand{top:7px;left:10px}
-  .playful-theme .brand-mark{width:42px;height:34px}
-  .playful-theme .brand strong{font-size:13px}
-  .playful-theme .map-callout{top:7px;right:8px;min-height:40px;padding:6px 11px;box-shadow:3px 3px 0 var(--ink)!important}
-  .playful-theme .accordion{top:68px!important}
-  .playful-theme .sidebar{background:#fffdf8!important;border-color:var(--ink)!important}
-  .playful-theme .side-item{color:var(--ink)!important;border-color:rgba(11,38,51,.12)!important}
-  .playful-theme .side-item.is-active{background:#fff3a0!important;box-shadow:inset 0 4px 0 #ff4fa3!important}
-  .playful-theme .panel-title{font-size:15px!important}
-  .playful-theme .panel-content:not(#content-home){box-shadow:5px 5px 0 var(--sun)!important}
+@media (max-width:620px){
+  .brand strong{font-size:11px}.brand-mark{transform:scale(.8);transform-origin:left center}.map-callout{padding:0 10px}.map-icon{display:none}
+  .sidebar{overflow-x:auto;justify-content:flex-start;padding:0 6px}.side-item{flex:0 0 auto}
+  .home-copy{top:15px}.home-copy h2{font-size:40px}.home-copy p{font-size:13px;max-width:320px}.home-copy .panel-cta{min-height:40px;font-size:12px;margin-top:10px}
+  .weather-frame{padding:10px;border-radius:16px}.weather-grid{grid-template-columns:1fr}.accordion-station:nth-child(2){display:none}
+  .weather-head span{display:none}.accordion-station{padding:9px}.accordion-station-stats{grid-template-columns:repeat(4,1fr)}.accordion-station-stat{padding:5px}.accordion-station-source{display:none}
+  .scene-home .sun{width:110px;height:110px;right:4%;top:10%}.hiker{left:46%;transform:scale(.58)}.hut{display:none}
 }
-
-
-/* ============ Screenshot reference pass · 2026-09-29 ============ */
-.playful-theme{
-  --ref-ink:#0a0b0d;
-  --ref-white:#ffffff;
-  --ref-cyan:#08c8ec;
-  --ref-yellow:#ffe000;
-  --ref-pink:#ff2f93;
-  --ref-orange:#ff7112;
-  --ref-teal:#06aeb4;
-  --ref-soft:#f5f6f4;
-}
-.playful-theme .acc-panel[data-panel="home"]{--panel-accent:var(--ref-yellow)}
-.playful-theme .acc-panel[data-panel="news"]{--panel-accent:var(--ref-pink)}
-.playful-theme .acc-panel[data-panel="trails"]{--panel-accent:var(--ref-cyan)}
-.playful-theme .acc-panel[data-panel="poi"]{--panel-accent:var(--ref-pink)}
-.playful-theme .acc-panel[data-panel="shelter"]{--panel-accent:var(--ref-orange)}
-.playful-theme .acc-panel[data-panel="photos"]{--panel-accent:var(--ref-teal)}
-.playful-theme .acc-panel[data-panel="video"]{--panel-accent:#665cff}
-
-.playful-theme .acc-panel{
-  border-color:rgba(10,11,13,.18)!important;
-  background:#fff!important;
-  box-shadow:0 14px 34px rgba(11,38,51,.15)!important;
-}
-.playful-theme .acc-panel:not(.is-active) .panel-toggle{
-  inset:auto 0 0!important;
-  height:154px!important;
-  padding:18px 17px 16px!important;
-  display:block!important;
-  background:rgba(255,255,255,.97)!important;
-  border-top:1px solid rgba(10,11,13,.08)!important;
-  box-shadow:0 -8px 24px rgba(0,0,0,.06)!important;
-}
-.playful-theme .acc-panel:not(.is-active) .panel-title{
-  display:block!important;
-  max-width:calc(100% - 46px)!important;
-  color:var(--ref-ink)!important;
-  font-size:18px!important;
-  font-weight:950!important;
-  line-height:1.03!important;
-  letter-spacing:-.035em!important;
-  text-shadow:none!important;
-  opacity:1!important;
-  transform:none!important;
-}
-.playful-theme .acc-panel:not(.is-active) .panel-summary{
-  display:block!important;
-  max-width:calc(100% - 36px)!important;
-  margin-top:9px!important;
-  color:#5f676b!important;
-  font-size:11px!important;
-  line-height:1.36!important;
-  text-shadow:none!important;
-}
-.playful-theme .acc-panel:not(.is-active) .panel-arrow{
-  right:14px!important;
-  bottom:14px!important;
-  width:34px!important;
-  height:34px!important;
-  border:0!important;
-  background:var(--panel-accent)!important;
-  color:var(--ref-ink)!important;
-  box-shadow:none!important;
-}
-.playful-theme .acc-panel:not(.is-active)::after{
-  content:"";
-  position:absolute;
-  z-index:4;
-  left:17px;
-  bottom:138px;
-  width:44px;
-  height:6px;
-  border-radius:999px;
-  background:var(--panel-accent);
-  pointer-events:none;
-}
-.playful-theme .acc-panel.is-active{
-  box-shadow:0 18px 46px rgba(11,38,51,.20)!important;
-}
-.playful-theme .acc-panel.is-active .panel-toggle{
-  opacity:0!important;
-}
-.playful-theme .acc-panel.is-active .panel-overlay{
-  background:linear-gradient(90deg,rgba(5,25,30,.34) 0%,rgba(5,25,30,.08) 48%,rgba(5,25,30,.14) 100%)!important;
-  opacity:1!important;
-}
-.playful-theme .panel-content:not(#content-home){
-  left:clamp(28px,3vw,52px)!important;
-  right:auto!important;
-  bottom:clamp(30px,5vh,58px)!important;
-  max-width:min(610px,calc(100% - 76px))!important;
-  padding:28px 30px 30px!important;
-  border:0!important;
-  border-radius:22px!important;
-  background:rgba(255,255,255,.97)!important;
-  box-shadow:0 18px 44px rgba(0,0,0,.18)!important;
-}
-.playful-theme .panel-content:not(#content-home)::before{
-  content:"";
-  display:block;
-  width:58px;
-  height:8px;
-  margin-bottom:17px;
-  border-radius:999px;
-  background:var(--panel-accent);
-}
-.playful-theme .panel-content:not(#content-home) h2{
-  font-size:clamp(38px,4.2vw,68px)!important;
-  line-height:.96!important;
-  letter-spacing:-.045em!important;
-  font-family:"Roboto",Arial,sans-serif!important;
-  font-weight:950!important;
-}
-.playful-theme .panel-content:not(#content-home) p{
-  max-width:520px!important;
-  font-size:16px!important;
-  line-height:1.55!important;
-}
-.playful-theme .panel-cta{
-  min-height:48px!important;
-  padding:12px 20px!important;
-  border:0!important;
-  border-radius:999px!important;
-  background:var(--ref-yellow)!important;
-  color:var(--ref-ink)!important;
-  box-shadow:none!important;
-  font-weight:950!important;
-}
-.playful-theme .panel-cta:hover{
-  transform:translateY(-2px)!important;
-  background:#ffea31!important;
-}
-
-.playful-theme #content-home{
-  left:clamp(28px,4vw,64px)!important;
-  right:clamp(28px,4vw,64px)!important;
-  top:clamp(24px,5vh,62px)!important;
-  bottom:clamp(24px,5vh,54px)!important;
-  max-width:none!important;
-  width:auto!important;
-  padding:0!important;
-  border:0!important;
-  border-radius:0!important;
-  background:none!important;
-  box-shadow:none!important;
-  display:block!important;
-}
-.playful-theme #content-home .home-copy{
-  position:absolute;
-  left:0;
-  top:clamp(58px,9vh,118px);
-  width:min(620px,56%);
-  max-width:620px;
-}
-.playful-theme #content-home .home-copy .eyebrow{
-  display:inline-flex;
-  align-items:center;
-  min-height:30px;
-  padding:0 13px;
-  border-radius:999px;
-  background:var(--ref-pink);
-  color:#fff!important;
-  font-size:11px!important;
-  letter-spacing:.12em!important;
-  text-shadow:none!important;
-}
-.playful-theme #content-home .home-copy h2{
-  margin:14px 0 16px!important;
-  color:#fff!important;
-  font-family:"Roboto",Arial,sans-serif!important;
-  font-size:clamp(54px,6.2vw,104px)!important;
-  font-weight:950!important;
-  line-height:.86!important;
-  letter-spacing:-.065em!important;
-  text-shadow:0 5px 22px rgba(0,0,0,.28)!important;
-}
-.playful-theme #content-home .home-copy p{
-  max-width:520px!important;
-  color:#fff!important;
-  font-size:clamp(16px,1.35vw,21px)!important;
-  line-height:1.42!important;
-  font-weight:600!important;
-  text-shadow:0 2px 12px rgba(0,0,0,.34)!important;
-}
-.playful-theme #content-home .home-map-cta{
-  margin-top:20px!important;
-  min-width:210px!important;
-  justify-content:center!important;
-  background:var(--ref-yellow)!important;
-  color:var(--ref-ink)!important;
-}
-.playful-theme #content-home .accordion-weather-stack{
-  position:absolute!important;
-  right:0!important;
-  bottom:0!important;
-  width:min(560px,45%)!important;
-  display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  gap:12px!important;
-}
-.playful-theme #content-home .accordion-station{
-  padding:14px 15px 12px!important;
-  border:0!important;
-  border-radius:20px!important;
-  background:rgba(255,255,255,.96)!important;
-  box-shadow:0 16px 34px rgba(0,0,0,.16)!important;
-}
-.playful-theme #content-home .accordion-station[data-live-station="panachaiko"]{
-  box-shadow:0 16px 34px rgba(0,0,0,.16)!important;
-}
-.playful-theme #content-home .accordion-station-temp{
-  font-size:clamp(42px,4vw,64px)!important;
-  font-weight:950!important;
-  letter-spacing:-.06em!important;
-}
-.playful-theme #content-home .accordion-station-main{
-  gap:9px!important;
-  margin:7px 0 9px!important;
-}
-.playful-theme #content-home .accordion-station-icon{
-  width:48px!important;
-  height:48px!important;
-}
-.playful-theme #content-home .accordion-station-stat{
-  padding:7px 6px!important;
-  border-radius:10px!important;
-  background:#f4f6f4!important;
-}
-.playful-theme #content-home .accordion-station-stat dt{
-  font-size:8.5px!important;
-}
-.playful-theme #content-home .accordion-station-stat dd{
-  font-size:15px!important;
-}
-.playful-theme #content-home .accordion-station-source{
-  margin-top:7px!important;
-  padding-top:7px!important;
-  font-size:9px!important;
-}
-
-@media (min-width:901px){
-  .playful-theme::before{
-    height:74px!important;
-    border-bottom:0!important;
-    background:#fff!important;
-    box-shadow:0 2px 14px rgba(10,11,13,.08)!important;
-  }
-  .playful-theme .brand{
-    top:8px!important;
-    left:22px!important;
-    height:58px!important;
-    z-index:50!important;
-  }
-  .playful-theme .brand strong{
-    font-size:18px!important;
-    letter-spacing:-.02em!important;
-  }
-  .playful-theme .brand small{
-    display:none!important;
-  }
-  .playful-theme .brand-mark{
-    width:58px!important;
-    height:48px!important;
-  }
-  .playful-theme .map-callout{
-    top:12px!important;
-    right:24px!important;
-    min-height:46px!important;
-    border:0!important;
-    border-radius:999px!important;
-    background:var(--ref-yellow)!important;
-    box-shadow:none!important;
-  }
-  .playful-theme .map-callout:hover{
-    transform:translateY(-2px)!important;
-    box-shadow:0 8px 18px rgba(0,0,0,.12)!important;
-  }
-  .playful-theme .sidebar{
-    display:flex!important;
-    position:absolute!important;
-    z-index:45!important;
-    top:0!important;
-    left:300px!important;
-    right:190px!important;
-    bottom:auto!important;
-    width:auto!important;
-    height:74px!important;
-    flex-direction:row!important;
-    align-items:center!important;
-    justify-content:center!important;
-    gap:2px!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    box-shadow:none!important;
-    overflow:visible!important;
-  }
-  .playful-theme .side-item{
-    flex:0 0 auto!important;
-    min-height:38px!important;
-    padding:0 13px!important;
-    gap:0!important;
-    border:0!important;
-    border-radius:999px!important;
-    background:transparent!important;
-    box-shadow:none!important;
-    color:var(--ref-ink)!important;
-    font-weight:800!important;
-  }
-  .playful-theme .side-item:hover{
-    background:#f2f3ef!important;
-    box-shadow:none!important;
-  }
-  .playful-theme .side-item.is-active{
-    background:var(--ref-yellow)!important;
-    box-shadow:none!important;
-  }
-  .playful-theme .side-label{
-    font-size:12px!important;
-    font-weight:850!important;
-    white-space:nowrap!important;
-  }
-  .playful-theme .side-item[data-open="home"]{order:1}
-  .playful-theme .side-item[data-open="trails"]{order:2}
-  .playful-theme .side-item[data-open="poi"]{order:3}
-  .playful-theme .side-item[data-open="shelter"]{order:4}
-  .playful-theme .side-item[data-open="photos"]{order:5}
-  .playful-theme .side-item[data-open="video"]{order:6}
-  .playful-theme .side-item[data-open="news"]{order:7}
-  .playful-theme .accordion{
-    top:82px!important;
-    left:10px!important;
-    right:10px!important;
-    bottom:10px!important;
-    gap:10px!important;
-    background:#eef0ed!important;
-  }
-  .playful-theme .acc-panel{
-    min-width:124px!important;
-    border-radius:22px!important;
-  }
-  .playful-theme .acc-panel.is-active{
-    flex-grow:5.4!important;
-  }
-}
-
-@media (min-width:901px) and (max-width:1220px){
-  .playful-theme .sidebar{left:245px!important;right:158px!important}
-  .playful-theme .side-item{padding:0 8px!important}
-  .playful-theme .side-label{font-size:10.5px!important}
-  .playful-theme .map-copy small{display:none!important}
-  .playful-theme #content-home .accordion-weather-stack{width:48%!important}
-  .playful-theme #content-home .home-copy{width:50%!important}
-}
-
-@media (max-width:900px){
-  .playful-theme .acc-panel:not(.is-active) .panel-toggle{
-    height:auto!important;
-    inset:0!important;
-    padding:0 16px!important;
-    background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,255,255,.88))!important;
-    display:flex!important;
-    align-items:center!important;
-  }
-  .playful-theme .acc-panel:not(.is-active)::after{display:none!important}
-  .playful-theme .acc-panel:not(.is-active) .panel-summary{display:none!important}
-  .playful-theme .acc-panel:not(.is-active) .panel-title{
-    max-width:calc(100% - 50px)!important;
-    font-size:14px!important;
-  }
-  .playful-theme #content-home .home-copy{
-    position:relative!important;
-    top:auto!important;
-    width:100%!important;
-    max-width:none!important;
-  }
-  .playful-theme #content-home .accordion-weather-stack{
-    position:relative!important;
-    right:auto!important;
-    bottom:auto!important;
-    width:100%!important;
-    margin-top:16px!important;
-    grid-template-columns:1fr!important;
-  }
-}
-
 </style>
-<div class="app playful-theme">
-  <div class="bg" aria-hidden="true"></div>
 
-  <h1 class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 74 58"><circle cx="55" cy="12" r="9" fill="#FFD900"/><path d="M3 50 22 18 41 50Z" fill="#0B2633"/><path d="M18 50 38 10 58 50Z" fill="#10C8E8"/><path d="M35 50 49 26 69 50Z" fill="#FF4FA3"/><path d="m35 50 8-14 8 14Z" fill="#FF6A00"/></svg></span><span><strong>PANACHAIKO TRAILS</strong><small>ΦΥΣΗ • ΙΣΤΟΡΙΑ • ΕΜΠΕΙΡΙΕΣ</small></span></h1>
+<div class="home-shell">
+  <header class="site-header">
+    <div class="brand" aria-label="Panachaiko Trails">
+      <span class="brand-mark" aria-hidden="true"><i class="tri"></i><i class="tri"></i><i class="tri"></i><i class="sun-dot"></i></span>
+      <span><strong>PANACHAIKO<br/>TRAILS</strong><small>ΦΥΣΗ · ΙΣΤΟΡΙΑ · ΕΜΠΕΙΡΙΕΣ</small></span>
+    </div>
 
-  <button class="map-callout" id="mapCta" type="button">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/><circle cx="16.5" cy="9" r="1.8"/></svg>
-    <span class="map-copy"><strong>Άνοιγμα Χάρτη →</strong><small>Διαδραστικός χάρτης</small></span>
-  </button>
+    <nav class="sidebar" id="sidebar" aria-label="Ενότητες">
+      <button class="side-item is-active" type="button" data-open="home" aria-controls="panel-home" aria-current="true">Αρχική</button>
+      <button class="side-item" type="button" data-open="trails" aria-controls="panel-trails">Μονοπάτια</button>
+      <button class="side-item" type="button" data-open="poi" aria-controls="panel-poi">Σημεία ενδιαφέροντος</button>
+      <button class="side-item" type="button" data-open="shelter" aria-controls="panel-shelter">Καταφύγια</button>
+      <button class="side-item" type="button" data-open="photos" aria-controls="panel-photos">Φωτογραφίες</button>
+      <button class="side-item" type="button" data-open="video" aria-controls="panel-video">Βίντεο</button>
+      <button class="side-item" type="button" data-open="news" aria-controls="panel-news">Νέα</button>
+    </nav>
 
-  <nav class="sidebar" id="sidebar" aria-label="Ενότητες">
-    <button class="side-item is-active" type="button" data-open="home" aria-controls="panel-home" aria-current="true"><span class="side-label">Αρχική</span></button>
-    <button class="side-item" type="button" data-open="news" aria-controls="panel-news"><span class="side-label">Νέα</span></button>
-    <button class="side-item" type="button" data-open="trails" aria-controls="panel-trails"><span class="side-label">Μονοπάτια</span></button>
-    <button class="side-item" type="button" data-open="poi" aria-controls="panel-poi"><span class="side-label">Σημεία Ενδιαφέροντος</span></button>
-    <button class="side-item" type="button" data-open="shelter" aria-controls="panel-shelter"><span class="side-label">Καταφύγια</span></button>
-    <button class="side-item" type="button" data-open="photos" aria-controls="panel-photos"><span class="side-label">Φωτογραφίες</span></button>
-    <button class="side-item" type="button" data-open="video" aria-controls="panel-video"><span class="side-label">Βίντεο</span></button>
-  </nav>
+    <div class="header-actions">
+      <button class="search-dot" type="button" aria-label="Αναζήτηση"></button>
+      <button class="map-callout" id="mapCta" type="button"><span class="map-icon" aria-hidden="true"></span><span class="map-copy"><strong>Χάρτης</strong><small>Διαδραστικός χάρτης</small></span></button>
+    </div>
+  </header>
 
   <main class="accordion" id="accordion">
-    <article class="acc-panel is-active" id="panel-home" data-panel="home" aria-labelledby="title-home" data-bg={defaultHomeBackground} data-default-bg={defaultHomeBackground} data-bg-loaded={defaultHomeBackground}>
-      <div class="panel-home-media" aria-hidden="true">
-        <picture>
-          <source
-            srcset={[
-              homeHeroAvif480 && `${homeHeroAvif480} 480w`,
-              homeHeroAvif768 && `${homeHeroAvif768} 768w`,
-              homeHeroAvif1024 && `${homeHeroAvif1024} 1024w`,
-            ].filter(Boolean).join(', ')}
-            sizes="100vw"
-            type="image/avif"
-          />
-          <img
-            src={homeHeroLarge || homeHeroFull}
-            srcset={[
-              homeHeroSmall && `${homeHeroSmall} 300w`,
-              homeHeroMedium && `${homeHeroMedium} 768w`,
-              homeHeroLarge && `${homeHeroLarge} 1024w`,
-              homeHeroFull && `${homeHeroFull} 1440w`,
-            ].filter(Boolean).join(', ')}
-            sizes="100vw"
-            alt=""
-            width="1440"
-            height="961"
-            loading="eager"
-            decoding="async"
-            fetchpriority="high"
-          />
-        </picture>
+    <article class="acc-panel is-active" id="panel-home" data-panel="home" aria-labelledby="title-home" style="--accent:var(--yellow)">
+      <div class="panel-scene scene-home" aria-hidden="true">
+        <span class="sun"></span>
+        <span class="cloud a"></span><span class="cloud b"></span>
+        <span class="mountain m1"></span><span class="mountain m2"></span><span class="mountain m3"></span>
+        <span class="hills"></span><span class="forest"></span><span class="trail-ribbon"></span>
+        <span class="hut"></span>
+        <span class="hiker"><i class="head"></i><i class="cap"></i><i class="body"></i><i class="pack"></i><i class="leg one"></i><i class="leg two"></i><i class="boot one"></i><i class="boot two"></i><i class="pole one"></i><i class="pole two"></i></span>
       </div>
-      <svg class="hero-route" viewBox="0 0 760 820" aria-hidden="true">
-        <path d="M610 692 C548 648 516 605 530 554 C542 509 598 488 576 438 C555 392 498 394 478 346 C455 292 512 262 489 213" />
-        <g>
-          <circle cx="610" cy="692" r="5"/><circle cx="564" cy="642" r="5"/>
-          <circle cx="529" cy="575" r="5"/><circle cx="565" cy="492" r="5"/>
-          <circle cx="538" cy="411" r="5"/><circle cx="480" cy="345" r="5"/>
-          <circle cx="493" cy="251" r="5"/><circle cx="489" cy="213" r="7"/>
-        </g>
-      </svg>
-      <div class="panel-overlay" aria-hidden="true"></div>
-      <button class="panel-toggle" type="button" aria-expanded="true" aria-controls="content-home" tabindex="-1"><span class="panel-title">Αρχική</span></button>
+      <button class="panel-toggle" type="button" aria-expanded="true" aria-controls="content-home" tabindex="-1"><span class="panel-footer"><span class="panel-title">Αρχική</span></span></button>
       <div class="panel-content" id="content-home">
-        <div class="accordion-weather-stack" aria-label="Σύγκριση καιρού Πάτρας και Παναχαϊκού">
-        <section class="accordion-station" data-live-station="patra" aria-label="Ζωντανός καιρός Πάτρα">
-          <div class="accordion-station-head">
-            <div class="accordion-station-place"><span data-station-name>Πάτρα</span><small data-station-elev>· 60 μ.</small></div>
-            <div class="accordion-station-live"><span class="accordion-station-dot" aria-hidden="true"></span><span data-station-status>Φόρτωση…</span></div>
-          </div>
-          <div class="accordion-station-main">
-            <div class="accordion-station-icon" data-station-icon aria-hidden="true"></div>
-            <div class="accordion-station-temp" data-station-temp>–<sup>°C</sup></div>
-            <div>
-              <div class="accordion-station-feels" data-station-feels>Live μέτρηση</div>
-              <div class="accordion-station-observed" data-station-observed></div>
-            </div>
-          </div>
-          <dl class="accordion-station-stats">
-            <div class="accordion-station-stat"><dt>Υγρασία</dt><dd data-station-hum>–</dd></div>
-            <div class="accordion-station-stat"><dt>Άνεμος</dt><dd data-station-wind>–</dd><span data-station-wind-dir></span></div>
-            <div class="accordion-station-stat"><dt>Βροχή σήμερα</dt><dd data-station-rain>–</dd></div>
-            <div class="accordion-station-stat"><dt>Πίεση</dt><dd data-station-pressure>–</dd></div>
-          </dl>
-          <div class="accordion-station-source"><span>Πηγή</span><a data-station-source href="#" target="_blank" rel="noopener">MeteoPatras</a></div>
-        </section>
-        <section class="accordion-station" data-live-station="panachaiko" aria-label="Ζωντανός καιρός Παναχαϊκό">
-          <div class="accordion-station-head">
-            <div class="accordion-station-place"><span data-station-name>Παναχαϊκό</span><small data-station-elev>· 1.588 μ.</small></div>
-            <div class="accordion-station-live"><span class="accordion-station-dot" aria-hidden="true"></span><span data-station-status>Φόρτωση…</span></div>
-          </div>
-          <div class="accordion-station-main">
-            <div class="accordion-station-icon" data-station-icon aria-hidden="true"></div>
-            <div class="accordion-station-temp" data-station-temp>–<sup>°C</sup></div>
-            <div>
-              <div class="accordion-station-feels" data-station-feels>Live μέτρηση</div>
-              <div class="accordion-station-observed" data-station-observed></div>
-            </div>
-          </div>
-          <dl class="accordion-station-stats">
-            <div class="accordion-station-stat"><dt>Υγρασία</dt><dd data-station-hum>–</dd></div>
-            <div class="accordion-station-stat"><dt>Άνεμος</dt><dd data-station-wind>–</dd><span data-station-wind-dir></span></div>
-            <div class="accordion-station-stat"><dt>Βροχή σήμερα</dt><dd data-station-rain>–</dd></div>
-            <div class="accordion-station-stat"><dt>Πίεση</dt><dd data-station-pressure>–</dd></div>
-          </dl>
-          <div class="accordion-station-source"><span>Πηγή</span><a data-station-source href="#" target="_blank" rel="noopener">ΕΑΑ / meteo.gr</a></div>
-        </section>
-        </div>
         <div class="home-copy">
-          <div class="eyebrow">PANACHAIKO TRAILS</div>
-          <h2 id="title-home">Ανακαλύψτε<br/>το Παναχαϊκό</h2>
-          <p>Μονοπάτια, κορυφές, καταφύγια και σημεία ενδιαφέροντος σε έναν ολοκληρωμένο ψηφιακό οδηγό για το βουνό της Αχαΐας.</p>
-          <div class="panel-feed" id="feed-home" aria-live="polite"></div>
-          <button class="panel-cta home-map-cta" type="button" data-demo="Αρχική">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/></svg>
-            <span>Άνοιγμα Χάρτη</span><b aria-hidden="true">→</b>
-          </button>
+          <span class="home-kicker">PANACHAIKO TRAILS</span>
+          <h2 id="title-home"><span>Ανακάλυψε</span>το Παναχαϊκό</h2>
+          <p>Μονοπάτια, καταφύγια, κορυφές και αυθεντικές εμπειρίες στο βουνό της Αχαΐας.</p>
+          <div class="panel-feed" id="feed-home" hidden></div>
+          <button class="panel-cta" type="button">Δες τα μονοπάτια <b aria-hidden="true">→</b></button>
         </div>
-      </div>
-      <div class="panel-index" aria-hidden="true">01</div>
-    </article>
 
-    <article class="acc-panel" id="panel-news" data-panel="news" aria-labelledby="title-news"
-      data-bg="/art/playful-news.svg" data-bg-preview="/art/playful-news.svg">
-      <div class="panel-overlay" aria-hidden="true"></div>
-      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-news">
-        <span class="panel-title">Τελευταία Νέα</span>
-        <span class="panel-summary">Τα 5 πιο πρόσφατα άρθρα από το blog</span>
-        <span class="panel-arrow" aria-hidden="true">→</span>
-      </button>
-
-      <div class="panel-content news-panel-content" id="content-news" inert>
-        <div class="eyebrow">PANACHAIKO TRAILS · BLOG</div>
-        <h2 id="title-news">Τελευταία Νέα</h2>
-        <p>Νέα, ιστορίες, διαδρομές και χρήσιμες πληροφορίες από το Παναχαϊκό.</p>
-
-        <section class="news-board" aria-labelledby="news-board-title">
-          <div class="news-board-head">
-            <div>
-              <span>ΤΕΛΕΥΤΑΙΑ ΝΕΑ</span>
-              <h3 id="news-board-title">Από το blog</h3>
-            </div>
-            <div class="news-board-badge">5 άρθρα</div>
-          </div>
-          <div class="home-news-body news-board-body" id="newsPanelBody" aria-live="polite">
-            <div class="home-news-placeholder">
-              <div class="home-news-placeholder-media" aria-hidden="true"></div>
-              <div>
-                <strong>Φόρτωση τελευταίων άρθρων…</strong>
-                <p>Τα πιο πρόσφατα νέα από το blog θα εμφανιστούν εδώ.</p>
+        <section class="weather-frame" aria-label="Ζωντανός καιρός Πάτρας και Παναχαϊκού">
+          <div class="weather-head"><strong>Καιρός τώρα</strong><span>Ζωντανά δεδομένα από Πάτρα & Παναχαϊκό</span></div>
+          <div class="weather-grid">
+            <article class="accordion-station" data-live-station="patra" aria-label="Ζωντανός καιρός Πάτρα">
+              <div class="accordion-station-head">
+                <div class="accordion-station-place"><span data-station-name>Πάτρα</span><small data-station-elev>· 60 μ.</small></div>
+                <div class="accordion-station-live"><span class="accordion-station-dot" aria-hidden="true"></span><span data-station-status>Φόρτωση…</span></div>
               </div>
-            </div>
+              <div class="accordion-station-main">
+                <div class="accordion-station-icon" data-station-icon aria-hidden="true"></div>
+                <div class="accordion-station-temp" data-station-temp>–<sup>°C</sup></div>
+                <div><div class="accordion-station-feels" data-station-feels>Live μέτρηση</div><div class="accordion-station-observed" data-station-observed></div></div>
+              </div>
+              <dl class="accordion-station-stats">
+                <div class="accordion-station-stat"><dt>Υγρασία</dt><dd data-station-hum>–</dd></div>
+                <div class="accordion-station-stat"><dt>Άνεμος</dt><dd data-station-wind>–</dd><span data-station-wind-dir></span></div>
+                <div class="accordion-station-stat"><dt>Βροχή</dt><dd data-station-rain>–</dd></div>
+                <div class="accordion-station-stat"><dt>Πίεση</dt><dd data-station-pressure>–</dd></div>
+              </dl>
+              <div class="accordion-station-source"><span>Πηγή</span><a data-station-source href="#" target="_blank" rel="noopener">MeteoPatras</a></div>
+            </article>
+
+            <article class="accordion-station" data-live-station="panachaiko" aria-label="Ζωντανός καιρός Παναχαϊκό">
+              <div class="accordion-station-head">
+                <div class="accordion-station-place"><span data-station-name>Παναχαϊκό</span><small data-station-elev>· 1.588 μ.</small></div>
+                <div class="accordion-station-live"><span class="accordion-station-dot" aria-hidden="true"></span><span data-station-status>Φόρτωση…</span></div>
+              </div>
+              <div class="accordion-station-main">
+                <div class="accordion-station-icon" data-station-icon aria-hidden="true"></div>
+                <div class="accordion-station-temp" data-station-temp>–<sup>°C</sup></div>
+                <div><div class="accordion-station-feels" data-station-feels>Live μέτρηση</div><div class="accordion-station-observed" data-station-observed></div></div>
+              </div>
+              <dl class="accordion-station-stats">
+                <div class="accordion-station-stat"><dt>Υγρασία</dt><dd data-station-hum>–</dd></div>
+                <div class="accordion-station-stat"><dt>Άνεμος</dt><dd data-station-wind>–</dd><span data-station-wind-dir></span></div>
+                <div class="accordion-station-stat"><dt>Βροχή</dt><dd data-station-rain>–</dd></div>
+                <div class="accordion-station-stat"><dt>Πίεση</dt><dd data-station-pressure>–</dd></div>
+              </dl>
+              <div class="accordion-station-source"><span>Πηγή</span><a data-station-source href="#" target="_blank" rel="noopener">ΕΑΑ / meteo.gr</a></div>
+            </article>
           </div>
         </section>
       </div>
-      <div class="panel-index" aria-hidden="true">02</div>
     </article>
 
-    <article class="acc-panel" id="panel-trails" data-panel="trails" aria-labelledby="title-trails" data-bg="/art/playful-trails.svg" data-bg-preview="/art/playful-trails.svg">
-      <div class="panel-overlay" aria-hidden="true"></div>
-      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-trails">
-        <span class="panel-title">Μονοπάτια</span>
-        <span class="panel-summary">Εξερευνήστε τις διαδρομές του Παναχαϊκού</span>
-        <span class="panel-arrow" aria-hidden="true">→</span>
-      </button>
-      <div class="panel-content" id="content-trails" inert>
-        <div class="eyebrow">PANACHAIKO TRAILS</div>
-        <h2 id="title-trails">Μονοπάτια</h2>
-        <p>Πεζοπορικές διαδρομές, υψομετρικά προφίλ, βαθμός δυσκολίας και σημεία ενδιαφέροντος.</p>
-        <div class="panel-feed" id="feed-trails" aria-live="polite"></div>
-        <button class="panel-cta" type="button" data-demo="Μονοπάτια">Εξερεύνηση <span aria-hidden="true">→</span></button>
-      </div>
-      <div class="panel-index" aria-hidden="true">03</div>
+    <article class="acc-panel panel-trails" id="panel-trails" data-panel="trails" aria-labelledby="title-trails">
+      <div class="panel-scene mini-scene"><span class="mini-sun"></span><span class="mini-cloud"></span><span class="symbol trail-symbol"></span></div>
+      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-trails"><span class="panel-footer"><span class="panel-title">Μονοπάτια</span><span class="panel-arrow">→</span></span></button>
+      <div class="panel-content" id="content-trails" inert><div class="eyebrow">PANACHAIKO TRAILS</div><h2 id="title-trails">Μονοπάτια</h2><p>Εξερεύνησε διαδρομές, υψομετρικά προφίλ, δυσκολία και σημεία ενδιαφέροντος.</p><div class="panel-feed" id="feed-trails"></div><button class="panel-cta" type="button">Άνοιγμα χάρτη →</button></div>
     </article>
-    <article class="acc-panel" id="panel-poi" data-panel="poi" aria-labelledby="title-poi" data-bg="/art/playful-poi.svg" data-bg-preview="/art/playful-poi.svg">
-      <div class="panel-overlay" aria-hidden="true"></div>
-      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-poi">
-        <span class="panel-title">Σημεία Ενδιαφέροντος</span>
-        <span class="panel-summary">Φύση, θέα και πολιτιστικά σημεία</span>
-        <span class="panel-arrow" aria-hidden="true">→</span>
-      </button>
-      <div class="panel-content" id="content-poi" inert>
-        <div class="eyebrow">PANACHAIKO TRAILS</div>
-        <h2 id="title-poi">Σημεία Ενδιαφέροντος</h2>
-        <p>Φυσικά αξιοθέατα, ιστορικά σημεία, θέα και μικρές στάσεις στην πορεία.</p>
-        <div class="panel-feed" id="feed-poi" aria-live="polite"></div>
-        <button class="panel-cta" type="button" data-demo="Σημεία Ενδιαφέροντος">Εξερεύνηση <span aria-hidden="true">→</span></button>
-      </div>
-      <div class="panel-index" aria-hidden="true">04</div>
+
+    <article class="acc-panel panel-poi" id="panel-poi" data-panel="poi" aria-labelledby="title-poi">
+      <div class="panel-scene mini-scene"><span class="mini-sun"></span><span class="mini-cloud"></span><span class="symbol pin-symbol"></span></div>
+      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-poi"><span class="panel-footer"><span class="panel-title">Σημεία ενδιαφέροντος</span><span class="panel-arrow">→</span></span></button>
+      <div class="panel-content" id="content-poi" inert><div class="eyebrow">ΑΝΑΚΑΛΥΨΕ</div><h2 id="title-poi">Σημεία ενδιαφέροντος</h2><p>Θέα, φυσικά τοπόσημα, ιστορικά σημεία και μικρές στάσεις πάνω στη διαδρομή.</p><div class="panel-feed" id="feed-poi"></div><button class="panel-cta" type="button">Στον χάρτη →</button></div>
     </article>
-    <article class="acc-panel" id="panel-shelter" data-panel="shelter" aria-labelledby="title-shelter" data-bg="/art/playful-shelter.svg" data-bg-preview="/art/playful-shelter.svg">
-      <div class="panel-overlay" aria-hidden="true"></div>
-      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-shelter">
-        <span class="panel-title">Καταφύγια</span>
-        <span class="panel-summary">Πληροφορίες για τα καταφύγια του βουνού</span>
-        <span class="panel-arrow" aria-hidden="true">→</span>
-      </button>
-      <div class="panel-content" id="content-shelter" inert>
-        <div class="eyebrow">PANACHAIKO TRAILS</div>
-        <h2 id="title-shelter">Καταφύγια</h2>
-        <p>Ορεινά καταφύγια και σημεία προστασίας με χρήσιμες πληροφορίες πρόσβασης.</p>
-        <div class="panel-feed" id="feed-shelter" aria-live="polite"></div>
-        <button class="panel-cta" type="button" data-demo="Καταφύγια">Εξερεύνηση <span aria-hidden="true">→</span></button>
-      </div>
-      <div class="panel-index" aria-hidden="true">05</div>
+
+    <article class="acc-panel panel-shelter" id="panel-shelter" data-panel="shelter" aria-labelledby="title-shelter">
+      <div class="panel-scene mini-scene"><span class="mini-sun"></span><span class="mini-cloud"></span><span class="symbol hut-symbol"></span></div>
+      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-shelter"><span class="panel-footer"><span class="panel-title">Καταφύγια</span><span class="panel-arrow">→</span></span></button>
+      <div class="panel-content" id="content-shelter" inert><div class="eyebrow">ΣΤΑΣΗ ΣΤΟ ΒΟΥΝΟ</div><h2 id="title-shelter">Καταφύγια</h2><p>Σημεία προστασίας και ορεινά καταφύγια με βασικές πληροφορίες πρόσβασης.</p><div class="panel-feed" id="feed-shelter"></div><button class="panel-cta" type="button">Στον χάρτη →</button></div>
     </article>
-    <article class="acc-panel" id="panel-photos" data-panel="photos" aria-labelledby="title-photos" data-bg="/art/playful-photos.svg" data-bg-preview="/art/playful-photos.svg">
-      <div class="panel-overlay" aria-hidden="true"></div>
-      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-photos">
-        <span class="panel-title">Φωτογραφίες</span>
-        <span class="panel-summary">Στιγμές από το Παναχαϊκό και τις διαδρομές του</span>
-        <span class="panel-arrow" aria-hidden="true">→</span>
-      </button>
-      <div class="panel-content" id="content-photos" inert>
-        <div class="eyebrow">PANACHAIKO TRAILS</div>
-        <h2 id="title-photos">Φωτογραφίες</h2>
-        <p>Στιγμές από το Παναχαϊκό, τα μονοπάτια και τις εποχές του βουνού.</p>
-        <div class="panel-feed" id="feed-photos" aria-live="polite"></div>
-        <button class="panel-cta" type="button" data-demo="Φωτογραφίες">Εξερεύνηση <span aria-hidden="true">→</span></button>
-      </div>
-      <div class="panel-index" aria-hidden="true">06</div>
+
+    <article class="acc-panel panel-photos" id="panel-photos" data-panel="photos" aria-labelledby="title-photos">
+      <div class="panel-scene mini-scene photo-scene"><span class="mini-sun"></span><span class="mini-cloud"></span><span class="symbol camera-symbol"></span></div>
+      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-photos"><span class="panel-footer"><span class="panel-title">Φωτογραφίες</span><span class="panel-arrow">→</span></span></button>
+      <div class="panel-content" id="content-photos" inert><div class="eyebrow">ΣΤΙΓΜΕΣ</div><h2 id="title-photos">Φωτογραφίες</h2><p>Εικόνες από το Παναχαϊκό, τις εποχές του βουνού και τις αγαπημένες διαδρομές.</p><div class="panel-feed" id="feed-photos"></div><button class="panel-cta" type="button">Προβολή →</button></div>
     </article>
-    <article class="acc-panel" id="panel-video" data-panel="video" aria-labelledby="title-video" data-bg="/art/playful-video.svg" data-bg-preview="/art/playful-video.svg">
-      <div class="panel-overlay" aria-hidden="true"></div>
-      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-video">
-        <span class="panel-title">Βίντεο</span>
-        <span class="panel-summary">Δείτε το Παναχαϊκό σε κίνηση</span>
-        <span class="panel-arrow" aria-hidden="true">→</span>
-      </button>
-      <div class="panel-content" id="content-video" inert>
-        <div class="eyebrow">PANACHAIKO TRAILS</div>
-        <h2 id="title-video">Βίντεο</h2>
-        <p>Δείτε το Παναχαϊκό σε κίνηση μέσα από επιλεγμένα βίντεο και μικρές ιστορίες.</p>
-        <div class="panel-feed" id="feed-video" aria-live="polite"></div>
-        <button class="panel-cta" type="button" data-demo="Βίντεο">Εξερεύνηση <span aria-hidden="true">→</span></button>
-      </div>
-      <div class="panel-index" aria-hidden="true">07</div>
+
+    <article class="acc-panel panel-video" id="panel-video" data-panel="video" aria-labelledby="title-video">
+      <div class="panel-scene mini-scene video-scene"><span class="mini-sun"></span><span class="mini-cloud"></span><span class="symbol play-symbol"></span></div>
+      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-video"><span class="panel-footer"><span class="panel-title">Βίντεο</span><span class="panel-arrow">→</span></span></button>
+      <div class="panel-content" id="content-video" inert><div class="eyebrow">ΣΕ ΚΙΝΗΣΗ</div><h2 id="title-video">Βίντεο</h2><p>Μικρές ιστορίες, λήψεις από διαδρομές και εμπειρίες από το βουνό.</p><div class="panel-feed" id="feed-video"></div><button class="panel-cta" type="button">Προβολή →</button></div>
+    </article>
+
+    <article class="acc-panel panel-news" id="panel-news" data-panel="news" aria-labelledby="title-news">
+      <div class="panel-scene mini-scene news-scene"><span class="mini-sun"></span><span class="mini-cloud"></span><span class="symbol news-symbol"></span></div>
+      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="content-news"><span class="panel-footer"><span class="panel-title">Νέα</span><span class="panel-arrow">→</span></span></button>
+      <div class="panel-content" id="content-news" inert><div class="eyebrow">PANACHAIKO TRAILS · BLOG</div><h2 id="title-news">Νέα</h2><p>Εκδηλώσεις, δράσεις, νέα μονοπάτια και ιστορίες από το Παναχαϊκό.</p><section class="news-board"><div class="news-board-head"><div><span>ΤΕΛΕΥΤΑΙΑ ΝΕΑ</span><h3>Από το blog</h3></div><div class="news-board-badge">5 άρθρα</div></div><div class="news-board-body" id="newsPanelBody" aria-live="polite"><div class="home-news-card"><span class="home-news-image"></span><div><span class="home-news-date">Φόρτωση…</span><h4 class="home-news-title">Τα τελευταία άρθρα θα εμφανιστούν εδώ.</h4></div></div></div></section></div>
     </article>
   </main>
-
-  <div class="hint" aria-hidden="true"><b>Κλικ</b> σε μια ενότητα για άνοιγμα • το προηγούμενο παράθυρο κλείνει αυτόματα • <b>← →</b> με το πληκτρολόγιο</div>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
+
 <script src="../scripts/homepage-accordion.js"></script>
 <script src="../scripts/homepage-feed.js"></script>
 <script src="../scripts/homepage-dual-weather.js"></script>

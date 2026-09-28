@@ -8,7 +8,7 @@ const HOMEPAGE_ENDPOINT =
 
 const TRAILS_ENDPOINT = 'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/trails';
 const RECREATION_ENDPOINT = 'https://cms.panachaikotrails.gr/wp-json/wp/v2/recreation_spot?per_page=1&_fields=id';
-const BLOG_ENDPOINT = 'https://cms.panachaikotrails.gr/wp-json/wp/v2/posts?per_page=3&status=publish&_embed=1';
+const BLOG_ENDPOINT = 'https://cms.panachaikotrails.gr/wp-json/wp/v2/posts?per_page=5&status=publish&_embed=1&orderby=date&order=desc';
 
 const request = async (url: string, timeoutMs = 3500) => {
   const controller = new AbortController();

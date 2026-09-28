@@ -431,24 +431,25 @@ body{font-family:"Roboto",Arial,sans-serif}
 .accordion-station-source{display:flex;justify-content:space-between;gap:10px;margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.10);font-size:10px;color:#a8c7ca}
 .accordion-station-source a{color:#67e6ed;font-weight:700;text-decoration:none}
 .accordion-station-source a:hover{text-decoration:underline}
-.home-news{position:absolute;right:0;bottom:10px;width:min(430px,36%);padding:16px;border:1px solid rgba(69,215,223,.38);border-radius:20px;background:linear-gradient(160deg,rgba(4,55,64,.94),rgba(3,40,48,.90));box-shadow:0 22px 52px rgba(0,18,23,.28);backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);overflow:hidden}
+.home-news{position:absolute;right:0;top:2px;bottom:auto;width:min(430px,36%);max-height:calc(100% - 8px);padding:15px;border:1px solid rgba(69,215,223,.40);border-radius:20px;background:linear-gradient(160deg,rgba(4,55,64,.95),rgba(3,40,48,.91));box-shadow:0 22px 52px rgba(0,18,23,.28);backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);overflow:hidden}
 .home-news-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px}
 .home-news-kicker{display:block;font-size:9px;font-weight:900;letter-spacing:.19em;color:#54e6ed}
 .home-news-head h3{margin:4px 0 0;font-size:20px;line-height:1.05;font-weight:900;color:#fff}
 .home-news-mark{display:grid;place-items:center;width:34px;height:34px;flex:none;border:1px solid rgba(69,215,223,.34);border-radius:50%;font-size:18px;color:#c9f3f5}
-.home-news-card{display:grid;grid-template-columns:120px minmax(0,1fr);gap:13px;color:inherit;text-decoration:none;border-radius:14px;transition:transform .18s ease,background .18s ease}
-.home-news-card:hover{transform:translateY(-2px)}
-.home-news-image{width:120px;height:98px;border-radius:12px;object-fit:cover;background:linear-gradient(135deg,#0b5964,#0a3f49)}
+.home-news-body{display:grid;gap:7px;max-height:calc(100% - 54px);overflow:auto;padding-right:3px;scrollbar-width:thin;scrollbar-color:rgba(69,215,223,.62) rgba(255,255,255,.06)}
+.home-news-card{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;align-items:center;padding:8px;border:1px solid rgba(69,215,223,.15);border-radius:13px;background:rgba(3,35,42,.28);color:inherit;text-decoration:none;transition:transform .18s ease,background .18s ease,border-color .18s ease}
+.home-news-card:hover{transform:translateY(-1px);background:rgba(5,61,70,.52);border-color:rgba(69,215,223,.34)}
+.home-news-image{width:76px;height:66px;border-radius:10px;object-fit:cover;background:linear-gradient(135deg,#0b5964,#0a3f49)}
 .home-news-copy{min-width:0}
-.home-news-date{display:block;margin-bottom:5px;font-size:9px;font-weight:700;color:#9fc4c7}
-.home-news-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:0;font-size:15px;line-height:1.22;font-weight:900;color:#fff}
-.home-news-excerpt{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;margin:7px 0 0;font-size:11px;line-height:1.45;color:#c5dcde}
-.home-news-read{display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:10px;font-weight:850;color:#5be8ef}
-.home-news-placeholder{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:center}
-.home-news-placeholder-media{width:96px;height:84px;border-radius:12px;background:linear-gradient(135deg,rgba(69,215,223,.16),rgba(255,255,255,.05)),url("https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-300x200.webp") center/cover no-repeat;filter:saturate(.8)}
+.home-news-date{display:block;margin-bottom:3px;font-size:8px;font-weight:700;color:#9fc4c7}
+.home-news-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:0;font-size:12.5px;line-height:1.2;font-weight:900;color:#fff}
+.home-news-excerpt{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:4px 0 0;font-size:9.5px;line-height:1.35;color:#c5dcde}
+.home-news-read{display:inline-flex;align-items:center;gap:4px;margin-top:5px;font-size:9px;font-weight:850;color:#5be8ef}
+.home-news-placeholder{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;align-items:center;padding:8px;border:1px solid rgba(69,215,223,.15);border-radius:13px;background:rgba(3,35,42,.28)}
+.home-news-placeholder-media{width:76px;height:66px;border-radius:12px;background:linear-gradient(135deg,rgba(69,215,223,.16),rgba(255,255,255,.05)),url("https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-300x200.webp") center/cover no-repeat;filter:saturate(.8)}
 .home-news-placeholder strong{display:block;font-size:13px;line-height:1.25;color:#fff}
 .home-news-placeholder p{margin:6px 0 0;font-size:10.5px;line-height:1.4;color:#b8d2d5}
-.home-copy{width:min(720px,59%);display:flex;flex-direction:column;align-items:flex-start}
+.home-copy{width:min(700px,57%);display:flex;flex-direction:column;align-items:flex-start}
 .home-copy .eyebrow{font-size:10px;font-weight:900;letter-spacing:.3em;color:#4de4eb;margin-bottom:12px}
 #content-home .home-copy h2{display:block;margin:0;color:#fff;font-size:clamp(48px,4.9vw,78px);font-weight:900;line-height:.91;letter-spacing:-.055em;text-shadow:0 6px 30px rgba(0,0,0,.28)}
 .home-copy>p{margin-top:14px;max-width:570px;font-size:16px;line-height:1.45;color:#e0f1f2;text-shadow:0 2px 12px rgba(0,0,0,.34)}
@@ -464,9 +465,9 @@ body{font-family:"Roboto",Arial,sans-serif}
 .home-stat small{margin-top:4px;font-size:10px;color:#c5dcde;white-space:nowrap}
 #content-home .panel-feed{display:none}
 @media (min-width:901px) and (max-width:1300px){
-  .home-news{width:min(390px,38%);padding:14px}
-  .home-news-card{grid-template-columns:100px minmax(0,1fr)}
-  .home-news-image{width:100px;height:90px}
+  .home-news{width:min(390px,39%);padding:13px}
+  .home-news-card{grid-template-columns:68px minmax(0,1fr)}
+  .home-news-image{width:68px;height:58px}
   .panel-summary{display:none}
   .panel-icon{width:36px;height:36px}
   .panel-title{font-size:14px}
@@ -476,10 +477,10 @@ body{font-family:"Roboto",Arial,sans-serif}
   .home-stat{min-width:105px;padding:0 12px}
 }
 @media (max-width:900px){
-  .home-news{right:0;bottom:0;width:min(340px,44%);padding:12px}
+  .home-news{right:0;top:0;bottom:auto;width:min(340px,44%);padding:12px}
   .home-news-head h3{font-size:17px}
-  .home-news-card{grid-template-columns:86px minmax(0,1fr);gap:10px}
-  .home-news-image{width:86px;height:76px}
+  .home-news-card{grid-template-columns:64px minmax(0,1fr);gap:9px}
+  .home-news-image{width:64px;height:56px}
   .home-news-excerpt{display:none}
   .app::before{height:72px}
   .accordion{left:88px;top:72px}
@@ -492,9 +493,9 @@ body{font-family:"Roboto",Arial,sans-serif}
   #content-home .home-copy h2{font-size:48px}
 }
 @media (min-width:641px) and (max-height:780px){
-  .home-news{width:min(390px,34%);padding:12px}
+  .home-news{width:min(390px,35%);padding:11px}
   .home-news-excerpt{display:none}
-  .home-news-image{height:82px}
+  .home-news-image{height:54px}
   .accordion-station-source{display:none}
   .accordion-station{padding-top:13px;padding-bottom:11px}
   .accordion-station-main{margin:6px 0 8px}
@@ -507,17 +508,17 @@ body{font-family:"Roboto",Arial,sans-serif}
 }
 
 @media (max-width:640px){
-  .home-news{position:relative;right:auto;bottom:auto;width:100%;padding:10px 11px;margin-top:7px;border-radius:14px}
+  .home-news{position:relative;right:auto;top:auto;bottom:auto;width:100%;max-height:250px;padding:10px 11px;margin-top:7px;border-radius:14px}
   .home-news-head{margin-bottom:7px}
   .home-news-head h3{font-size:15px}
   .home-news-mark{width:28px;height:28px;font-size:15px}
-  .home-news-card{grid-template-columns:78px minmax(0,1fr);gap:9px}
-  .home-news-image{width:78px;height:68px}
+  .home-news-card{grid-template-columns:64px minmax(0,1fr);gap:8px}
+  .home-news-image{width:64px;height:56px}
   .home-news-date{font-size:8px}
   .home-news-title{font-size:12px}
   .home-news-read{margin-top:5px;font-size:9px}
-  .home-news-placeholder{grid-template-columns:70px minmax(0,1fr)}
-  .home-news-placeholder-media{width:70px;height:60px}
+  .home-news-placeholder{grid-template-columns:64px minmax(0,1fr)}
+  .home-news-placeholder-media{width:64px;height:56px}
   .home-news-placeholder p{display:none}
   .app::before{height:64px}
   .brand{left:12px;top:10px}

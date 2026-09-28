@@ -15,25 +15,26 @@
   const renderHomeNews = blog => {
     const host = document.getElementById('homeNewsBody');
     if (!host) return;
-    const item = Array.isArray(blog?.items) ? blog.items[0] : null;
-    if (!item) return;
+    const items = Array.isArray(blog?.items) ? blog.items.slice(0, 5) : [];
+    if (!items.length) return;
 
-    const image = item.image
-      ? '<img class="home-news-image" src="' + esc(item.image) + '" alt="" loading="lazy" decoding="async">'
-      : '<span class="home-news-image" aria-hidden="true"></span>';
-    const date = item.date ? '<span class="home-news-date">' + esc(formatDate(item.date)) + '</span>' : '';
-    const excerpt = item.excerpt ? '<p class="home-news-excerpt">' + esc(item.excerpt) + '</p>' : '';
-    const body = image +
-      '<div class="home-news-copy">' +
-        date +
-        '<h4 class="home-news-title">' + esc(item.title) + '</h4>' +
-        excerpt +
-        '<span class="home-news-read">Διαβάστε το άρθρο <b aria-hidden="true">→</b></span>' +
-      '</div>';
-
-    host.innerHTML = item.url
-      ? '<a class="home-news-card" href="' + esc(item.url) + '">' + body + '</a>'
-      : '<div class="home-news-card">' + body + '</div>';
+    host.innerHTML = items.map(item => {
+      const image = item.image
+        ? '<img class="home-news-image" src="' + esc(item.image) + '" alt="" loading="lazy" decoding="async">'
+        : '<span class="home-news-image" aria-hidden="true"></span>';
+      const date = item.date ? '<span class="home-news-date">' + esc(formatDate(item.date)) + '</span>' : '';
+      const excerpt = item.excerpt ? '<p class="home-news-excerpt">' + esc(item.excerpt) + '</p>' : '';
+      const body = image +
+        '<div class="home-news-copy">' +
+          date +
+          '<h4 class="home-news-title">' + esc(item.title) + '</h4>' +
+          excerpt +
+          '<span class="home-news-read">Διαβάστε <b aria-hidden="true">→</b></span>' +
+        '</div>';
+      return item.url
+        ? '<a class="home-news-card" href="' + esc(item.url) + '">' + body + '</a>'
+        : '<div class="home-news-card">' + body + '</div>';
+    }).join('');
   };
 
 

@@ -26,7 +26,7 @@ const headers = {
   'Cache-Control': 'public, max-age=60, s-maxage=180, stale-while-revalidate=1800',
 };
 
-const UA = 'Mozilla/5.0 (compatible; PanachaikoTrails/1.0; +https://panachaikotrails.gr)';
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36';
 
 const num = (value: unknown): number | null => {
   if (value === null || value === undefined || value === '') return null;
@@ -56,11 +56,11 @@ const textFromHtml = (html: string) => html
 
 const fetchText = async (url: string, accept = 'text/html,application/xhtml+xml') => {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5500);
+  const timeout = setTimeout(() => controller.abort(), 10000);
   try {
     const response = await fetch(url, {
       signal: controller.signal,
-      headers: { Accept: accept, 'User-Agent': UA, Referer: new URL(url).origin + '/' },
+      headers: { Accept: accept, 'User-Agent': UA, 'Accept-Language': 'el-GR,el;q=0.9,en;q=0.8' },
       cache: 'no-store',
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -97,10 +97,19 @@ const patraFromJson = async (): Promise<Station | null> => {
     const temp = num(data.temp_c ?? data.temp_out_c ?? data.temperature_c ?? data.temp);
     const humidity = num(data.relative_humidity ?? data.humidity ?? data.hum_out);
     const pressure = num(data.pressure_mb ?? data.barometer_hpa ?? data.pressure_hpa ?? data.bar_m);
-    const wind = num(data.wind_kph ?? data.wind_speed_kmh ?? data.wind_speed_kph ?? data.wind_speed);
+    const davis = data.davis_current_observation && typeof data.davis_current_observation === 'object'
+      ? data.davis_current_observation as Record<string, unknown>
+      : {};
+    const directWind = num(data.wind_kph ?? data.wind_speed_kmh ?? data.wind_speed_kph ?? data.wind_speed);
+    const mphWind = num(data.wind_mph);
+    const wind = directWind ?? (mphWind == null ? null : mphWind * 1.609344);
     const windDirRaw = data.wind_dir ?? data.wind_cardinal ?? data.wind_direction;
-    const rainToday = num(data.precip_today_metric ?? data.rain_day_mm ?? data.rain_today);
-    const rainRate = num(data.precip_rate_metric ?? data.rain_rate_mm ?? data.rain_rate);
+    const directRainToday = num(data.precip_today_metric ?? data.rain_day_mm ?? data.rain_today);
+    const rainDayIn = num(davis.rain_day_in);
+    const rainToday = directRainToday ?? (rainDayIn == null ? null : rainDayIn * 25.4);
+    const directRainRate = num(data.precip_rate_metric ?? data.rain_rate_mm ?? data.rain_rate);
+    const rainRateIn = num(davis.rain_rate_in_per_hr);
+    const rainRate = directRainRate ?? (rainRateIn == null ? null : rainRateIn * 25.4);
     const feels = num(data.feelslike_c ?? data.heat_index_c ?? data.windchill_c ?? data.feels_like);
     const dewPoint = num(data.dewpoint_c ?? data.dew_point_c ?? data.dewpoint);
     const observedRaw = data.observation_time_rfc822 ?? data.observation_time ?? data.datetime ?? data.generated_at;
@@ -160,7 +169,20 @@ const panachaikoFromHtml = async (): Promise<Station> => {
   const sourceUrl = 'https://penteli.meteo.gr/stations/panachaiko/';
   const base = empty('panachaiko', 'Παναχαϊκό', 1588, 'Εθνικό Αστεροσκοπείο Αθηνών', sourceUrl);
   try {
-    const html = await fetchText(sourceUrl);
+    let html = '';
+    let lastError: unknown = null;
+    for (const candidate of [
+      sourceUrl + '?v=' + Math.floor(Date.now() / 180000),
+      'http://penteli.meteo.gr/stations/panachaiko/?v=' + Math.floor(Date.now() / 180000),
+    ]) {
+      try {
+        html = await fetchText(candidate);
+        if (html) break;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    if (!html) throw lastError ?? new Error('Panachaiko station unavailable');
     const text = textFromHtml(html);
 
     const observedMatch = text.match(/Latest\s*Values\s*\/\s*Τελευταίες\s*Τιμές\s*([0-9]{1,2}\/\d{1,2}\/\d{4})\s*([0-9]{1,2}:[0-9]{2})/i);

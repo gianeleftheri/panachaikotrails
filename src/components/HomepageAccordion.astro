@@ -439,12 +439,11 @@ body{font-family:"Roboto",Arial,sans-serif}
 .home-map-cta svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.9}
 .home-map-cta b{font-size:22px;margin-left:4px}
 .home-stats{display:flex;align-items:center;gap:0;margin-top:18px;padding:8px 0 0}
-.home-stat{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:8px;align-items:center;min-width:126px;padding:0 18px;border-right:1px solid rgba(255,255,255,.18)}
+.home-stat{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-width:126px;padding:0 18px;border-right:1px solid rgba(255,255,255,.18)}
 .home-stat:first-child{padding-left:0}
 .home-stat:last-child{border-right:0}
-.home-stat-icon{grid-row:1/3;font-size:24px;color:#f5ffff;filter:grayscale(1) brightness(1.7)}
-.home-stat strong{font-size:16px;line-height:1;color:#fff}
-.home-stat small{margin-top:3px;font-size:10px;color:#c5dcde;white-space:nowrap}
+.home-stat strong{font-size:18px;line-height:1;color:#fff}
+.home-stat small{margin-top:4px;font-size:10px;color:#c5dcde;white-space:nowrap}
 #content-home .panel-feed{display:none}
 @media (min-width:901px) and (max-width:1300px){
   .panel-summary{display:none}
@@ -521,7 +520,6 @@ body{font-family:"Roboto",Arial,sans-serif}
   .home-stats{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:10px}
   .home-stat{display:flex;min-width:0;padding:0 4px;border-right:1px solid rgba(255,255,255,.14);flex-direction:column;gap:2px;text-align:center}
   .home-stat:first-child{padding-left:4px}
-  .home-stat-icon{display:none}
   .home-stat strong{font-size:13px}
   .home-stat small{font-size:8px;white-space:normal;line-height:1.1}
   .hero-route{right:-10%;bottom:13%;width:82%;height:62%;opacity:.58}
@@ -656,10 +654,10 @@ body{font-family:"Roboto",Arial,sans-serif}
             <span>Άνοιγμα Χάρτη</span><b aria-hidden="true">→</b>
           </button>
           <div class="home-stats" aria-label="Βασικά στοιχεία Panachaiko Trails">
-            <div class="home-stat"><span class="home-stat-icon">🥾</span><strong>13</strong><small>Μονοπάτια</small></div>
-            <div class="home-stat"><span class="home-stat-icon">⌖</span><strong>6</strong><small>Σημεία</small></div>
-            <div class="home-stat"><span class="home-stat-icon">⌂</span><strong>2</strong><small>Καταφύγια</small></div>
-            <div class="home-stat"><span class="home-stat-icon">△</span><strong>1.926 μ.</strong><small>Μέγιστο υψόμετρο</small></div>
+            <div class="home-stat"><strong>13</strong><small>Μονοπάτια</small></div>
+            <div class="home-stat"><strong>6</strong><small>Σημεία</small></div>
+            <div class="home-stat"><strong>2</strong><small>Καταφύγια</small></div>
+            <div class="home-stat"><strong>1.926 μ.</strong><small>Μέγιστο υψόμετρο</small></div>
           </div>
         </div>
       </div>

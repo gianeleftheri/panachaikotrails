@@ -1,0 +1,149 @@
+---
+import '../styles/homepage-landing.css';
+
+const sections = [
+  { id:'news', eyebrow:'ΤΕΛΕΥΤΑΙΑ ΑΠΟ ΤΟ ΠΑΝΑΧΑΪΚΟ', title:'Νέα', text:'Εκδηλώσεις, δράσεις, νέα μονοπάτια και ιστορίες από το Παναχαϊκό.', image:'/art/hires/news.webp', accent:'#8a70ff' },
+  { id:'trails', eyebrow:'PANACHAIKO TRAILS', title:'Μονοπάτια', text:'Διαδρομές, αποστάσεις, δυσκολία και βασικές πληροφορίες για να οργανώσεις την πεζοπορία σου.', image:'/art/hires/trails.webp', accent:'#55d6f4' },
+  { id:'poi', eyebrow:'ΑΝΑΚΑΛΥΨΕ', title:'Σημεία ενδιαφέροντος', text:'Κορυφές, φυσικά τοπόσημα, θέα, ιστορικά σημεία και στάσεις πάνω στις διαδρομές.', image:'/art/hires/poi.webp', accent:'#ff6bb3' },
+  { id:'shelter', eyebrow:'ΣΤΑΣΗ ΣΤΟ ΒΟΥΝΟ', title:'Καταφύγια', text:'Ορεινά καταφύγια και σημεία προστασίας με πληροφορίες πρόσβασης.', image:'/art/hires/shelter.webp', accent:'#ff8b4a' },
+  { id:'photos', eyebrow:'ΣΤΙΓΜΕΣ', title:'Φωτογραφίες', text:'Εικόνες από τις διαδρομές, το βουνό και τις εποχές του Παναχαϊκού.', image:'/art/hires/photos.webp', accent:'#0aa7a4' },
+  { id:'video', eyebrow:'ΣΕ ΚΙΝΗΣΗ', title:'Βίντεο', text:'Διαδρομές, εμπειρίες και μικρές ιστορίες από το Παναχαϊκό σε βίντεο.', image:'/art/hires/video.webp', accent:'#2f9bf4' },
+];
+---
+
+<div class="landing-shell">
+  <header class="landing-header">
+    <a class="landing-brand" href="#home" aria-label="Panachaiko Trails - Αρχική">
+      <span class="brand-mark" aria-hidden="true"><i class="tri"></i><i class="tri"></i><i class="tri"></i><i class="sun-dot"></i></span>
+      <strong>PANACHAIKO<br/>TRAILS</strong>
+    </a>
+
+    <nav class="landing-nav" aria-label="Ενότητες">
+      <a href="#home" data-nav="home" class="is-active">Αρχική</a>
+      <a href="#news" data-nav="news">Νέα</a>
+      <a href="#trails" data-nav="trails">Μονοπάτια</a>
+      <a href="#poi" data-nav="poi">Σημεία ενδιαφέροντος</a>
+      <a href="#shelter" data-nav="shelter">Καταφύγια</a>
+      <a href="#photos" data-nav="photos">Φωτογραφίες</a>
+      <a href="#video" data-nav="video">Βίντεο</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="search-dot" id="siteSearchButton" type="button" aria-label="Αναζήτηση" aria-expanded="false" aria-controls="siteSearchOverlay"></button>
+      <a class="map-callout" href="/map">Χάρτης</a>
+    </div>
+  </header>
+
+  <div class="site-search-overlay" id="siteSearchOverlay" hidden>
+    <section class="site-search-dialog" id="siteSearchDialog" role="dialog" aria-modal="true" aria-labelledby="siteSearchTitle">
+      <div class="site-search-top">
+        <div class="site-search-field">
+          <label class="sr-only" id="siteSearchTitle" for="siteSearchInput">Αναζήτηση στο Panachaiko Trails</label>
+          <input class="site-search-input" id="siteSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Αναζήτησε μονοπάτι, σημείο, καταφύγιο ή νέο…" />
+        </div>
+        <button class="site-search-close" id="siteSearchClose" type="button" aria-label="Κλείσιμο αναζήτησης">×</button>
+      </div>
+      <div class="site-search-meta"><span id="siteSearchStatus">Γράψε τουλάχιστον 2 χαρακτήρες.</span><span>ESC για κλείσιμο</span></div>
+      <div class="site-search-results" id="siteSearchResults" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <main>
+    <section class="landing-hero" id="home" data-section="home">
+      <div class="hero-inner">
+        <div class="hero-copy glass">
+          <span class="eyebrow">ΒΟΥΝΟ · ΦΥΣΗ · ΕΜΠΕΙΡΙΕΣ</span>
+          <h1><span>Ανακάλυψε</span><b>το Παναχαϊκό</b></h1>
+          <p>Μονοπάτια, καταφύγια, κορυφές και αυθεντικές εμπειρίες στο βουνό της Αχαΐας.</p>
+          <div class="hero-actions">
+            <a class="primary-cta" href="#trails">Δες τα μονοπάτια →</a>
+            <a class="secondary-cta" href="/map">Άνοιξε τον χάρτη</a>
+          </div>
+        </div>
+
+        <section class="weather-frame" aria-label="Ζωντανός καιρός Πάτρας και Παναχαϊκού">
+          <div class="weather-head"><strong>Καιρός τώρα</strong><span>Ζωντανά δεδομένα από Πάτρα & Παναχαϊκό</span></div>
+          <div class="weather-grid">
+            <article class="accordion-station" data-live-station="patra" aria-label="Ζωντανός καιρός Πάτρα">
+              <div class="accordion-station-head">
+                <div class="accordion-station-place"><span data-station-name>Πάτρα</span><small data-station-elev>· 60 μ.</small></div>
+                <div class="accordion-station-live"><span class="accordion-station-dot" aria-hidden="true"></span><span data-station-status>Φόρτωση…</span></div>
+              </div>
+              <div class="accordion-station-main">
+                <div class="accordion-station-icon" data-station-icon aria-hidden="true"></div>
+                <div class="accordion-station-temp" data-station-temp>–<sup>°C</sup></div>
+                <div><div class="accordion-station-feels" data-station-feels>Live μέτρηση</div><div class="accordion-station-observed" data-station-observed></div></div>
+              </div>
+              <dl class="accordion-station-stats">
+                <div class="accordion-station-stat"><dt>Υγρασία</dt><dd data-station-hum>–</dd></div>
+                <div class="accordion-station-stat"><dt>Άνεμος</dt><dd data-station-wind>–</dd><span data-station-wind-dir></span></div>
+                <div class="accordion-station-stat"><dt>Βροχή</dt><dd data-station-rain>–</dd></div>
+                <div class="accordion-station-stat"><dt>Πίεση</dt><dd data-station-pressure>–</dd></div>
+              </dl>
+              <div class="accordion-station-source"><span>Πηγή</span><a data-station-source href="#" target="_blank" rel="noopener">MeteoPatras</a></div>
+            </article>
+
+            <article class="accordion-station" data-live-station="panachaiko" aria-label="Ζωντανός καιρός Παναχαϊκό">
+              <div class="accordion-station-head">
+                <div class="accordion-station-place"><span data-station-name>Παναχαϊκό</span><small data-station-elev>· 1.588 μ.</small></div>
+                <div class="accordion-station-live"><span class="accordion-station-dot" aria-hidden="true"></span><span data-station-status>Φόρτωση…</span></div>
+              </div>
+              <div class="accordion-station-main">
+                <div class="accordion-station-icon" data-station-icon aria-hidden="true"></div>
+                <div class="accordion-station-temp" data-station-temp>–<sup>°C</sup></div>
+                <div><div class="accordion-station-feels" data-station-feels>Live μέτρηση</div><div class="accordion-station-observed" data-station-observed></div></div>
+              </div>
+              <dl class="accordion-station-stats">
+                <div class="accordion-station-stat"><dt>Υγρασία</dt><dd data-station-hum>–</dd></div>
+                <div class="accordion-station-stat"><dt>Άνεμος</dt><dd data-station-wind>–</dd><span data-station-wind-dir></span></div>
+                <div class="accordion-station-stat"><dt>Βροχή</dt><dd data-station-rain>–</dd></div>
+                <div class="accordion-station-stat"><dt>Πίεση</dt><dd data-station-pressure>–</dd></div>
+              </dl>
+              <div class="accordion-station-source"><span>Πηγή</span><a data-station-source href="#" target="_blank" rel="noopener">ΕΑΑ / meteo.gr</a></div>
+            </article>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    {sections.map((section) => (
+      <section class="landing-section" id={section.id} data-section={section.id} style={"background-image:url('" + section.image + "')"}>
+        <div class="section-panel">
+          <div class="section-head">
+            <div>
+              <span class="section-eyebrow" style={"color:" + section.accent}>{section.eyebrow}</span>
+              <h2>{section.title}</h2>
+              <p>{section.text}</p>
+            </div>
+            {(section.id === 'trails' || section.id === 'poi' || section.id === 'shelter') && <a class="section-link" href="/map">Άνοιγμα χάρτη →</a>}
+          </div>
+
+          {section.id === 'news' ? (
+            <div class="news-board-body" id="newsPanelBody" aria-live="polite">
+              <div class="empty-card">Φόρτωση τελευταίων νέων…</div>
+            </div>
+          ) : (
+            <div class="landing-feed" id={"feed-" + section.id} aria-live="polite">
+              <div class="empty-card">Φόρτωση περιεχομένου…</div>
+            </div>
+          )}
+        </div>
+      </section>
+    ))}
+
+    <section class="landing-section map-section" id="map">
+      <div class="section-panel map-panel">
+        <div>
+          <span class="section-eyebrow" style="color:#ffdc36">ΔΙΑΔΡΑΣΤΙΚΟΣ ΧΑΡΤΗΣ</span>
+          <h2>Όλο το Παναχαϊκό στον χάρτη</h2>
+          <p>Δες μονοπάτια, σημεία ενδιαφέροντος, καταφύγια και τη θέση σου σε μία ενιαία εμπειρία.</p>
+        </div>
+        <a class="map-cta-big" href="/map">Άνοιξε τον χάρτη →</a>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="../scripts/homepage-search.js"></script>
+<script src="../scripts/homepage-landing.js"></script>
+<script src="../scripts/homepage-dual-weather.js"></script>

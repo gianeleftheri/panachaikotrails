@@ -57,7 +57,11 @@ if (app) {
     attribution: '© OpenStreetMap contributors | Μονοπάτια: ΟΦΥΠΕΚΑ'
   });
   const imageryLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 18,
+    // Around Panachaiko some Esri z16+ tiles are valid HTTP images but contain
+    // the "Map data not yet available" placeholder. Cap native requests at z15
+    // and let Leaflet upscale those tiles for closer zoom levels.
+    maxNativeZoom: 15,
+    maxZoom: 19,
     attribution: 'Tiles © Esri, Maxar, Earthstar Geographics | Μονοπάτια: ΟΦΥΠΕΚΑ'
   });
   const imageryLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {

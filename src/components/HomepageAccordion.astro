@@ -366,6 +366,98 @@ opacity:.92}
   .weather-frame{left:16px!important;right:16px!important;bottom:16px!important;width:auto!important}
 }
 
+
+/* Frosted hero panel 2026-09-29 */
+.home-copy{
+  box-sizing:border-box!important;
+  width:min(650px,51%)!important;
+  padding:clamp(22px,2.2vw,34px)!important;
+  border:1.5px solid rgba(255,255,255,.72)!important;
+  border-radius:30px!important;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.44),rgba(225,248,255,.26))!important;
+  -webkit-backdrop-filter:blur(16px) saturate(1.08)!important;
+  backdrop-filter:blur(16px) saturate(1.08)!important;
+  box-shadow:
+    0 22px 50px rgba(11,38,51,.18),
+    inset 0 1px 0 rgba(255,255,255,.68)!important;
+}
+.home-copy h2{
+  margin:0 0 18px!important;
+}
+.home-copy h2 span{
+  color:var(--ink)!important;
+}
+.home-copy h2 b{
+  color:#fff!important;
+  text-shadow:0 2px 10px rgba(11,38,51,.16)!important;
+}
+.home-copy p{
+  margin:0!important;
+  max-width:500px!important;
+  color:#0b2633!important;
+  font-weight:720!important;
+}
+.home-copy .panel-cta{
+  margin-top:22px!important;
+  min-height:48px!important;
+  padding:0 20px!important;
+  border:1px solid rgba(11,38,51,.08)!important;
+  box-shadow:0 8px 18px rgba(11,38,51,.12)!important;
+}
+
+@media (min-width:1300px){
+  .home-copy{
+    width:min(690px,50%)!important;
+    padding:34px 38px!important;
+  }
+}
+@media (max-width:1100px){
+  .home-copy{
+    width:52%!important;
+    padding:24px!important;
+  }
+}
+@media (max-width:900px){
+  .home-copy{
+    left:18px!important;
+    top:18px!important;
+    width:calc(100% - 36px)!important;
+    padding:22px 24px!important;
+    border-radius:24px!important;
+  }
+  .home-copy h2{
+    margin-bottom:12px!important;
+  }
+  .home-copy .panel-cta{
+    margin-top:14px!important;
+  }
+}
+@media (max-width:620px){
+  .home-copy{
+    top:12px!important;
+    left:12px!important;
+    width:calc(100% - 24px)!important;
+    padding:16px 17px!important;
+    border-radius:20px!important;
+    -webkit-backdrop-filter:blur(12px) saturate(1.04)!important;
+    backdrop-filter:blur(12px) saturate(1.04)!important;
+  }
+  .home-copy h2{
+    font-size:36px!important;
+    margin-bottom:10px!important;
+  }
+  .home-copy p{
+    font-size:12.5px!important;
+    line-height:1.36!important;
+  }
+  .home-copy .panel-cta{
+    min-height:38px!important;
+    margin-top:11px!important;
+    padding:0 15px!important;
+    font-size:11.5px!important;
+  }
+}
 </style>
 
 <div class="home-shell">

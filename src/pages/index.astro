@@ -1,6 +1,6 @@
 ---
 import MaintenancePage from '../components/MaintenancePage.astro';
-import HomepageAccordion from '../components/HomepageAccordion.astro';
+import HomepageEditorial from '../components/HomepageEditorial.astro';
 import { getPanachaikoSiteStatus } from '../lib/site-status';
 
 export const prerender = false;
@@ -53,16 +53,7 @@ const description = underConstruction
   </head>
   <body>
     {underConstruction ? <MaintenancePage /> : (
-      <HomepageAccordion
-        homeHeroFull={homeHero?.full}
-        homeHeroLarge={homeHero?.large}
-        homeHeroMedium={homeHero?.medium}
-        homeHeroSmall={homeHero?.small}
-        homeHeroAvif480={homeHero?.avif480}
-        homeHeroAvif768={homeHero?.avif768}
-        homeHeroAvif1024={homeHero?.avif1024}
-        defaultHomeBackground={defaultHomeBackground}
-      />
+      <HomepageEditorial />
     )}
   </body>
 </html>

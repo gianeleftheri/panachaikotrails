@@ -1,0 +1,18 @@
+---
+---
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Αναζήτηση | Panachaiko Trails</title>
+<style>
+body{margin:0;background:#e8e6de;color:#23443f;font-family:Arial,sans-serif}main{width:min(900px,calc(100% - 32px));margin:0 auto;padding:48px 0}
+a{color:inherit}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}.top h1{font:500 clamp(42px,7vw,74px)/1 Georgia,serif;margin:0}
+input{width:100%;height:58px;border:1px solid rgba(35,68,63,.18);border-radius:18px;padding:0 18px;font-size:18px;background:#faf8f1;outline:none}
+#results{display:grid;gap:10px;margin-top:18px}.item{display:block;padding:16px 18px;border-radius:16px;background:#faf8f1;text-decoration:none;color:#23443f}.item strong{display:block}.item small{color:#74817d}
+</style></head>
+<body><main><div class="top"><h1>Αναζήτηση</h1><a href="/">← Αρχική</a></div><input id="q" type="search" placeholder="Μονοπάτι, σημείο, καταφύγιο ή νέο…" autofocus/><div id="results"></div></main>
+<script>
+const q=document.getElementById('q'), results=document.getElementById('results'); let timer;
+q.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(async()=>{const value=q.value.trim();if(value.length<2){results.innerHTML='';return;}results.innerHTML='<div class="item">Αναζήτηση…</div>';try{const r=await fetch('/api/search?q='+encodeURIComponent(value));const data=await r.json();const items=Array.isArray(data?.results)?data.results:[];results.innerHTML=items.length?items.map(x=>'<a class="item" href="'+(x.href||'#')+'"><strong>'+String(x.title||'')+'</strong><small>'+String(x.type||'')+'</small></a>').join(''):'<div class="item">Δεν βρέθηκαν αποτελέσματα.</div>';}catch(e){results.innerHTML='<div class="item">Η αναζήτηση δεν είναι διαθέσιμη αυτή τη στιγμή.</div>'; }},250)});
+</script></body></html>

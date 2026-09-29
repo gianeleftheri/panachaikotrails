@@ -458,6 +458,54 @@ opacity:.92}
     font-size:11.5px!important;
   }
 }
+
+/* Signpost labels 2026-09-29 */
+.home-sign-labels{
+  position:absolute;
+  inset:0;
+  z-index:7;
+  pointer-events:none;
+  overflow:hidden;
+}
+.home-sign-label{
+  position:absolute;
+  left:6.6%;
+  display:block;
+  max-width:210px;
+  color:#082c3e;
+  font-size:clamp(12px,1.05vw,18px);
+  font-weight:950;
+  line-height:1;
+  letter-spacing:-.035em;
+  white-space:nowrap;
+  text-shadow:0 1px 0 rgba(255,255,255,.2);
+  transform-origin:left center;
+}
+.sign-tranos{
+  top:20.5%;
+  transform:rotate(-1.6deg);
+}
+.sign-vountenis{
+  top:34.7%;
+  left:6.9%;
+  transform:rotate(-1.2deg);
+}
+.sign-kokkinovrysi{
+  top:48.8%;
+  left:7.1%;
+  transform:rotate(-1.8deg);
+}
+@media (max-width:1180px){
+  .home-sign-label{
+    left:5.8%;
+    font-size:clamp(11px,1.15vw,15px);
+  }
+  .sign-vountenis{left:6.1%}
+  .sign-kokkinovrysi{left:6.3%}
+}
+@media (max-width:900px){
+  .home-sign-labels{display:none}
+}
 </style>
 
 <div class="home-shell">
@@ -506,6 +554,11 @@ opacity:.92}
         <span class="hills"></span><span class="forest"></span><span class="trail-ribbon"></span>
         <span class="hut"></span>
         <span class="hiker"><i class="head"></i><i class="cap"></i><i class="body"></i><i class="pack"></i><i class="leg one"></i><i class="leg two"></i><i class="boot one"></i><i class="boot two"></i><i class="pole one"></i><i class="pole two"></i></span>
+      </div>
+      <div class="home-sign-labels" aria-hidden="true">
+        <span class="home-sign-label sign-tranos">Τρανός βράχος</span>
+        <span class="home-sign-label sign-vountenis">Σκάλα Βούντενης</span>
+        <span class="home-sign-label sign-kokkinovrysi">Κοκκινόβρυση</span>
       </div>
       <button class="panel-toggle" type="button" aria-expanded="true" aria-controls="content-home" tabindex="-1"><span class="panel-footer"><span class="panel-title">Αρχική</span></span></button>
       <div class="panel-content" id="content-home">

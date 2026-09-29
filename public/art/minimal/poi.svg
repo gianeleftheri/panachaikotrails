@@ -1,6 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
-<rect width="1600" height="900" fill="#e9f2ef"/><path d="M0 640L330 320 580 620 850 290 1130 610 1390 390 1600 560V900H0Z" fill="#86b9c0"/>
-<path d="M0 760L270 570 520 730 760 540 980 730 1240 570 1600 710V900H0Z" fill="#a9cf8a"/>
-<g transform="translate(1080 360)"><path d="M0 70c0-54 44-98 98-98s98 44 98 98c0 75-98 170-98 170S0 145 0 70z" fill="#ff6bb3"/><circle cx="98" cy="70" r="34" fill="#fffdf8"/></g>
-<circle cx="310" cy="210" r="60" fill="#f8dc67"/><path d="M1110 710h180l-35-80h-110z" fill="#fffdf8" opacity=".85"/>
+<defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="2.5" fill="#0b2633"/></pattern></defs>
+<rect width="1600" height="900" fill="#18c7e8"/><circle cx="250" cy="135" r="86" fill="#ffdf00"/>
+<path d="M0 560L220 390 410 520 650 230 860 500 1070 270 1280 520 1450 380 1600 500V900H0Z" fill="#fff"/>
+<path d="M0 610L245 440 425 550 670 315 875 555 1090 350 1300 565 1465 430 1600 530V900H0Z" fill="#07304b"/>
+<path d="M0 720L260 540 500 690 760 480 1000 680 1220 500 1600 675V900H0Z" fill="#b9e52b"/>
+<path d="M0 770L280 650 520 770 800 610 1040 760 1320 640 1600 750V900H0Z" fill="#ff8b4a"/>
+<g transform="translate(1090 350)"><path d="M0 88c0-63 51-114 114-114s114 51 114 114c0 88-114 198-114 198S0 176 0 88z" fill="#ff3c98" stroke="#fff" stroke-width="14"/><circle cx="114" cy="88" r="39" fill="#fff"/></g>
+<g transform="translate(260 570)"><circle cx="95" cy="95" r="90" fill="#ffdf00" stroke="#0b2633" stroke-width="10"/><path d="M32 110c36-52 94-70 135-48M36 126c38 22 86 30 126 7" fill="none" stroke="#0b2633" stroke-width="14" stroke-linecap="round"/></g>
+<path d="M1320 700h210v135h-210z" fill="url(#dots)" opacity=".38"/>
 </svg>

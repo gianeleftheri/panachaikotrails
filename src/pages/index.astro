@@ -1,6 +1,6 @@
 ---
 import MaintenancePage from '../components/MaintenancePage.astro';
-import HomepageAccordion from '../components/HomepageAccordion.astro';
+import HomepageFacetedExact from '../components/HomepageFacetedExact.astro';
 import { getPanachaikoSiteStatus } from '../lib/site-status';
 
 export const prerender = false;
@@ -9,16 +9,6 @@ const siteStatus = await getPanachaikoSiteStatus();
 Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=10, stale-while-revalidate=20');
 
 const underConstruction = siteStatus.under_construction;
-const defaultHomeBackground = 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized.webp';
-const homeHero = !underConstruction ? {
-  full: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized.webp',
-  large: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-1024x683.webp',
-  medium: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-768x513.webp',
-  small: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-300x200.webp',
-  avif480: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Hero-AVIF-480-Low.avif',
-  avif768: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Hero-AVIF-768-Low.avif',
-  avif1024: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Hero-AVIF-1024-Low.avif',
-} : null;
 const title = underConstruction ? 'Υπό κατασκευή | Panachaiko Trails' : 'Panachaiko Trails';
 const description = underConstruction
   ? 'Το νέο Panachaiko Trails ετοιμάζεται. Σύντομα θα ανακαλύψετε τα μονοπάτια και τις διαδρομές του Παναχαϊκού όρους.'
@@ -32,37 +22,14 @@ const description = underConstruction
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="robots" content={underConstruction ? 'noindex,nofollow' : 'index,follow'} />
-    <meta name="theme-color" content={underConstruction ? '#081711' : '#fffdf8'} />
-    {homeHero && <link rel="preconnect" href="https://cms.panachaikotrails.gr" crossorigin />}
+    <meta name="theme-color" content={underConstruction ? '#081711' : '#e8e6de'} />
     {!underConstruction && <link rel="preconnect" href="https://fonts.googleapis.com" />}
     {!underConstruction && <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />}
     {!underConstruction && <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;900&display=swap" />}
-    {homeHero && (
-      <link
-        rel="preload"
-        as="image"
-        href={homeHero.avif768}
-        imagesrcset={`${homeHero.avif480} 480w, ${homeHero.avif768} 768w, ${homeHero.avif1024} 1024w`}
-        imagesizes="100vw"
-        type="image/avif"
-        fetchpriority="high"
-      />
-    )}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
   </head>
   <body>
-    {underConstruction ? <MaintenancePage /> : (
-      <HomepageAccordion
-        homeHeroFull={homeHero?.full}
-        homeHeroLarge={homeHero?.large}
-        homeHeroMedium={homeHero?.medium}
-        homeHeroSmall={homeHero?.small}
-        homeHeroAvif480={homeHero?.avif480}
-        homeHeroAvif768={homeHero?.avif768}
-        homeHeroAvif1024={homeHero?.avif1024}
-        defaultHomeBackground={defaultHomeBackground}
-      />
-    )}
+    {underConstruction ? <MaintenancePage /> : <HomepageFacetedExact />}
   </body>
 </html>

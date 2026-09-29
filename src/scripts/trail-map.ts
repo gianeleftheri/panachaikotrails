@@ -205,9 +205,14 @@ if (app) {
   const allBounds: L.LatLngExpression[] = [];
   let codes: string[] = [];
   let selectedCode: string | null = null;
+  const mapQuery = new URLSearchParams(window.location.search);
+  const initialTrailCode = mapQuery.get('trail')?.trim() || null;
+  const searchFocusLat = Number(mapQuery.get('lat'));
+  const searchFocusLng = Number(mapQuery.get('lng'));
+  const searchFocusLabel = mapQuery.get('label')?.trim() || 'Σημείο ενδιαφέροντος';
   // Διατηρεί την τελευταία ρητή επιλογή του χρήστη ακόμη κι όταν τα δεδομένα
   // ανανεώνονται από το WordPress και η λίστα/τα layers ξαναχτίζονται.
-  let requestedCode: string | null = null;
+  let requestedCode: string | null = initialTrailCode;
   let userPosition: UserPosition | null = null;
   let watchId: number | null = null;
   let userMarker: L.Marker | null = null;
@@ -837,6 +842,22 @@ if (app) {
   };
 
   renderTrails(trails, true);
+
+  if (Number.isFinite(searchFocusLat) && Number.isFinite(searchFocusLng)) {
+    window.setTimeout(() => {
+      const focusIcon = L.divIcon({
+        className: '',
+        html: '<div class="trail-poi-marker search-focus-marker" title="' + escapeHtml(searchFocusLabel) + '">📍</div>',
+        iconSize: [34, 34],
+        iconAnchor: [17, 17]
+      });
+      const marker = L.marker([searchFocusLat, searchFocusLng], { icon: focusIcon }).addTo(map);
+      marker.bindPopup('<div class="poi-popup"><strong>' + escapeHtml(searchFocusLabel) + '</strong><div>Αποτέλεσμα αναζήτησης</div></div>');
+      map.flyTo([searchFocusLat, searchFocusLng], 16, { duration: .8 });
+      marker.openPopup();
+    }, 250);
+  }
+
   void refreshTrailsFromCms().then(cmsTrails => {
     if (!cmsTrails) { app.dataset.trailSource = 'fallback'; return; }
     renderTrails(cmsTrails, false); app.dataset.trailSource = 'cms';

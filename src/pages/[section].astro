@@ -1,0 +1,33 @@
+---
+const sections = {
+  trails: { title:'Μονοπάτια', text:'Οι διαδρομές του Παναχαϊκού θα εμφανίζονται εδώ.', action:'/map', actionLabel:'Άνοιξε τον χάρτη' },
+  points: { title:'Σημεία ενδιαφέροντος', text:'Φυσικά και πολιτιστικά σημεία του Παναχαϊκού.', action:'/map', actionLabel:'Δες τα στον χάρτη' },
+  shelters: { title:'Καταφύγια', text:'Καταφύγια και σημεία στάσης στο βουνό.', action:'/map', actionLabel:'Δες τα στον χάρτη' },
+  photos: { title:'Φωτογραφίες', text:'Η φωτογραφική βιβλιοθήκη του Panachaiko Trails.', action:'/', actionLabel:'Επιστροφή στην αρχική' },
+  videos: { title:'Βίντεο', text:'Βίντεο και εμπειρίες από το Παναχαϊκό.', action:'/', actionLabel:'Επιστροφή στην αρχική' },
+  news: { title:'Νέα', text:'Νέα, δράσεις και ενημερώσεις από το Παναχαϊκό.', action:'/', actionLabel:'Επιστροφή στην αρχική' },
+};
+export function getStaticPaths(){
+  return Object.entries(sections).map(([section,data]) => ({ params:{section}, props:{data} }));
+}
+const { data } = Astro.props;
+---
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>{data.title} | Panachaiko Trails</title>
+<style>
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,#e8e6de,#d8dfd9);color:#23443f;font-family:Georgia,'Times New Roman',serif}
+main{min-height:100vh;display:grid;place-items:center;padding:24px}
+.panel{width:min(760px,100%);padding:48px;border-radius:32px;background:rgba(250,248,241,.88);box-shadow:0 24px 70px rgba(32,54,49,.16);text-align:center;border:1px solid rgba(255,255,255,.8)}
+h1{font-size:clamp(48px,8vw,88px);font-weight:500;margin:0 0 18px;letter-spacing:-.03em}
+p{font-family:Arial,sans-serif;font-size:17px;line-height:1.6;color:#62716d;margin:0 auto;max-width:560px}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+a{display:inline-flex;padding:13px 20px;border-radius:999px;background:#264d46;color:white;text-decoration:none;font-family:Arial,sans-serif;font-weight:700}
+a.secondary{background:#f5efe3;color:#264d46;border:1px solid rgba(38,77,70,.15)}
+</style>
+</head>
+<body><main><section class="panel"><h1>{data.title}</h1><p>{data.text}</p><div class="actions"><a href={data.action}>{data.actionLabel}</a><a class="secondary" href="/">← Αρχική</a></div></section></main></body>
+</html>

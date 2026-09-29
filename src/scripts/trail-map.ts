@@ -57,11 +57,7 @@ if (app) {
     attribution: '© OpenStreetMap contributors | Μονοπάτια: ΟΦΥΠΕΚΑ'
   });
   const imageryLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    // Around Panachaiko some Esri z16+ tiles are valid HTTP images but contain
-    // the "Map data not yet available" placeholder. Cap native requests at z15
-    // and let Leaflet upscale those tiles for closer zoom levels.
-    maxNativeZoom: 15,
-    maxZoom: 19,
+    maxZoom: 18,
     attribution: 'Tiles © Esri, Maxar, Earthstar Geographics | Μονοπάτια: ΟΦΥΠΕΚΑ'
   });
   const imageryLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
@@ -211,8 +207,16 @@ if (app) {
   let selectedCode: string | null = null;
   const mapQuery = new URLSearchParams(window.location.search);
   const initialTrailCode = mapQuery.get('trail')?.trim() || null;
-  const searchFocusLat = Number(mapQuery.get('lat'));
-  const searchFocusLng = Number(mapQuery.get('lng'));
+  const rawSearchFocusLat = mapQuery.get('lat');
+  const rawSearchFocusLng = mapQuery.get('lng');
+  const parsedSearchFocusLat = rawSearchFocusLat === null ? null : Number(rawSearchFocusLat);
+  const parsedSearchFocusLng = rawSearchFocusLng === null ? null : Number(rawSearchFocusLng);
+  const searchFocusLat = parsedSearchFocusLat !== null && Number.isFinite(parsedSearchFocusLat) && parsedSearchFocusLat >= 37 && parsedSearchFocusLat <= 39
+    ? parsedSearchFocusLat
+    : null;
+  const searchFocusLng = parsedSearchFocusLng !== null && Number.isFinite(parsedSearchFocusLng) && parsedSearchFocusLng >= 20 && parsedSearchFocusLng <= 23
+    ? parsedSearchFocusLng
+    : null;
   const searchFocusLabel = mapQuery.get('label')?.trim() || 'Σημείο ενδιαφέροντος';
   // Διατηρεί την τελευταία ρητή επιλογή του χρήστη ακόμη κι όταν τα δεδομένα
   // ανανεώνονται από το WordPress και η λίστα/τα layers ξαναχτίζονται.
@@ -847,7 +851,7 @@ if (app) {
 
   renderTrails(trails, true);
 
-  if (Number.isFinite(searchFocusLat) && Number.isFinite(searchFocusLng)) {
+  if (searchFocusLat !== null && searchFocusLng !== null) {
     window.setTimeout(() => {
       const focusIcon = L.divIcon({
         className: '',

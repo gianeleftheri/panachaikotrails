@@ -1,0 +1,112 @@
+---
+const hero = 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-editorial-mountain-hero.jpg';
+
+const cards = [
+  { href:'/trails', title:'Μονοπάτια', subtitle:'Διαδρομές για κάθε επίπεδο', image:hero, icon:'trail' },
+  { href:'/points', title:'Σημεία ενδιαφέροντος', subtitle:'Φυσικά και πολιτιστικά σημεία', image:hero, icon:'pin' },
+  { href:'/shelters', title:'Καταφύγια', subtitle:'Στάσεις φιλοξενίας στο βουνό', image:hero, icon:'home' },
+  { href:'/photos', title:'Φωτογραφίες', subtitle:'Στιγμές από το Παναχαϊκό', image:hero, icon:'camera' },
+  { href:'/videos', title:'Βίντεο', subtitle:'Εμπειρίες σε κίνηση', image:hero, icon:'play' },
+  { href:'/news', title:'Νέα', subtitle:'Δράσεις και ενημερώσεις', image:hero, icon:'news' },
+];
+---
+
+<style>
+  :global(html){scroll-behavior:smooth}
+  :global(body){margin:0;background:#efe6d7;color:#243f39;font-family:Georgia,'Times New Roman',serif}
+  *{box-sizing:border-box}
+  .page{min-height:100vh;background:#efe6d7}
+  .hero{position:relative;min-height:100svh;overflow:hidden;background:#d9c7aa}
+  .hero-photo{position:absolute;inset:0;background-image:linear-gradient(to bottom,rgba(246,231,207,.10),rgba(246,231,207,.12) 58%,rgba(239,230,215,.94) 90%,#efe6d7 100%),url('https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-editorial-mountain-hero.jpg');background-size:cover;background-position:center 42%}
+  .hero-photo::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 20%,transparent 0 42%,rgba(32,53,48,.12) 100%)}
+  .triangles{position:absolute;inset:76px 0 23%;pointer-events:none;mix-blend-mode:multiply;opacity:.52}
+  .triangle{position:absolute;width:34vw;max-width:520px;aspect-ratio:1;clip-path:polygon(50% 0,100% 100%,0 100%);background:rgba(34,73,71,.38);backdrop-filter:saturate(.75)}
+  .triangle.t1{left:-4%;top:16%;background:rgba(176,105,62,.35)}
+  .triangle.t2{left:18%;top:2%;background:rgba(31,78,77,.38)}
+  .triangle.t3{left:43%;top:-6%;background:rgba(31,78,77,.34)}
+  .triangle.t4{right:2%;top:9%;background:rgba(188,121,72,.25)}
+  .header{position:relative;z-index:10;height:92px;display:flex;align-items:center;justify-content:space-between;gap:26px;width:min(1420px,calc(100% - 48px));margin:0 auto}
+  .brand{display:flex;align-items:center;gap:13px;text-decoration:none;color:#25473f}
+  .brand-mark{display:flex;gap:3px;align-items:end}.brand-mark i{display:block;width:34px;height:28px;clip-path:polygon(50% 0,100% 100%,0 100%);background:#24473f}.brand-mark i:nth-child(2){height:38px;background:#385d51}.brand-mark i:nth-child(3){height:24px;background:#9b744c}
+  .brand-copy strong{display:block;font-size:29px;letter-spacing:.16em;font-weight:600}.brand-copy small{font-family:Arial,sans-serif;font-size:8px;letter-spacing:.42em;color:#8c674a}
+  .nav{display:flex;gap:28px;align-items:center}.nav a{font-family:Arial,sans-serif;font-size:11px;letter-spacing:.08em;text-decoration:none;color:#2f423e;text-transform:uppercase}
+  .hero-center{position:relative;z-index:5;width:min(980px,calc(100% - 40px));margin:18vh auto 0;text-align:center}
+  .hero-center .kicker{font-family:Arial,sans-serif;font-size:12px;letter-spacing:.48em;color:#7c684f}
+  .hero-center h1{font-size:clamp(56px,7.2vw,112px);font-weight:500;letter-spacing:.07em;margin:14px 0 10px;color:#24473f}
+  .hero-center h2{font-family:Arial,sans-serif;font-size:clamp(13px,1.2vw,19px);letter-spacing:.37em;margin:0;color:#8a5d34;text-transform:uppercase}
+  .hero-center p{font-size:16px;line-height:1.5;max-width:550px;margin:24px auto 0;color:#304941}
+  .divider{width:72px;height:1px;background:#8a5d34;margin:18px auto}
+  .weather{position:absolute;z-index:8;right:max(28px,5vw);top:118px;width:min(360px,31vw);padding:15px 18px;border-radius:18px;background:rgba(248,241,226,.72);border:1px solid rgba(255,255,255,.75);backdrop-filter:blur(10px);box-shadow:0 14px 38px rgba(31,48,43,.12)}
+  .weather-title{font-family:Arial,sans-serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#6d6d64;margin-bottom:9px}
+  .weather-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .station{padding:10px;border-radius:12px;background:rgba(255,255,255,.56)}
+  .station strong{display:block;font-family:Arial,sans-serif;font-size:11px}.station .temp{font-size:28px;font-weight:700;margin-top:3px}.station small{font-family:Arial,sans-serif;font-size:9px;color:#6f7a75}
+  .cards-wrap{position:absolute;z-index:7;left:0;right:0;bottom:2.8vh;width:min(1420px,calc(100% - 44px));margin:auto;display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+  .card{position:relative;min-height:250px;border-radius:16px;overflow:hidden;text-decoration:none;color:#233e37;border:1px solid rgba(255,255,255,.55);background:rgba(248,240,224,.76);backdrop-filter:blur(8px);box-shadow:0 14px 36px rgba(31,48,43,.10);transition:transform .25s ease,box-shadow .25s ease}
+  .card:hover{transform:translateY(-6px);box-shadow:0 22px 48px rgba(31,48,43,.16)}
+  .card-image{height:112px;background-size:cover;background-position:center;filter:saturate(.72) sepia(.12);position:relative}
+  .card-image::after{content:"";position:absolute;inset:55% 0 0;background:linear-gradient(transparent,rgba(248,240,224,.95))}
+  .card-body{padding:0 16px 16px;text-align:center}
+  .icon{width:42px;height:42px;margin:-21px auto 7px;border-radius:50%;display:grid;place-items:center;background:rgba(245,234,214,.96);border:1px solid rgba(63,82,75,.22);position:relative;z-index:2}
+  .icon svg{width:26px;height:26px;fill:none;stroke:#2b4c43;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .card h3{font-size:22px;font-weight:500;margin:4px 0}.card p{font-family:Arial,sans-serif;font-size:9px;letter-spacing:.13em;text-transform:uppercase;line-height:1.5;color:#7a6c59;margin:0}
+  .card-arrow{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);width:30px;height:30px;border:1px solid #9d7952;border-radius:50%;display:grid;place-items:center;color:#8c643f;font-family:Arial,sans-serif}
+  .fade-bottom{position:absolute;left:0;right:0;bottom:-1px;height:28vh;background:linear-gradient(to bottom,rgba(239,230,215,0),#efe6d7 82%);pointer-events:none;z-index:4}
+  .credit{position:absolute;left:16px;bottom:8px;z-index:9;font-family:Arial,sans-serif;font-size:8px;color:rgba(49,67,61,.55)}
+  @media(max-width:1100px){.nav{gap:14px}.nav a{font-size:9px}.cards-wrap{grid-template-columns:repeat(3,1fr);position:relative;padding:38px 0 50px}.hero{min-height:auto;padding-bottom:0}.weather{position:relative;right:auto;top:auto;margin:24px auto 10px;width:min(640px,calc(100% - 32px))}.hero-center{margin:10vh auto 0}.fade-bottom{display:none}}
+  @media(max-width:720px){.header{height:auto;padding:16px 0;align-items:flex-start}.nav{display:none}.brand-copy strong{font-size:20px}.weather-grid{grid-template-columns:1fr 1fr}.hero-center{margin:7vh auto 0}.hero-center h1{font-size:52px}.hero-center h2{font-size:10px;line-height:1.7}.cards-wrap{grid-template-columns:1fr 1fr;width:calc(100% - 24px);gap:10px}.card{min-height:228px}.card h3{font-size:18px}}
+</style>
+
+<div class="page">
+  <section class="hero">
+    <div class="hero-photo"></div>
+    <div class="triangles" aria-hidden="true"><span class="triangle t1"></span><span class="triangle t2"></span><span class="triangle t3"></span><span class="triangle t4"></span></div>
+    <header class="header">
+      <a class="brand" href="/"><span class="brand-mark"><i></i><i></i><i></i></span><span class="brand-copy"><strong>ΠΑΝΑΧΑΪΚΟ</strong><small>ΜΟΝΟΠΑΤΙΑ · ΦΥΣΗ · ΕΜΠΕΙΡΙΕΣ</small></span></a>
+      <nav class="nav"><a href="/">Αρχική</a><a href="/trails">Μονοπάτια</a><a href="/points">Σημεία ενδιαφέροντος</a><a href="/shelters">Καταφύγια</a><a href="/photos">Φωτογραφίες</a><a href="/videos">Βίντεο</a><a href="/news">Νέα</a></nav>
+    </header>
+
+    <section class="weather" aria-label="Καιρός">
+      <div class="weather-title">Καιρός τώρα</div>
+      <div class="weather-grid">
+        <article class="station" data-live-station="patra">
+          <strong data-station-name>Πάτρα</strong><div class="temp" data-station-temp>–<sup>°C</sup></div><small data-station-status>Φόρτωση…</small>
+          <span hidden data-station-elev></span><span hidden data-station-icon></span><span hidden data-station-feels></span><span hidden data-station-observed></span><span hidden data-station-hum></span><span hidden data-station-wind></span><span hidden data-station-wind-dir></span><span hidden data-station-rain></span><span hidden data-station-pressure></span><a hidden data-station-source href="#"></a>
+        </article>
+        <article class="station" data-live-station="panachaiko">
+          <strong data-station-name>Παναχαϊκό</strong><div class="temp" data-station-temp>–<sup>°C</sup></div><small data-station-status>Φόρτωση…</small>
+          <span hidden data-station-elev></span><span hidden data-station-icon></span><span hidden data-station-feels></span><span hidden data-station-observed></span><span hidden data-station-hum></span><span hidden data-station-wind></span><span hidden data-station-wind-dir></span><span hidden data-station-rain></span><span hidden data-station-pressure></span><a hidden data-station-source href="#"></a>
+        </article>
+      </div>
+    </section>
+
+    <div class="hero-center">
+      <div class="kicker">ΑΝΑΚΑΛΥΨΕ ΤΟ</div><h1>ΠΑΝΑΧΑΪΚΟ</h1>
+      <h2>ΜΟΝΟΠΑΤΙΑ ΠΟΥ ΕΝΩΝΟΥΝ<br/>ΤΟΝ ΑΝΘΡΩΠΟ ΜΕ ΤΗ ΦΥΣΗ</h2>
+      <div class="divider"></div><p>Βουνό εμπειριών, διαδρομών και ιστοριών. Ανακάλυψε το Παναχαϊκό, βήμα προς βήμα.</p>
+    </div>
+
+    <div class="cards-wrap">
+      {cards.map((card) => (
+        <a class="card" href={card.href}>
+          <div class="card-image" style={"background-image:url('" + card.image + "')"}></div>
+          <div class="card-body">
+            <span class="icon">
+              {card.icon === 'trail' && <svg viewBox="0 0 32 36"><path d="M8 25c7-7 8-15 8-21M16 9l6 5 5-5M16 15l-5 7M22 14l4 9M10 27l-3 7M25 23l5 7"/></svg>}
+              {card.icon === 'pin' && <svg viewBox="0 0 32 36"><path d="M16 33S7 24 7 15a9 9 0 1 1 18 0c0 9-9 18-9 18Z"/><circle cx="16" cy="15" r="3"/></svg>}
+              {card.icon === 'home' && <svg viewBox="0 0 32 36"><path d="M5 17 16 7l11 10v12H5Z"/><path d="M12 29v-8h8v8"/></svg>}
+              {card.icon === 'camera' && <svg viewBox="0 0 32 36"><rect x="5" y="11" width="22" height="16" rx="2"/><path d="M10 11l2-4h8l2 4"/><circle cx="16" cy="19" r="5"/></svg>}
+              {card.icon === 'play' && <svg viewBox="0 0 32 36"><circle cx="16" cy="18" r="12"/><path d="m14 13 7 5-7 5Z"/></svg>}
+              {card.icon === 'news' && <svg viewBox="0 0 32 36"><path d="M8 6h16v24H8Z"/><path d="M11 11h10M11 16h10M11 21h7"/></svg>}
+            </span>
+            <h3>{card.title}</h3><p>{card.subtitle}</p>
+          </div>
+          <span class="card-arrow">→</span>
+        </a>
+      ))}
+    </div>
+    <div class="fade-bottom"></div>
+    <div class="credit">Φωτογραφία: Unsplash / Leon Zschätzsch</div>
+  </section>
+</div>
+<script src="../scripts/homepage-dual-weather.js"></script>

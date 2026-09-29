@@ -271,21 +271,30 @@ opacity:.92}
 .weather-frame{
   right:2.4%!important;
   bottom:2.6%!important;
-  width:min(520px,44%)!important;
-  padding:12px!important;
+  width:min(640px,50%)!important;
+  padding:18px!important;
   border:1px solid rgba(11,38,51,.08)!important;
-  border-radius:20px!important;
-  box-shadow:0 18px 38px rgba(11,38,51,.16)!important;
+  border-radius:24px!important;
+  box-shadow:0 20px 44px rgba(11,38,51,.18)!important;
 }
-.weather-head{padding:0 3px 9px!important}
-.weather-head strong{font-size:13px!important}
-.weather-head span{font-size:9px!important}
-.weather-grid{gap:8px!important}
-.accordion-station{padding:10px!important;border-radius:14px!important}
-.accordion-station-main{margin:6px 0 7px!important}
-.accordion-station-temp{font-size:34px!important}
-.accordion-station-stats{gap:5px!important}
-.accordion-station-stat{padding:6px!important}
+.weather-head{padding:1px 4px 13px!important}
+.weather-head strong{font-size:17px!important}
+.weather-head span{font-size:10px!important}
+.weather-grid{gap:12px!important}
+.accordion-station{padding:14px!important;border-radius:17px!important}
+.accordion-station-place{font-size:14px!important}
+.accordion-station-live{font-size:10px!important}
+.accordion-station-main{grid-template-columns:48px auto 1fr!important;gap:10px!important;margin:10px 0 11px!important}
+.accordion-station-icon{width:46px!important;height:46px!important}
+.accordion-station-temp{font-size:44px!important}
+.accordion-station-feels{font-size:10px!important}
+.accordion-station-observed{font-size:9px!important}
+.accordion-station-stats{gap:7px!important}
+.accordion-station-stat{padding:9px!important}
+.accordion-station-stat dt{font-size:9px!important}
+.accordion-station-stat dd{font-size:16px!important}
+.accordion-station-stat>span{font-size:9px!important}
+.accordion-station-source{font-size:9px!important;margin-top:9px!important;padding-top:8px!important}
 
 .acc-panel:not(.is-active) .panel-footer{
   height:118px!important;
@@ -304,12 +313,12 @@ opacity:.92}
 @media (min-width:1300px){
   .home-copy{width:min(610px,48%)!important}
   .home-copy h2{font-size:clamp(60px,5.4vw,92px)!important}
-  .weather-frame{width:min(540px,43%)!important}
+  .weather-frame{width:min(700px,50%)!important}
 }
 @media (max-width:1100px){
   .home-copy{width:50%!important;left:4%!important}
   .home-copy h2{font-size:clamp(44px,5.5vw,68px)!important}
-  .weather-frame{width:47%!important}
+  .weather-frame{width:52%!important}
 }
 @media (max-width:900px){
   .panel-scene{

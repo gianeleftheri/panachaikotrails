@@ -56,6 +56,40 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--pink);outline-offse
 .map-icon::before,.map-icon::after{content:"";position:absolute;top:1px;width:8px;height:16px;border:2px solid currentColor;transform:skewY(-18deg)}
 .map-icon::before{left:1px}.map-icon::after{right:1px;transform:skewY(18deg)}
 .map-copy small{display:none}
+body.search-open{overflow:hidden}
+.site-search-overlay{position:fixed;z-index:120;inset:0;display:grid;place-items:start center;padding:96px 18px 24px;background:rgba(6,25,34,.62);backdrop-filter:blur(8px)}
+.site-search-overlay[hidden]{display:none!important}
+.site-search-dialog{width:min(820px,100%);max-height:min(720px,calc(100vh - 120px));display:flex;flex-direction:column;overflow:hidden;border-radius:28px;background:#fffdf8;box-shadow:0 28px 80px rgba(7,31,42,.32);border:1px solid rgba(11,38,51,.1)}
+.site-search-top{display:flex;align-items:center;gap:12px;padding:18px 20px 12px}
+.site-search-field{position:relative;flex:1}
+.site-search-field::before{content:"";position:absolute;left:17px;top:50%;width:14px;height:14px;border:3px solid var(--ink);border-radius:50%;transform:translateY(-58%)}
+.site-search-field::after{content:"";position:absolute;left:30px;top:53%;width:10px;height:3px;border-radius:4px;background:var(--ink);transform:rotate(45deg)}
+.site-search-input{width:100%;height:58px;border:2px solid rgba(11,38,51,.12);border-radius:18px;background:#fff;padding:0 18px 0 52px;color:var(--ink);font:800 18px/1 Roboto,Arial,sans-serif;outline:none}
+.site-search-input:focus{border-color:var(--yellow);box-shadow:0 0 0 4px rgba(255,223,0,.22)}
+.site-search-close{flex:none;width:48px;height:48px;border:0;border-radius:50%;background:#f1f3ef;color:var(--ink);font-size:22px;font-weight:900;cursor:pointer}
+.site-search-meta{display:flex;justify-content:space-between;gap:12px;padding:0 22px 13px;color:var(--muted);font-size:12px;font-weight:700}
+.site-search-results{display:grid;gap:8px;overflow:auto;padding:0 14px 16px}
+.site-search-result{display:grid;grid-template-columns:44px minmax(0,1fr) 34px;gap:12px;align-items:center;padding:13px 14px;border-radius:16px;background:#f7f8f4;color:var(--ink);text-decoration:none;border:1px solid rgba(11,38,51,.06);transition:transform .16s ease,background .16s ease,box-shadow .16s ease}
+.site-search-result:hover,.site-search-result:focus-visible{transform:translateY(-1px);background:#fff;box-shadow:0 10px 24px rgba(11,38,51,.1)}
+.site-search-result-icon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--yellow);font-size:19px;font-weight:950}
+.site-search-result-icon.type-poi{background:#c9f3f4}.site-search-result-icon.type-shelter{background:#ffd7a8}.site-search-result-icon.type-news{background:#e2dcff}
+.site-search-result-copy{min-width:0;display:grid;gap:3px}
+.site-search-result-type{font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:var(--pink);font-weight:950}
+.site-search-result-copy strong{font-size:15px;line-height:1.2}
+.site-search-result-copy small{font-size:11px;line-height:1.35;color:var(--muted)}
+.site-search-result-arrow{font-size:22px;font-weight:900}
+.site-search-empty,.site-search-loading{padding:28px 18px;text-align:center;color:var(--muted);font-weight:700}
+@media(max-width:620px){
+  .site-search-overlay{padding:72px 8px 8px}
+  .site-search-dialog{max-height:calc(100vh - 80px);border-radius:20px}
+  .site-search-top{padding:12px 12px 9px}
+  .site-search-input{height:52px;font-size:16px}
+  .site-search-close{width:44px;height:44px}
+  .site-search-meta{padding:0 14px 10px}
+  .site-search-results{padding:0 8px 10px}
+  .site-search-result{grid-template-columns:40px minmax(0,1fr) 26px;padding:11px 10px}
+  .site-search-result-icon{width:38px;height:38px}
+}
 .accordion{position:absolute;z-index:5;top:88px;left:14px;right:14px;bottom:14px;display:flex;gap:9px;overflow:hidden}
 .acc-panel{position:relative;flex:1 1 0;min-width:112px;overflow:hidden;border-radius:20px;background:#fff;box-shadow:var(--shadow);transition:flex-grow .68s var(--ease),transform .3s ease;isolation:isolate}
 .acc-panel.is-active{flex-grow:6.4}
@@ -351,10 +385,24 @@ opacity:.92}
     </nav>
 
     <div class="header-actions">
-      <button class="search-dot" type="button" aria-label="Αναζήτηση"></button>
+      <button class="search-dot" id="siteSearchButton" type="button" aria-label="Αναζήτηση" aria-expanded="false" aria-controls="siteSearchOverlay"></button>
       <button class="map-callout" id="mapCta" type="button"><span class="map-icon" aria-hidden="true"></span><span class="map-copy"><strong>Χάρτης</strong><small>Διαδραστικός χάρτης</small></span></button>
     </div>
   </header>
+
+  <div class="site-search-overlay" id="siteSearchOverlay" hidden>
+    <section class="site-search-dialog" id="siteSearchDialog" role="dialog" aria-modal="true" aria-labelledby="siteSearchTitle">
+      <div class="site-search-top">
+        <div class="site-search-field">
+          <label class="sr-only" id="siteSearchTitle" for="siteSearchInput">Αναζήτηση στο Panachaiko Trails</label>
+          <input class="site-search-input" id="siteSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Αναζήτησε μονοπάτι, σημείο, καταφύγιο ή νέο…" />
+        </div>
+        <button class="site-search-close" id="siteSearchClose" type="button" aria-label="Κλείσιμο αναζήτησης">×</button>
+      </div>
+      <div class="site-search-meta"><span id="siteSearchStatus">Γράψε τουλάχιστον 2 χαρακτήρες.</span><span>ESC για κλείσιμο</span></div>
+      <div class="site-search-results" id="siteSearchResults" aria-live="polite"></div>
+    </section>
+  </div>
 
   <main class="accordion" id="accordion">
     <article class="acc-panel is-active" id="panel-home" data-panel="home" aria-labelledby="title-home" style="--accent:var(--yellow)">
@@ -460,5 +508,6 @@ opacity:.92}
 </div>
 
 <script src="../scripts/homepage-accordion.js"></script>
+<script src="../scripts/homepage-search.js"></script>
 <script src="../scripts/homepage-feed.js"></script>
 <script src="../scripts/homepage-dual-weather.js"></script>

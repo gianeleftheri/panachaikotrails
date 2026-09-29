@@ -17,14 +17,15 @@ const cards = [
   a{color:inherit}
   .home{min-height:100vh;background:#e8e6de;overflow:hidden}
   .hero{position:relative;min-height:100svh;isolation:isolate;overflow:hidden}
-  .scene{position:absolute;inset:0;z-index:-5}
-  .scene img{width:100%;height:100%;object-fit:cover;object-position:center center;display:block;filter:saturate(.92) contrast(.98)}
-  .scene::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(248,247,240,.06) 0%,rgba(248,247,240,.02) 52%,rgba(232,230,222,.96) 83%,#e8e6de 100%)}
-
-  /* hide the UI that exists inside the raster reference; only the mountain artwork remains visible */
-  .clean-top{position:absolute;z-index:-2;left:0;right:0;top:0;height:96px;background:linear-gradient(180deg,rgba(248,247,240,.98),rgba(248,247,240,.88));backdrop-filter:blur(10px)}
-  .clean-copy{position:absolute;z-index:-2;left:0;top:96px;width:min(46vw,760px);height:53vh;background:linear-gradient(90deg,rgba(246,245,238,.97) 0%,rgba(246,245,238,.90) 62%,rgba(246,245,238,.40) 84%,rgba(246,245,238,0) 100%)}
-  .clean-bottom{position:absolute;z-index:-2;left:0;right:0;bottom:0;height:35vh;background:linear-gradient(180deg,rgba(232,230,222,.20),rgba(232,230,222,.90) 25%,#e8e6de 100%)}
+  .scene{position:absolute;inset:0;z-index:-5;overflow:hidden;background:#e7e0d3 url('https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-editorial-mountain-hero.jpg') center 48%/cover no-repeat}
+  .scene::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(248,245,236,.12) 0%,rgba(246,243,234,.06) 48%,rgba(232,230,222,.66) 78%,#e8e6de 100%)}
+  .facet-layer{position:absolute;inset:70px 0 17%;pointer-events:none;opacity:.54;mix-blend-mode:multiply}
+  .facet-layer i{position:absolute;display:block;aspect-ratio:1;clip-path:polygon(50% 0,100% 100%,0 100%);background-image:url('https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-editorial-mountain-hero.jpg');background-repeat:no-repeat;background-size:1700px auto;filter:saturate(.78) contrast(.94)}
+  .facet-layer i:nth-child(1){width:min(39vw,600px);left:-4%;top:13%;background-position:11% 50%;opacity:.48}
+  .facet-layer i:nth-child(2){width:min(35vw,540px);left:21%;top:-1%;background-position:43% 42%;opacity:.56}
+  .facet-layer i:nth-child(3){width:min(39vw,610px);left:43%;top:-8%;background-position:64% 44%;opacity:.56}
+  .facet-layer i:nth-child(4){width:min(34vw,520px);right:-2%;top:10%;background-position:88% 48%;opacity:.42}
+  .hiker-art{position:absolute;z-index:2;right:23%;bottom:27%;width:145px;height:205px;background-repeat:no-repeat;background-size:1672px 941px;background-position:-1085px -372px;filter:saturate(.86) contrast(.96);-webkit-mask-image:radial-gradient(ellipse at center,#000 58%,transparent 100%);mask-image:radial-gradient(ellipse at center,#000 58%,transparent 100%);pointer-events:none}
 
   .header{position:relative;z-index:10;display:flex;align-items:center;gap:28px;min-height:92px;width:min(1480px,calc(100% - 48px));margin:0 auto}
   .brand{flex:0 0 auto;width:300px;aspect-ratio:442/74;background-repeat:no-repeat;background-size:378.3% auto;background-position:6.34% 2.08%;text-indent:-9999px;overflow:hidden}
@@ -37,7 +38,7 @@ const cards = [
   .search-link span::after{content:"";position:absolute;width:8px;height:2px;background:#173d43;right:-6px;bottom:-3px;transform:rotate(45deg)}
   .menu-button{display:none}
 
-  .hero-grid{position:relative;z-index:4;width:min(1480px,calc(100% - 48px));margin:0 auto;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(360px,.75fr);gap:52px;align-items:start;padding-top:76px}
+  .hero-grid{position:relative;z-index:4;width:min(1480px,calc(100% - 48px));margin:0 auto;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(360px,.75fr);gap:52px;align-items:start;padding-top:92px}
   .hero-copy{max-width:650px}
   .kicker{font-size:12px;letter-spacing:.35em;text-transform:uppercase;color:#7f9597;font-weight:700;margin-bottom:24px}
   .hero-copy h1{font-family:Georgia,'Times New Roman',serif;font-size:clamp(64px,6.2vw,108px);line-height:.86;letter-spacing:-.055em;font-weight:500;margin:0;color:#173d43}
@@ -68,7 +69,7 @@ const cards = [
   .station-stats dd small{font-size:7px;margin-left:1px}
   .station-source{display:none}
 
-  .cards-section{position:relative;z-index:6;width:min(1400px,calc(100% - 48px));margin:75px auto 0;padding-bottom:58px}
+  .cards-section{position:relative;z-index:6;width:min(1400px,calc(100% - 48px));margin:92px auto 0;padding-bottom:58px}
   .cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
   .card{display:flex;flex-direction:column;min-height:218px;overflow:hidden;border-radius:16px;background:rgba(248,248,242,.88);border:1px solid rgba(255,255,255,.82);box-shadow:0 15px 40px rgba(41,61,58,.10);text-decoration:none;transition:transform .22s ease,box-shadow .22s ease}
   .card:hover,.card:focus-visible{transform:translateY(-7px);box-shadow:0 22px 48px rgba(41,61,58,.16)}
@@ -90,11 +91,9 @@ const cards = [
     .cards-section{margin-top:50px}
     .clean-copy{width:65vw}
   }
-  @media(max-width:780px){
+  @media(max-width:780px){.hiker-art{right:4%;bottom:33%;width:112px;height:165px;background-size:1672px 941px;background-position:-1095px -380px;opacity:.82}.facet-layer{inset:78px 0 30%;opacity:.42}
     .hero{min-height:auto}
     .scene img{object-position:57% center}
-    .clean-top{height:78px}
-    .clean-copy{top:78px;width:100%;height:470px;background:linear-gradient(180deg,rgba(246,245,238,.94) 0%,rgba(246,245,238,.80) 70%,rgba(246,245,238,0) 100%)}
     .header{min-height:78px;width:calc(100% - 24px)}
     .brand{width:210px}
     .menu-button{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.75);margin-left:auto;color:#173d43;font-size:22px;cursor:pointer}
@@ -126,10 +125,8 @@ const cards = [
 
 <div class="home">
   <section class="hero" id="home">
-    <div class="scene" aria-hidden="true"><img src={master} alt="" /></div>
-    <div class="clean-top" aria-hidden="true"></div>
-    <div class="clean-copy" aria-hidden="true"></div>
-    <div class="clean-bottom" aria-hidden="true"></div>
+    <div class="scene" aria-hidden="true"><div class="facet-layer"><i></i><i></i><i></i><i></i></div></div>
+    <div class="hiker-art" style={"background-image:url('" + master + "')"} aria-hidden="true"></div>
 
     <header class="header">
       <a class="brand" href="/" style={"background-image:url('" + master + "')"} aria-label="Panachaiko Trails">Panachaiko Trails</a>

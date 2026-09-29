@@ -1,5 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
-<rect width="1600" height="900" fill="#eaf0f3"/><path d="M0 660L310 380 560 620 820 300 1100 635 1360 410 1600 590V900H0Z" fill="#8bb7c7"/>
-<path d="M0 760L320 580 570 730 840 560 1090 735 1330 600 1600 720V900H0Z" fill="#abc987"/>
-<g transform="translate(1050 370)"><circle cx="130" cy="130" r="120" fill="#fffdf8" opacity=".92"/><path d="M105 70l90 60-90 60z" fill="#2f9bf4"/></g>
+<defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="2.6" fill="#0b2633"/></pattern></defs>
+<rect width="1600" height="900" fill="#11c7e8"/><circle cx="1290" cy="135" r="90" fill="#ffdf00"/>
+<path d="M0 590L260 350 490 560 760 240 1020 570 1280 335 1600 570V900H0Z" fill="#fff"/>
+<path d="M0 640L280 425 520 600 780 325 1040 610 1300 420 1600 610V900H0Z" fill="#07304b"/>
+<path d="M0 750L280 565 520 720 810 515 1070 715 1330 565 1600 710V900H0Z" fill="#b9e52b"/>
+<g transform="translate(1010 350)"><circle cx="140" cy="140" r="126" fill="#ff3c98" stroke="#fff" stroke-width="12"/><path d="M115 74l105 66-105 66z" fill="#fff"/></g>
+<g transform="translate(250 520)"><path d="M65 0c23 0 41 18 41 41s-18 41-41 41-41-18-41-41S42 0 65 0z" fill="#d98758"/><path d="M35 80c30-24 78-20 100 12l22 122H14L18 115z" fill="#ff8b4a" stroke="#0b2633" stroke-width="8"/><path d="M5 120l-48 120M150 118l52 118" stroke="#0b2633" stroke-width="8" stroke-linecap="round"/><path d="M38 209l-26 112M120 205l25 115" stroke="#0b2633" stroke-width="22" stroke-linecap="round"/></g>
+<path d="M90 120h210v150H90z" fill="url(#dots)" opacity=".34"/>
 </svg>

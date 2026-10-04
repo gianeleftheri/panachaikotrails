@@ -94,16 +94,16 @@ body{background:#fcfbf9;color:#543c31}
 .brand{display:block;margin:0 0 30px}
 .brand h1{font-size:clamp(64px,7.4vw,116px);line-height:.82;letter-spacing:-.035em}
 .brand .intro{display:block;max-width:none;font-size:14px;line-height:1.65;margin-top:24px}
-.counter,.updates{background:#fcfbf9ed;border:3px solid #543c31;box-shadow:6px 6px 0 #543c31;padding:22px;margin-bottom:26px}
+.counter,.updates,.routes-panel,.weather-panel{background:#fcfbf9ed;border:3px solid #543c31;box-shadow:6px 6px 0 #543c31;padding:22px;margin-bottom:26px}
 .box-label{display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 10px Inter,Arial,sans-serif;letter-spacing:.08em}
 .box-label h2{font:32px Inter,Arial,sans-serif;margin:0;letter-spacing:0}
 .digits{font:clamp(84px,9vw,148px)/1 Inter,Arial,sans-serif;margin:22px 0;display:flex;align-items:baseline;gap:18px}.digits span{font-size:clamp(28px,3.2vw,48px)}
 .counter-bottom{display:flex;justify-content:space-between;gap:12px;border-top:1px solid #543c3133;padding-top:12px;font-size:10px;line-height:1.5}
-.counter-bottom a{font-weight:700;white-space:nowrap}.news-row{display:block;font-size:13px;line-height:1.5;padding:13px 0;border-bottom:1px solid #543c3133}.news-row:hover{color:#26717e}.updates .text-link{font-size:11px;margin-top:10px}#updates-feed>p,#updates-feed{font-size:13px;line-height:1.7}.dashboard-note{font-size:12px;line-height:1.7;max-width:390px}
+.counter-bottom a{font-weight:700;white-space:nowrap}.routes-list{margin-top:14px;border-top:1px solid #543c3133}.route-card{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid #543c3133;font-size:12px;line-height:1.35}.route-card:hover{color:#26717e}.route-card strong{font-size:13px}.route-card small{display:block;margin-top:4px;color:#6f645e}.weather-panel .station:last-child{border-bottom:0}.weather-panel .station strong{font-size:36px}.panel-note{font-size:10px;line-height:1.5;color:#6f645e;margin-top:12px}.news-row{display:block;font-size:13px;line-height:1.5;padding:13px 0;border-bottom:1px solid #543c3133}.news-row:hover{color:#26717e}.updates .text-link{font-size:11px;margin-top:10px}#updates-feed>p,#updates-feed{font-size:13px;line-height:1.7}.dashboard-note{font-size:12px;line-height:1.7;max-width:390px}
 .hub{gap:19px;grid-template-columns:repeat(2,minmax(0,1fr))}.tile{background:var(--tile);backdrop-filter:none;padding:19px;min-height:210px;border:3px solid #543c31;box-shadow:5px 5px 0 #543c31}.tile:hover,.tile:active{background:var(--tile);box-shadow:1px 1px 0 #543c31}.tile h2{font-size:clamp(29px,3vw,46px);line-height:.95;overflow-wrap:anywhere;margin:23px 0 18px}.tile-top{font-size:10px}.pixel-icon{width:32px;height:32px}.tile-bottom{font-size:10px;margin-top:auto;line-height:1.4}.section-label{padding-top:0;border-top:0;margin-bottom:4px}.footer{margin-top:44px;padding-top:20px;border-top:1px solid #543c3150}.landscape{inset:auto 0 0;height:80%;opacity:.18;z-index:-1}.landscape svg{min-height:0;width:100%;height:100%;position:static;transform:none}
 .content ul{padding-left:22px;line-height:1.8;font-size:14px}
 @media(max-width:1000px){.split{gap:28px}.tile{padding:15px}.tile h2{font-size:32px}.brand h1{font-size:72px}}
-@media(max-width:760px){.shell{padding:20px 20px 28px}.split{grid-template-columns:1fr;gap:32px}#hub{padding-top:35px}.brand h1{font-size:clamp(60px,13vw,90px)}.brand .intro{font-size:13px}.counter,.updates{padding:18px}.digits{font-size:96px}.digits span{font-size:42px}.hub{grid-template-columns:1fr;gap:18px}.tile{min-height:170px;padding:20px}.tile h2{font-size:40px;margin:14px 0}.tile-bottom{font-size:12px}.landscape{height:65%;inset:auto -180px 0}.landscape svg{position:static;transform:none;width:100%;height:100%;min-height:0}.footer{font-size:9px}.dialog{max-height:90dvh}}
+@media(max-width:760px){.shell{padding:20px 20px 28px}.split{grid-template-columns:1fr;gap:32px}#hub{padding-top:35px}.brand h1{font-size:clamp(60px,13vw,90px)}.brand .intro{font-size:13px}.counter,.updates,.routes-panel,.weather-panel{padding:18px}.digits{font-size:96px}.digits span{font-size:42px}.hub{grid-template-columns:1fr;gap:18px}.tile{min-height:170px;padding:20px}.tile h2{font-size:40px;margin:14px 0}.tile-bottom{font-size:12px}.landscape{height:65%;inset:auto -180px 0}.landscape svg{position:static;transform:none;width:100%;height:100%;min-height:0}.footer{font-size:9px}.dialog{max-height:90dvh}}
 
 /* Orange expedition poster: mountain silhouette and cream display lettering. */
 :root{--paper:#f4efe1;--ink:#20221d}
@@ -122,7 +122,7 @@ body{background:#f4efe1;color:#20221d}
 .poster-word i{display:inline-block;font-style:normal;transform:rotate(-3deg);transform-origin:50% 80%}.poster-word i:nth-child(2n){transform:rotate(3deg) translateY(3px)}.poster-word i:nth-child(3n){transform:rotate(-5deg) scaleY(1.09)}
 .poster-trails{display:block;font-size:clamp(100px,14vw,204px);letter-spacing:-.04em;transform:rotate(-2deg);margin-top:10px}
 #hub.split{max-width:1480px;margin:0 auto;padding:48px max(4vw,20px) 0;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:42px;scroll-margin-top:24px}
-.counter,.updates{background:#fcfbf9;border-color:#20221d;box-shadow:5px 5px 0 #20221d}
+.counter,.updates,.routes-panel,.weather-panel{background:#fcfbf9;border-color:#20221d;box-shadow:5px 5px 0 #20221d}
 .tile{border-color:#20221d;box-shadow:5px 5px 0 #20221d;color:#20221d}.tile:hover,.tile:active{box-shadow:1px 1px 0 #20221d}
 .footer{max-width:1360px;margin:40px auto 0;padding:22px max(2vw,20px);color:#20221d}
 @media(min-width:1500px){.poster-hero{min-height:620px}.poster-mountain{height:525px}}
@@ -184,12 +184,13 @@ body{font-family:Inter,Arial,sans-serif}
 <main id="hub" class="split">
 <section class="dashboard" aria-label="Πίνακας ενημέρωσης">
 
-<section class="counter"><div class="box-label"><span>01 / ΤΟ ΔΙΚΤΥΟ</span><span>ΠΑΝΑΧΑΪΚΟ</span></div><div class="digits">{String(trails.length).padStart(2,'0')}<span>ΔΙΑΔΡΟΜΕΣ</span></div><div class="counter-bottom"><span>{source}</span><a href="#weather" data-dialog="weather" id="live-counter">Καιρός ↗</a></div></section>
+<section class="routes-panel" id="routes-panel"><div class="box-label"><h2>ΔΙΑΔΡΟΜΕΣ</h2><span>{String(trails.length).padStart(2,'0')}</span></div><div class="routes-list">{trails.map(({key,trail})=><a class="route-card" href={`/map?trail=${encodeURIComponent(key)}`} aria-label={`Άνοιγμα διαδρομής ${trail.name} στον χάρτη`}><span class="route-code">{key}</span><span><strong>{trail.name}</strong><small>{Number.isFinite(trail.length_km) ? `${trail.length_km.toLocaleString('el-GR')} km` : 'Άνοιγμα στον χάρτη'}</small></span><span aria-hidden="true">↗</span></a>)}</div><p class="panel-note">{source} · Κάντε κλικ σε μια διαδρομή για να ανοίξει απευθείας στον χάρτη.</p></section>
+<section class="weather-panel" id="weather-panel"><div class="box-label"><h2>ΚΑΙΡΟΣ</h2><span>LIVE</span></div><div id="weather-panel-content" aria-live="polite"><p>Φόρτωση μετρήσεων…</p></div></section>
 <section class="updates"><div class="box-label"><h2>ΝΕΑ / ΕΝΗΜΕΡΩΣΕΙΣ</h2><span>02</span></div><div id="updates-feed" aria-live="polite"><p>Φόρτωση δημοσιεύσεων…</p></div><a class="text-link" href="#news" data-dialog="news">Όλες οι ενημερώσεις ↗</a></section>
 <p class="dashboard-note">Διαδρομές, σημεία ενδιαφέροντος και πληροφορίες για την επόμενη εξόρμησή σου.</p>
 </section>
 <section class="navigation"><div class="section-label"><span>03 / ΕΠΙΛΕΞΕ ΚΑΤΕΥΘΥΝΣΗ</span><span>↙</span></div><nav class="hub" aria-label="Κεντρική πλοήγηση">
-{menu.map((item,i)=><a href={`#${item.id}`} data-dialog={item.id} class="tile" style={`--tile:${item.color}`} aria-label={item.label}><div class="tile-top"><span>0{i+1}</span><svg class="pixel-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={item.icon}/></svg></div><h2>{item.title}</h2><div class="tile-bottom"><span>{item.detail}</span><span aria-hidden="true">↗</span></div></a>)}
+{menu.map((item,i)=><a href={item.id==='weather'?'#weather-panel':`#${item.id}`} data-dialog={item.id==='weather'?undefined:item.id} class="tile" style={`--tile:${item.color}`} aria-label={item.label}><div class="tile-top"><span>0{i+1}</span><svg class="pixel-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={item.icon}/></svg></div><h2>{item.title}</h2><div class="tile-bottom"><span>{item.detail}</span><span aria-hidden="true">↗</span></div></a>)}
 </nav></section></main>
 <footer class="footer"><strong>ΛΙΓΟΤΕΡΗ ΟΘΟΝΗ. ΠΕΡΙΣΣΟΤΕΡΟ ΒΟΥΝΟ.</strong><a href="/map">ΑΝΟΙΓΜΑ ΧΑΡΤΗ ↗</a></footer>
 </div>
@@ -212,24 +213,30 @@ async function loadUpdates(){
 loadUpdates();
 
 const format=v=>typeof v==='number'&&Number.isFinite(v)?v.toLocaleString('el-GR',{maximumFractionDigits:1}):'—';
+function renderWeather(root,data){
+ if(!root)return;
+ root.replaceChildren();
+ for(const key of ['patra','panachaiko']){
+  const s=data.stations[key];if(!s)continue;
+  const box=document.createElement('section');box.className='station';
+  const title=document.createElement('h3');title.textContent=s.name;
+  const temp=document.createElement('strong');temp.textContent=s.status==='unavailable'?'—':format(s.temp)+' °C';
+  const details=document.createElement('p');details.textContent=s.status==='unavailable'?'Οι μετρήσεις δεν είναι διαθέσιμες.':`Άνεμος ${format(s.wind)} km/h · Υγρασία ${format(s.humidity)}%`;
+  const status=document.createElement('p');status.className='source';status.textContent=(s.status==='live'?'Τελευταία διαθέσιμη μέτρηση':s.status==='stale'?'Παλαιότερη μέτρηση':'Μη διαθέσιμο')+(s.observed?' · '+s.observed:'');
+  const source=document.createElement('p');source.className='source';source.textContent='Πηγή: '+s.source;
+  box.append(title,temp,details,status,source);root.append(box);
+ }
+}
 async function weather(){
- const root=document.getElementById('weather-content');
+ const roots=[document.getElementById('weather-panel-content'),document.getElementById('weather-content')].filter(Boolean);
  try{
   const r=await fetch('/api/weather-live',{signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error();const data=await r.json();
-  if(!data.stations)throw Error();root.replaceChildren();
-  for(const key of ['patra','panachaiko']){
-   const s=data.stations[key];if(!s)continue;
-   const box=document.createElement('section');box.className='station';
-   const title=document.createElement('h3');title.textContent=s.name;
-   const temp=document.createElement('strong');temp.textContent=s.status==='unavailable'?'—':format(s.temp)+' °C';
-   const details=document.createElement('p');details.textContent=s.status==='unavailable'?'Οι μετρήσεις δεν είναι διαθέσιμες.':`Άνεμος ${format(s.wind)} km/h · Υγρασία ${format(s.humidity)}%`;
-   const status=document.createElement('p');status.className='source';status.textContent=(s.status==='live'?'Τελευταία διαθέσιμη μέτρηση':s.status==='stale'?'Παλαιότερη μέτρηση':'Μη διαθέσιμο')+(s.observed?' · '+s.observed:'');
-   const source=document.createElement('p');source.className='source';source.textContent='Πηγή: '+s.source;
-   box.append(title,temp,details,status,source);root.append(box);
-  }
-  if(!root.children.length)throw Error();weatherLoaded=true;
- }catch{root.textContent='Οι μετρήσεις δεν είναι διαθέσιμες αυτή τη στιγμή. Κλείσε και άνοιξε ξανά για νέα προσπάθεια.'}
+  if(!data.stations)throw Error();
+  roots.forEach(root=>renderWeather(root,data));
+  if(!roots.some(root=>root.children.length))throw Error();weatherLoaded=true;
+ }catch{roots.forEach(root=>root.textContent='Οι μετρήσεις δεν είναι διαθέσιμες αυτή τη στιγμή.')}
 }
+weather();
 function open(id){const d=document.getElementById(id);if(!(d instanceof HTMLDialogElement))return;if(!d.open)d.showModal();if(id==='weather'&&!weatherLoaded)weather()}
 document.querySelectorAll('[data-dialog]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();open(a.dataset.dialog)}));
 document.querySelectorAll('dialog').forEach(d=>{d.querySelector('.close').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()}})});

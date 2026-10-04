@@ -20,12 +20,12 @@ const icons = {
  sun: 'M22 16a6 6 0 1 1-12 0 6 6 0 0 1 12 0z M16 2v3 M16 27v3 M2 16h3 M27 16h3 M6.1 6.1l2.1 2.1 M23.8 23.8l2.1 2.1 M6.1 25.9l2.1-2.1 M23.8 8.2l2.1-2.1'
 };
 const menu = [
-{id:'trails',title:'MONOPATIA',label:'Μονοπάτια',detail:'Διαδρομές & χάρτης',icon:icons.trail,color:'#ced8b9'},
-{id:'pois',title:'SHMEIA ENDIAFERONTOS',label:'Σημεία ενδιαφέροντος',detail:'Ανακάλυψε το βουνό',icon:icons.map,color:'#b8d9d8'},
-{id:'weather',title:'KAIROS',label:'Καιρός',detail:'Μετρήσεις σταθμών',icon:icons.sun,color:'#ead694'},
-{id:'tips',title:'SYMVOYLES',label:'Συμβουλές',detail:'Πριν ξεκινήσεις',icon:icons.person,color:'#dbbea8'},
-{id:'gear',title:'EXOPLISMOS',label:'Εξοπλισμός',detail:'Τα απαραίτητα μαζί σου',icon:icons.trail,color:'#bacbdc'},
-{id:'news',title:'NEA / ARXEIO',label:'Νέα / Αρχείο',detail:'Ενημερώσεις του βουνού',icon:icons.map,color:'#d6c8dc'}
+{id:'trails',title:'ΜΟΝΟΠΑΤΙΑ',label:'Μονοπάτια',detail:'Διαδρομές & χάρτης',icon:icons.trail,color:'#ced8b9'},
+{id:'pois',title:'ΣΗΜΕΙΑ ΕΝΔΙΑΦΕΡΟΝΤΟΣ',label:'Σημεία ενδιαφέροντος',detail:'Ανακάλυψε το βουνό',icon:icons.map,color:'#b8d9d8'},
+{id:'weather',title:'ΚΑΙΡΟΣ',label:'Καιρός',detail:'Μετρήσεις σταθμών',icon:icons.sun,color:'#ead694'},
+{id:'tips',title:'ΣΥΜΒΟΥΛΕΣ',label:'Συμβουλές',detail:'Πριν ξεκινήσεις',icon:icons.person,color:'#dbbea8'},
+{id:'gear',title:'ΕΞΟΠΛΙΣΜΟΣ',label:'Εξοπλισμός',detail:'Τα απαραίτητα μαζί σου',icon:icons.trail,color:'#bacbdc'},
+{id:'news',title:'ΝΕΑ / ΑΡΧΕΙΟ',label:'Νέα / Αρχείο',detail:'Ενημερώσεις του βουνού',icon:icons.map,color:'#d6c8dc'}
 ];
 ---
 <!doctype html>
@@ -184,8 +184,8 @@ body{font-family:Inter,Arial,sans-serif}
 <main id="hub" class="split">
 <section class="dashboard" aria-label="Πίνακας ενημέρωσης">
 
-<section class="counter"><div class="box-label"><span>01 / TO DIKTYO</span><span>ΠΑΝΑΧΑΪΚΟ</span></div><div class="digits">{String(trails.length).padStart(2,'0')}<span>TRAILS</span></div><div class="counter-bottom"><span>{source}</span><a href="#weather" data-dialog="weather" id="live-counter">Καιρός ↗</a></div></section>
-<section class="updates"><div class="box-label"><h2>NEA / UPDATES</h2><span>02</span></div><div id="updates-feed" aria-live="polite"><p>Φόρτωση δημοσιεύσεων…</p></div><a class="text-link" href="#news" data-dialog="news">Όλες οι ενημερώσεις ↗</a></section>
+<section class="counter"><div class="box-label"><span>01 / ΤΟ ΔΙΚΤΥΟ</span><span>ΠΑΝΑΧΑΪΚΟ</span></div><div class="digits">{String(trails.length).padStart(2,'0')}<span>ΔΙΑΔΡΟΜΕΣ</span></div><div class="counter-bottom"><span>{source}</span><a href="#weather" data-dialog="weather" id="live-counter">Καιρός ↗</a></div></section>
+<section class="updates"><div class="box-label"><h2>ΝΕΑ / ΕΝΗΜΕΡΩΣΕΙΣ</h2><span>02</span></div><div id="updates-feed" aria-live="polite"><p>Φόρτωση δημοσιεύσεων…</p></div><a class="text-link" href="#news" data-dialog="news">Όλες οι ενημερώσεις ↗</a></section>
 <p class="dashboard-note">Διαδρομές, σημεία ενδιαφέροντος και πληροφορίες για την επόμενη εξόρμησή σου.</p>
 </section>
 <section class="navigation"><div class="section-label"><span>03 / ΕΠΙΛΕΞΕ ΚΑΤΕΥΘΥΝΣΗ</span><span>↙</span></div><nav class="hub" aria-label="Κεντρική πλοήγηση">
@@ -193,14 +193,14 @@ body{font-family:Inter,Arial,sans-serif}
 </nav></section></main>
 <footer class="footer"><strong>ΛΙΓΟΤΕΡΗ ΟΘΟΝΗ. ΠΕΡΙΣΣΟΤΕΡΟ ΒΟΥΝΟ.</strong><a href="/map">ΑΝΟΙΓΜΑ ΧΑΡΤΗ ↗</a></footer>
 </div>
-<dialog id="trails" class="dialog" aria-labelledby="trails-title"><div class="dialog-head"><h2 id="trails-title">DIADROMES</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p class="source">{source} · {trails.length} διαδρομές</p>{trails.map(({key,trail})=><a class="route" href={`/map?trail=${encodeURIComponent(key)}`}><span class="route-code">{key}</span><span>{trail.name}<small>{Number.isFinite(trail.length_km) ? `${trail.length_km.toLocaleString('el-GR')} km · ` : ''}{trail.existing ? 'Υφιστάμενη διαδρομή' : 'Σχεδιαζόμενη / υπό διερεύνηση'}</small></span><span aria-hidden="true">↗</span></a>)}</div></dialog>
-<dialog id="refuges" class="dialog" aria-labelledby="refuges-title"><div class="dialog-head"><h2 id="refuges-title">KATAFIGIA</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p>Καταφύγια στο Παναχαϊκό όρος.</p><p>Βρες τα καταφύγια και τις διαδρομές πρόσβασης στον υπάρχοντα διαδραστικό χάρτη.</p><a class="text-link" href="/map">Άνοιξε τον χάρτη ↗</a></div></dialog>
-<dialog id="weather" class="dialog" aria-labelledby="weather-title"><div class="dialog-head"><h2 id="weather-title">KAIROS</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content" id="weather-content" aria-live="polite"><p>Φόρτωση μετρήσεων…</p></div></dialog>
+<dialog id="trails" class="dialog" aria-labelledby="trails-title"><div class="dialog-head"><h2 id="trails-title">ΔΙΑΔΡΟΜΕΣ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p class="source">{source} · {trails.length} διαδρομές</p>{trails.map(({key,trail})=><a class="route" href={`/map?trail=${encodeURIComponent(key)}`}><span class="route-code">{key}</span><span>{trail.name}<small>{Number.isFinite(trail.length_km) ? `${trail.length_km.toLocaleString('el-GR')} km · ` : ''}{trail.existing ? 'Υφιστάμενη διαδρομή' : 'Σχεδιαζόμενη / υπό διερεύνηση'}</small></span><span aria-hidden="true">↗</span></a>)}</div></dialog>
+<dialog id="refuges" class="dialog" aria-labelledby="refuges-title"><div class="dialog-head"><h2 id="refuges-title">ΚΑΤΑΦΥΓΙΑ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p>Καταφύγια στο Παναχαϊκό όρος.</p><p>Βρες τα καταφύγια και τις διαδρομές πρόσβασης στον υπάρχοντα διαδραστικό χάρτη.</p><a class="text-link" href="/map">Άνοιξε τον χάρτη ↗</a></div></dialog>
+<dialog id="weather" class="dialog" aria-labelledby="weather-title"><div class="dialog-head"><h2 id="weather-title">ΚΑΙΡΟΣ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content" id="weather-content" aria-live="polite"><p>Φόρτωση μετρήσεων…</p></div></dialog>
 
-<dialog id="pois" class="dialog" aria-labelledby="pois-title"><div class="dialog-head"><h2 id="pois-title">SHMEIA</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p>Εξερεύνησε τα σημεία ενδιαφέροντος και τα καταφύγια στον χάρτη του Παναχαϊκού.</p><a class="text-link" href="/map">Άνοιγμα διαδραστικού χάρτη ↗</a></div></dialog>
-<dialog id="tips" class="dialog" aria-labelledby="tips-title"><div class="dialog-head"><h2 id="tips-title">SYMVOYLES</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p>Έλεγξε την πρόγνωση και τις διαθέσιμες ώρες φωτός. Διάλεξε διαδρομή κατάλληλη για την εμπειρία και τη φυσική σου κατάσταση.</p><p>Ενημέρωσε κάποιον για τη διαδρομή και την αναμενόμενη ώρα επιστροφής. Κράτησε αντίγραφο του χάρτη εκτός σύνδεσης.</p><p>Ακολούθησε τη σήμανση, πάρε μαζί σου τα απορρίμματα και γύρισε πίσω αν οι συνθήκες χειροτερέψουν.</p></div></dialog>
-<dialog id="gear" class="dialog" aria-labelledby="gear-title"><div class="dialog-head"><h2 id="gear-title">EXOPLISMOS</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p>Βασική λίστα — προσαρμόζεται στην εποχή, τη διάρκεια και τη διαδρομή.</p><ul><li>Παπούτσια πεζοπορίας και κατάλληλες κάλτσες.</li><li>Νερό, τροφή και επιπλέον ζεστή στρώση.</li><li>Αδιάβροχο, καπέλο και αντηλιακή προστασία.</li><li>Φορτισμένο κινητό, power bank και χάρτης εκτός σύνδεσης.</li><li>Φακός κεφαλής και προσωπικό φαρμακείο.</li></ul></div></dialog>
-<dialog id="news" class="dialog" aria-labelledby="news-title"><div class="dialog-head"><h2 id="news-title">NEA / ARXEIO</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content" id="news-feed">Φόρτωση δημοσιεύσεων…</div></dialog>
+<dialog id="pois" class="dialog" aria-labelledby="pois-title"><div class="dialog-head"><h2 id="pois-title">ΣΗΜΕΙΑ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p>Εξερεύνησε τα σημεία ενδιαφέροντος και τα καταφύγια στον χάρτη του Παναχαϊκού.</p><a class="text-link" href="/map">Άνοιγμα διαδραστικού χάρτη ↗</a></div></dialog>
+<dialog id="tips" class="dialog" aria-labelledby="tips-title"><div class="dialog-head"><h2 id="tips-title">ΣΥΜΒΟΥΛΕΣ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p>Έλεγξε την πρόγνωση και τις διαθέσιμες ώρες φωτός. Διάλεξε διαδρομή κατάλληλη για την εμπειρία και τη φυσική σου κατάσταση.</p><p>Ενημέρωσε κάποιον για τη διαδρομή και την αναμενόμενη ώρα επιστροφής. Κράτησε αντίγραφο του χάρτη εκτός σύνδεσης.</p><p>Ακολούθησε τη σήμανση, πάρε μαζί σου τα απορρίμματα και γύρισε πίσω αν οι συνθήκες χειροτερέψουν.</p></div></dialog>
+<dialog id="gear" class="dialog" aria-labelledby="gear-title"><div class="dialog-head"><h2 id="gear-title">ΕΞΟΠΛΙΣΜΟΣ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p>Βασική λίστα — προσαρμόζεται στην εποχή, τη διάρκεια και τη διαδρομή.</p><ul><li>Παπούτσια πεζοπορίας και κατάλληλες κάλτσες.</li><li>Νερό, τροφή και επιπλέον ζεστή στρώση.</li><li>Αδιάβροχο, καπέλο και αντηλιακή προστασία.</li><li>Φορτισμένο κινητό, power bank και χάρτης εκτός σύνδεσης.</li><li>Φακός κεφαλής και προσωπικό φαρμακείο.</li></ul></div></dialog>
+<dialog id="news" class="dialog" aria-labelledby="news-title"><div class="dialog-head"><h2 id="news-title">ΝΕΑ / ΑΡΧΕΙΟ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content" id="news-feed">Φόρτωση δημοσιεύσεων…</div></dialog>
 <script is:inline>
 (()=>{
 let weatherLoaded=false;

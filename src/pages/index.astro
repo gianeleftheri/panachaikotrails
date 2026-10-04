@@ -25,7 +25,7 @@ const menu = [
 {id:'weather',title:'KAIROS',label:'Καιρός',detail:'Μετρήσεις σταθμών',icon:icons.sun,color:'#ead694'},
 {id:'tips',title:'SYMVOYLES',label:'Συμβουλές',detail:'Πριν ξεκινήσεις',icon:icons.person,color:'#dbbea8'},
 {id:'gear',title:'EXOPLISMOS',label:'Εξοπλισμός',detail:'Τα απαραίτητα μαζί σου',icon:icons.trail,color:'#bacbdc'},
-{id:'news',title:'NEA',label:'Νέα / Αρχείο',detail:'Ενημερώσεις του βουνού',icon:icons.map,color:'#d6c8dc'}
+{id:'news',title:'NEA / ARXEIO',label:'Νέα / Αρχείο',detail:'Ενημερώσεις του βουνού',icon:icons.map,color:'#d6c8dc'}
 ];
 ---
 <!doctype html>
@@ -128,50 +128,6 @@ body{background:#f4efe1;color:#20221d}
 @media(min-width:1500px){.poster-hero{min-height:620px}.poster-mountain{height:480px}}
 @media(max-width:1000px){#hub.split{gap:28px}.poster-hero{min-height:480px}.poster-mountain{height:370px;bottom:65px}.poster-title{margin-top:105px}}
 @media(max-width:760px){.poster-hero{min-height:440px;padding:20px}.poster-meta{font-size:8px;letter-spacing:.04em}.poster-meta span:last-child{max-width:135px;text-align:right}.poster-mountain{width:130%;height:300px;bottom:80px}.poster-title{width:100%;margin-top:105px}.poster-word{font-size:clamp(32px,9.2vw,64px)}.poster-trails{font-size:clamp(94px,25vw,160px);margin-top:14px}.poster-bottom{font-size:8px;gap:12px;letter-spacing:.02em}.poster-bottom span{max-width:110px}#hub.split{grid-template-columns:1fr;padding:30px 20px 0;gap:26px}.footer{margin-top:24px}}
-
-/* Smooth Swiss typography matching the approved o8dipsezs preview. */
-:root{image-rendering:auto}
-body{font-family:Inter,Arial,sans-serif}
-.tile h2{font-family:Inter,Arial,sans-serif;font-weight:800;font-size:clamp(24px,2.25vw,35px);line-height:1.12;letter-spacing:-.045em;overflow-wrap:normal;word-break:normal}
-.box-label h2{font:800 24px/1.15 Inter,Arial,sans-serif;letter-spacing:-.04em}
-.digits{font-family:Inter,Arial,sans-serif;font-weight:800;font-size:clamp(68px,7vw,108px);line-height:1;letter-spacing:-.06em;font-variant-numeric:tabular-nums}
-.digits span{font-size:clamp(23px,2.5vw,36px);letter-spacing:-.04em}
-.dialog h2{font:800 clamp(23px,4vw,34px)/1.15 Inter,Arial,sans-serif;letter-spacing:-.04em}
-.route-code{font:700 17px/1.2 Inter,Arial,sans-serif}
-.station strong{font:800 44px/1.1 Inter,Arial,sans-serif;letter-spacing:-.05em}
-@media(max-width:1000px){.tile h2{font-size:25px}}
-@media(max-width:760px){.tile h2{font-size:clamp(24px,6.5vw,34px);line-height:1.12}.box-label h2{font-size:23px}.digits{font-size:80px}.digits span{font-size:30px}}
-
-/* Poster + classic desktop windows, with a single-column mobile reading order. */
-:root{--paper:#ea580c;--ink:#090909;image-rendering:pixelated}
-body{background:#ea580c;color:#090909}
-.shell{min-height:100svh;padding:28px clamp(20px,3vw,52px)}
-#hub.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:clamp(26px,3vw,50px);max-width:1600px;padding:0;margin:auto;min-height:calc(100svh - 110px)}
-.dashboard[hidden]{display:none}
-.poster-hero{background:transparent;min-height:660px;padding:0;border:0;overflow:visible}
-.poster-meta{font-size:9px;color:#090909;letter-spacing:.08em}
-.poster-meta span:last-child{max-width:160px;text-align:right}
-.poster-mountain{width:112%;height:540px;left:50%;bottom:58px}
-.poster-mountain>path:first-child{fill:#090909}
-.poster-mountain>path:nth-child(2){fill:#ea580c}
-.poster-title{position:absolute;top:190px;left:50%;transform:translateX(-50%);width:93%;margin:0;color:#fff6df;font-family:VT323,monospace;font-weight:400;line-height:.69}
-.poster-word{font:400 clamp(80px,9.8vw,160px)/.69 VT323,monospace;letter-spacing:-.065em;display:block;transform:rotate(-4deg);margin-bottom:10px}
-.poster-word.second-word{font-size:clamp(82px,9.8vw,160px);transform:rotate(2deg);letter-spacing:-.055em}
-.poster-trails{font:400 clamp(88px,11vw,172px)/.72 VT323,monospace;letter-spacing:-.04em;transform:rotate(-2deg);margin-top:12px}
-.poster-bottom{position:absolute;bottom:5px;left:0;right:0;font-size:9px;color:#090909}
-.navigation{min-width:0}.section-label{font:16px VT323,monospace;color:#090909}
-.hub{gap:20px;grid-template-columns:repeat(2,minmax(0,1fr));padding-right:7px}
-.tile{background:#fff6df;color:#090909;border:3px solid #090909;box-shadow:6px 6px 0 #090909;padding:0 17px 17px;min-height:200px}
-.tile:hover,.tile:active{background:#fff6df;box-shadow:2px 2px 0 #090909}
-.window-bar{margin:0 -17px 16px;padding:7px 10px;background:#090909;color:#fff6df;display:flex;justify-content:space-between;align-items:center;font:18px/1 VT323,monospace;letter-spacing:.02em}.window-bar span:last-child{white-space:nowrap;letter-spacing:.15em}
-.tile-top{font:16px VT323,monospace}.pixel-icon{width:27px;height:27px}
-.tile h2{font:400 clamp(29px,2.9vw,43px)/.92 VT323,monospace;letter-spacing:-.02em;margin:13px 0 17px;overflow-wrap:anywhere}
-.tile-bottom{font:11px/1.5 Inter,Arial,sans-serif;border-color:#09090940}
-.footer{color:#090909;border-color:#09090966;max-width:1600px;margin:30px auto 0;padding:16px 0 0;font-size:9px}
-.tile:focus-visible{outline-color:#090909;outline-offset:10px}
-@media(min-width:1600px){.poster-title{top:184px}.poster-word{font-size:160px}.poster-word.second-word{font-size:160px}.poster-trails{font-size:172px}}
-@media(min-width:761px) and (max-width:1100px){.poster-hero{min-height:570px}.poster-mountain{height:450px;bottom:62px}.poster-title{top:185px}.poster-word,.poster-word.second-word{font-size:9.5vw}.poster-trails{font-size:10.8vw}.tile{min-height:190px;padding-right:12px;padding-left:12px}.window-bar{margin-left:-12px;margin-right:-12px;font-size:16px}.tile h2{font-size:30px}}
-@media(max-width:760px){.shell{padding:20px}#hub.split{grid-template-columns:1fr;padding:0;gap:28px}.poster-hero{min-height:490px}.poster-mountain{width:114%;height:380px;bottom:55px}.poster-title{top:147px;width:96%}.poster-word,.poster-word.second-word{font-size:clamp(76px,19vw,130px)}.poster-trails{font-size:clamp(84px,21vw,144px)}.poster-meta{font-size:8px}.poster-bottom{font-size:8px}.hub{grid-template-columns:1fr;gap:20px}.tile{min-height:190px;padding:0 20px 18px}.window-bar{margin:0 -20px 16px;padding:9px 12px;font-size:20px}.tile h2{font-size:38px}.tile-bottom{font-size:12px}.footer{margin-top:28px}}
 </style>
 </head>
 <body>
@@ -203,26 +159,25 @@ body{background:#ea580c;color:#090909}
 </svg></div>
 
 <div class="eyebrow"><span class="location"><i class="dot" aria-hidden="true"></i>ΠΑΝΑΧΑΪΚΟ / ΑΧΑΪΑ</span><span>EXPLORE AT YOUR OWN PACE.</span></div>
-
-<main id="hub" class="split"><header class="poster-hero" aria-label="Panachaiko Trails">
+<header class="poster-hero" aria-label="Panachaiko Trails">
 <div class="poster-meta"><span>ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ</span><span>ΜΟΝΟΠΑΤΙΑ / ΦΥΣΗ / ΕΞΕΡΕΥΝΗΣΗ</span></div>
 <svg class="poster-mountain" viewBox="0 0 1200 600" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<!-- Broad, asymmetric massif with a continuous natural ridgeline. -->
-<path fill="#20221d" d="M8 589C24 560 39 535 58 518L96 481 118 467 143 430 159 422 187 382 207 372 238 325 259 319 282 290 302 297 337 256 354 249 389 204 409 195 430 161 448 166 477 135 497 124 522 94 538 100 565 76 589 55 609 67 632 96 647 103 674 135 697 146 722 178 740 175 765 205 785 219 804 249 824 261 849 254 873 281 891 292 914 323 932 331 955 363 976 372 998 405 1024 420 1043 449 1065 460 1089 491 1117 504C1144 525 1171 555 1195 589Z"/>
-<!-- Restrained negative-space cuts suggest rock folds above the lettering. -->
-<path fill="#ef641b" d="m589 55-26 82-36 45 42-31 25-58 27 38-8-35z M477 135l-10 43-31 33 38-23 19-48-12 7z M740 175l9 31 30 28-21-35-8-13z"/>
+<!-- Abstract cut-paper massif: broad planes, three offset peaks, pure black. -->
+<path fill="#000" d="M18 581 138 395 210 413 383 156 421 183 545 52 591 125 628 110 777 282 849 225 1015 414 1064 395 1182 581 1144 600H54Z"/>
+<path fill="#ef641b" d="m545 52-41 172 48-89 63 79-24-89z M383 156l-37 116 75-89-42 49z M849 225l33 105 43 31z"/>
 </svg>
-<h1 class="poster-title"><span class="poster-word">PANA</span><span class="poster-word second-word">CHAIKO</span><span class="poster-trails">TRAILS</span></h1>
+<h1 class="poster-title"><span class="poster-word"><i>P</i><i>A</i><i>N</i><i>A</i><i>C</i><i>H</i><i>A</i><i>I</i><i>K</i><i>O</i></span><span class="poster-trails">TRAILS</span></h1>
 <div class="poster-bottom"><span>ΤΟ ΒΟΥΝΟ ΕΙΝΑΙ ΔΙΠΛΑ ΣΟΥ.</span><a href="#hub">ΒΡΕΣ ΤΗ ΔΙΑΔΡΟΜΗ ΣΟΥ <span aria-hidden="true">↓</span></a></div>
 </header>
-<section class="dashboard" aria-label="Πίνακας ενημέρωσης" hidden>
+<main id="hub" class="split">
+<section class="dashboard" aria-label="Πίνακας ενημέρωσης">
 
 <section class="counter"><div class="box-label"><span>01 / TO DIKTYO</span><span>ΠΑΝΑΧΑΪΚΟ</span></div><div class="digits">{String(trails.length).padStart(2,'0')}<span>TRAILS</span></div><div class="counter-bottom"><span>{source}</span><a href="#weather" data-dialog="weather" id="live-counter">Καιρός ↗</a></div></section>
 <section class="updates"><div class="box-label"><h2>NEA / UPDATES</h2><span>02</span></div><div id="updates-feed" aria-live="polite"><p>Φόρτωση δημοσιεύσεων…</p></div><a class="text-link" href="#news" data-dialog="news">Όλες οι ενημερώσεις ↗</a></section>
 <p class="dashboard-note">Διαδρομές, σημεία ενδιαφέροντος και πληροφορίες για την επόμενη εξόρμησή σου.</p>
 </section>
 <section class="navigation"><div class="section-label"><span>03 / ΕΠΙΛΕΞΕ ΚΑΤΕΥΘΥΝΣΗ</span><span>↙</span></div><nav class="hub" aria-label="Κεντρική πλοήγηση">
-{menu.map((item,i)=><a href={`#${item.id}`} data-dialog={item.id} class="tile" style={`--tile:${item.color}`} aria-label={item.label}><div class="window-bar"><span>{item.id}.sys</span><span aria-hidden="true">▁ □ ×</span></div><div class="tile-top"><span>0{i+1}</span><svg class="pixel-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={item.icon}/></svg></div><h2>{item.title}</h2><div class="tile-bottom"><span>{item.detail}</span><span aria-hidden="true">↗</span></div></a>)}
+{menu.map((item,i)=><a href={`#${item.id}`} data-dialog={item.id} class="tile" style={`--tile:${item.color}`} aria-label={item.label}><div class="tile-top"><span>0{i+1}</span><svg class="pixel-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={item.icon}/></svg></div><h2>{item.title}</h2><div class="tile-bottom"><span>{item.detail}</span><span aria-hidden="true">↗</span></div></a>)}
 </nav></section></main>
 <footer class="footer"><strong>ΛΙΓΟΤΕΡΗ ΟΘΟΝΗ. ΠΕΡΙΣΣΟΤΕΡΟ ΒΟΥΝΟ.</strong><a href="/map">ΑΝΟΙΓΜΑ ΧΑΡΤΗ ↗</a></footer>
 </div>

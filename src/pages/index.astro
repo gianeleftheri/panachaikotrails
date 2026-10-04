@@ -1,68 +1,88 @@
 ---
-import MaintenancePage from '../components/MaintenancePage.astro';
-import HomepageAccordion from '../components/HomepageAccordion.astro';
-import { getPanachaikoSiteStatus } from '../lib/site-status';
-
 export const prerender = false;
-
-const siteStatus = await getPanachaikoSiteStatus();
-Astro.response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=10, stale-while-revalidate=20');
-
-const underConstruction = siteStatus.under_construction;
-const defaultHomeBackground = 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized.webp';
-const homeHero = !underConstruction ? {
-  full: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized.webp',
-  large: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-1024x683.webp',
-  medium: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-768x513.webp',
-  small: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Home-Hero-Optimized-300x200.webp',
-  avif480: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Hero-AVIF-480-Low.avif',
-  avif768: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Hero-AVIF-768-Low.avif',
-  avif1024: 'https://cms.panachaikotrails.gr/wp-content/uploads/2026/09/Panachaiko-Trails-Hero-AVIF-1024-Low.avif',
-} : null;
-const title = underConstruction ? 'Υπό κατασκευή | Panachaiko Trails' : 'Panachaiko Trails';
-const description = underConstruction
-  ? 'Το νέο Panachaiko Trails ετοιμάζεται. Σύντομα θα ανακαλύψετε τα μονοπάτια και τις διαδρομές του Παναχαϊκού όρους.'
-  : 'Panachaiko Trails — μονοπάτια, σημεία ενδιαφέροντος, καταφύγια, φωτογραφίες και βίντεο από το Παναχαϊκό όρος.';
+Astro.response.headers.set('Cache-Control', 'no-store');
+const bundled = Object.values(import.meta.glob('../data/trails/*.json', { eager: true, import: 'default' })) as any[];
+let trails = bundled;
+let source = 'Αποθηκευμένα δεδομένα διαδρομών';
+try {
+  const response = await fetch(import.meta.env.PUBLIC_TRAILS_API_URL || 'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/trails', { signal: AbortSignal.timeout(4000) });
+  if (!response.ok) throw new Error('CMS unavailable');
+  const data = await response.json();
+  if (!Array.isArray(data) || !data.every(x => typeof x?.key === 'string' && typeof x?.trail?.name === 'string')) throw new Error('Invalid trails');
+  trails = data;
+  source = 'Δεδομένα από το CMS';
+} catch {}
+trails.sort((a,b) => a.key.localeCompare(b.key, 'el', { numeric: true }));
+const icons = {
+ trail: 'M2 26h8v-4h4v-4h4v-4h4V6h-4V2h12v8h-8v8h-4v4h-4v4h-4v4H2z',
+ map: 'M2 6h8V2h12v4h8v24h-8v-4H10v4H2zm4 4v16h4V10zm8-4v16h4V6zm8 4v12h4V10z',
+ person: 'M12 2h8v4h4v12h-4v4h8v4h4v6H0v-6h4v-4h8v-4H8V6h4zm0 4v12h8V6z',
+ sun: 'M14 0h4v6h-4zm0 26h4v6h-4zM0 14h6v4H0zm26 0h6v4h-6zM4 4h4v4H4zm20 0h4v4h-4zM4 24h4v4H4zm20 0h4v4h-4zM10 8h12v4h4v12h-4v4H10v-4H6V12h4z'
+};
+const menu = [
+ {id:'trails',title:'DIADROMES',label:'Διαδρομές',detail:`${trails.length} διαδρομές · Βρες το μονοπάτι σου`,icon:icons.trail,color:'#b7cce9'},
+ {id:'map',title:'XARTIS',label:'Χάρτης',detail:'Εξερεύνησε το Παναχαϊκό',icon:icons.map,color:'#d1dba9'},
+ {id:'profile',title:'PROFIL',label:'Το Παναχαϊκό',detail:'Γνώρισε τον προορισμό',icon:icons.person,color:'#e8baa7'},
+ {id:'weather',title:'KAIROS',label:'Καιρός',detail:'Μετρήσεις Πάτρας & Παναχαϊκού',icon:icons.sun,color:'#edda83'}
+];
 ---
-
 <!doctype html>
 <html lang="el">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={description} />
-    <meta name="robots" content={underConstruction ? 'noindex,nofollow' : 'index,follow'} />
-    <meta name="theme-color" content={underConstruction ? '#081711' : '#fffdf8'} />
-    {homeHero && <link rel="preconnect" href="https://cms.panachaikotrails.gr" crossorigin />}
-    {!underConstruction && <link rel="preconnect" href="https://fonts.googleapis.com" />}
-    {!underConstruction && <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />}
-    {!underConstruction && <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;900&display=swap" />}
-    {homeHero && (
-      <link
-        rel="preload"
-        as="image"
-        href={homeHero.avif768}
-        imagesrcset={`${homeHero.avif480} 480w, ${homeHero.avif768} 768w, ${homeHero.avif1024} 1024w`}
-        imagesizes="100vw"
-        type="image/avif"
-        fetchpriority="high"
-      />
-    )}
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{title}</title>
-  </head>
-  <body>
-    {underConstruction ? <MaintenancePage /> : (
-      <HomepageAccordion
-        homeHeroFull={homeHero?.full}
-        homeHeroLarge={homeHero?.large}
-        homeHeroMedium={homeHero?.medium}
-        homeHeroSmall={homeHero?.small}
-        homeHeroAvif480={homeHero?.avif480}
-        homeHeroAvif768={homeHero?.avif768}
-        homeHeroAvif1024={homeHero?.avif1024}
-        defaultHomeBackground={defaultHomeBackground}
-      />
-    )}
-  </body>
-</html>
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/><meta name="theme-color" content="#f1f0e9"/>
+<title>Panachaiko Trails — Explore the mountain</title>
+<link rel="icon" href="/favicon.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script is:inline src="https://cdn.tailwindcss.com"></script>
+<style is:global>
+:root{image-rendering:crisp-edges;image-rendering:pixelated;--ink:#171b20;--paper:#f1f0e9}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,Arial,sans-serif}a{color:inherit;text-decoration:none}button{font:inherit;color:inherit}button,a{-webkit-tap-highlight-color:transparent}button:focus-visible,a:focus-visible{outline:3px dashed var(--ink);outline-offset:9px}.skip{position:fixed;top:-100px;left:16px;background:white;padding:12px;z-index:100}.skip:focus{top:10px}.shell{max-width:1600px;margin:auto;padding:28px 4vw 24px}.eyebrow{display:flex;justify-content:space-between;gap:16px;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;border-top:2px solid var(--ink);padding-top:14px}.location{display:flex;align-items:center;gap:9px}.dot{width:7px;height:7px;background:var(--ink);display:inline-block}.brand{display:grid;grid-template-columns:1fr auto;align-items:end;gap:24px;margin:44px 0 40px}.brand h1{font-family:VT323,monospace;font-size:clamp(76px,11.7vw,176px);line-height:.7;letter-spacing:-.035em;font-weight:400;margin:0}.brand h1 span{display:block}.brand p{font-size:13px;line-height:1.7;max-width:230px;margin:0 8px 0 0}.mountain{width:110px;height:54px;margin-bottom:22px}.section-label{display:flex;justify-content:space-between;border-top:1px solid var(--ink);padding:13px 0 21px;font-size:10px;font-weight:700;letter-spacing:.12em}.hub{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;padding-right:6px}.tile{position:relative;display:flex;flex-direction:column;align-items:stretch;text-align:left;min-width:0;min-height:235px;border:2px solid var(--ink);padding:23px 28px 21px;box-shadow:6px 6px 0 var(--ink);transition:transform .12s,box-shadow .12s;background:var(--tile);cursor:pointer;border-radius:0}.tile:hover,.tile:active{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--ink)}.tile-top{display:flex;justify-content:space-between;align-items:start;font-size:11px;font-weight:700}.pixel-icon{width:44px;height:44px;shape-rendering:crispEdges}.tile h2{font:400 clamp(46px,5.6vw,80px)/1 VT323,monospace;letter-spacing:-.03em;margin:21px 0 14px}.tile-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid #171b2038;padding-top:13px;font-size:12px;font-weight:500}.arrow{font-size:23px;line-height:1}.footer{display:flex;justify-content:space-between;gap:20px;margin-top:33px;font-size:10px;letter-spacing:.06em}.footer strong{font-weight:700}.dialog{border:2px solid var(--ink);padding:0;background:var(--paper);color:var(--ink);width:min(760px,calc(100% - 32px));max-height:85dvh;box-shadow:8px 8px 0 var(--ink)}.dialog::backdrop{background:#171b2099}.dialog-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:2px solid var(--ink);position:sticky;top:0;background:var(--paper);z-index:1}.dialog h2{font:40px/1 VT323,monospace;margin:0}.close{border:2px solid var(--ink);background:transparent;width:44px;height:44px;font-size:22px;cursor:pointer}.content{padding:24px}.content p{font-size:14px;line-height:1.8}.route{display:grid;grid-template-columns:48px 1fr auto;gap:12px;padding:18px 0;border-bottom:1px solid #171b2038;align-items:center;font-size:13px}.route:hover{background:#b7cce950}.route small{display:block;margin-top:6px;color:#50565e}.route-code{font:26px VT323,monospace}.source{font-size:11px!important;color:#50565e}.station{padding:18px 0;border-bottom:1px solid #171b2038}.station h3{font-weight:700}.station p{margin:6px 0}.station strong{font:54px VT323,monospace}.text-link{display:inline-block;border-bottom:2px solid var(--ink);padding:8px 0;font-weight:700}html:has(dialog[open]){overflow:hidden}@media(min-width:1500px){.tile{min-height:270px}}@media(max-width:640px){.shell{padding:20px 20px 24px}.eyebrow{font-size:8px;letter-spacing:.05em}.brand{display:block;margin:40px 0 30px}.brand h1{font-size:clamp(68px,17vw,108px)}.brand-aside{margin-top:25px}.brand-aside p{max-width:none;font-size:12px}.mountain{display:none}.hub{grid-template-columns:1fr;gap:20px}.tile{min-height:200px;padding:19px 22px}.tile h2{font-size:58px;margin:15px 0 10px}.pixel-icon{width:34px;height:34px}.footer{font-size:9px;line-height:1.6}.section-label{font-size:9px}.route{grid-template-columns:42px 1fr 16px}.dialog-head,.content{padding:18px}}@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<a href="#hub" class="skip">Μετάβαση στο μενού</a>
+<div class="shell">
+<header>
+<div class="eyebrow"><span class="location"><i class="dot" aria-hidden="true"></i>ΠΑΝΑΧΑΪΚΟ / ΑΧΑΪΑ</span><span>OUTDOORS IS THE WAY.</span></div>
+<div class="brand"><h1>PANACHAIKO<span>TRAILS<span aria-hidden="true" style="display:inline;color:#356aa0">.</span></span></h1><div class="brand-aside"><svg class="mountain" viewBox="0 0 110 54" fill="currentColor" aria-hidden="true" shape-rendering="crispEdges"><path d="M0 54V44h10V34h10V24h10V14h10V4h10v10h10v10h10V14h10v10h10v10h10v10h10v10z"/></svg><p>Το βουνό είναι δίπλα σου.<br/>Διάλεξε πού θέλεις να πας.</p></div></div>
+</header>
+<main id="hub"><div class="section-label"><span>01 — ΕΞΕΡΕΥΝΗΣΗ</span><span>ΔΙΑΛΕΞΕ ΚΑΤΕΥΘΥΝΣΗ ↙</span></div>
+<nav class="hub" aria-label="Κεντρική πλοήγηση">
+{menu.map((item,i) => <a href={item.id === 'map' ? '/map' : `#${item.id}`} data-dialog={item.id === 'map' ? undefined : item.id} class="tile" style={`--tile:${item.color}`} aria-label={item.label}><div class="tile-top"><span>0{i+1} / {item.label}</span><svg class="pixel-icon" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d={item.icon}/></svg></div><h2>{item.title}</h2><div class="tile-bottom"><span>{item.detail}</span><span class="arrow" aria-hidden="true">↗</span></div></a>)}
+</nav></main>
+<footer class="footer"><strong>ΛΙΓΟΤΕΡΗ ΟΘΟΝΗ. ΠΕΡΙΣΣΟΤΕΡΟ ΒΟΥΝΟ.</strong><span>PANACHAIKO TRAILS © {new Date().getFullYear()}</span></footer>
+</div>
+<dialog id="trails" class="dialog" aria-labelledby="trails-title"><div class="dialog-head"><h2 id="trails-title">DIADROMES</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p class="source">{source} · {trails.length} διαδρομές</p>{trails.map(({key,trail})=><a class="route" href={`/map?trail=${encodeURIComponent(key)}`}><span class="route-code">{key}</span><span>{trail.name}<small>{Number.isFinite(trail.length_km) ? `${trail.length_km.toLocaleString('el-GR')} km · ` : ''}{trail.existing ? 'Υφιστάμενη διαδρομή' : 'Σχεδιαζόμενη / υπό διερεύνηση'}</small></span><span aria-hidden="true">↗</span></a>)}</div></dialog>
+<dialog id="profile" class="dialog" aria-labelledby="profile-title"><div class="dialog-head"><h2 id="profile-title">PANACHAIKO</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p>Μονοπάτια και πεζοπορία στο Παναχαϊκό όρος, στην Αχαΐα.</p><p>Εξερεύνησε τις διαδρομές, τα σημεία ενδιαφέροντος και τα καταφύγια στον διαδραστικό χάρτη του Panachaiko Trails.</p><a class="text-link" href="/map">Άνοιξε τον χάρτη ↗</a></div></dialog>
+<dialog id="weather" class="dialog" aria-labelledby="weather-title"><div class="dialog-head"><h2 id="weather-title">KAIROS</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content" id="weather-content" aria-live="polite"><p>Φόρτωση μετρήσεων…</p></div></dialog>
+<script is:inline>
+(()=>{
+let weatherLoaded=false;
+const format=v=>typeof v==='number'&&Number.isFinite(v)?v.toLocaleString('el-GR',{maximumFractionDigits:1}):'—';
+async function weather(){
+ const root=document.getElementById('weather-content');
+ try{
+  const r=await fetch('/api/weather-live',{signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error();const data=await r.json();
+  if(!data.stations)throw Error();root.replaceChildren();
+  for(const key of ['patra','panachaiko']){
+   const s=data.stations[key];if(!s)continue;
+   const box=document.createElement('section');box.className='station';
+   const title=document.createElement('h3');title.textContent=s.name;
+   const temp=document.createElement('strong');temp.textContent=s.status==='unavailable'?'—':format(s.temp)+' °C';
+   const details=document.createElement('p');details.textContent=s.status==='unavailable'?'Οι μετρήσεις δεν είναι διαθέσιμες.':`Άνεμος ${format(s.wind)} km/h · Υγρασία ${format(s.humidity)}%`;
+   const status=document.createElement('p');status.className='source';status.textContent=(s.status==='live'?'Τελευταία διαθέσιμη μέτρηση':s.status==='stale'?'Παλαιότερη μέτρηση':'Μη διαθέσιμο')+(s.observed?' · '+s.observed:'');
+   const source=document.createElement('p');source.className='source';source.textContent='Πηγή: '+s.source;
+   box.append(title,temp,details,status,source);root.append(box);
+  }
+  if(!root.children.length)throw Error();weatherLoaded=true;
+ }catch{root.textContent='Οι μετρήσεις δεν είναι διαθέσιμες αυτή τη στιγμή. Κλείσε και άνοιξε ξανά για νέα προσπάθεια.'}
+}
+function open(id){const d=document.getElementById(id);if(!(d instanceof HTMLDialogElement))return;if(!d.open)d.showModal();if(id==='weather'&&!weatherLoaded)weather()}
+document.querySelectorAll('[data-dialog]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();open(a.dataset.dialog)}));
+document.querySelectorAll('dialog').forEach(d=>{d.querySelector('.close').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()}})});
+if(location.hash)open(location.hash.slice(1));
+})();
+</script>
+</body></html>

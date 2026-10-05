@@ -20,7 +20,6 @@ const icons = {
  sun: 'M22 16a6 6 0 1 1-12 0 6 6 0 0 1 12 0z M16 2v3 M16 27v3 M2 16h3 M27 16h3 M6.1 6.1l2.1 2.1 M23.8 23.8l2.1 2.1 M6.1 25.9l2.1-2.1 M23.8 8.2l2.1-2.1'
 };
 const menu = [
-{id:'trails',title:'ΜΟΝΟΠΑΤΙΑ',label:'Μονοπάτια',detail:'Διαδρομές & χάρτης',icon:icons.trail,color:'#ced8b9'},
 {id:'pois',title:'ΣΗΜΕΙΑ ΕΝΔΙΑΦΕΡΟΝΤΟΣ',label:'Σημεία ενδιαφέροντος',detail:'Ανακάλυψε το βουνό',icon:icons.map,color:'#b8d9d8'},
 {id:'weather',title:'ΚΑΙΡΟΣ',label:'Καιρός',detail:'Μετρήσεις σταθμών',icon:icons.sun,color:'#ead694'},
 {id:'tips',title:'ΣΥΜΒΟΥΛΕΣ',label:'Συμβουλές',detail:'Πριν ξεκινήσεις',icon:icons.person,color:'#dbbea8'},
@@ -196,7 +195,6 @@ body{font-family:Inter,Arial,sans-serif}
 </nav></section></main>
 <footer class="footer"><strong>ΛΙΓΟΤΕΡΗ ΟΘΟΝΗ. ΠΕΡΙΣΣΟΤΕΡΟ ΒΟΥΝΟ.</strong><a href="/map">ΑΝΟΙΓΜΑ ΧΑΡΤΗ ↗</a></footer>
 </div>
-<dialog id="trails" class="dialog" aria-labelledby="trails-title"><div class="dialog-head"><h2 id="trails-title">ΔΙΑΔΡΟΜΕΣ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p class="source">{source} · {trails.length} διαδρομές</p>{trails.map(({key,trail})=><a class="route" href={`/map?trail=${encodeURIComponent(key)}`}><span class="route-code">{key}</span><span>{trail.name}<small>{Number.isFinite(trail.length_km) ? `${trail.length_km.toLocaleString('el-GR')} km · ` : ''}{trail.existing ? 'Υφιστάμενη διαδρομή' : 'Σχεδιαζόμενη / υπό διερεύνηση'}</small></span><span aria-hidden="true">↗</span></a>)}</div></dialog>
 <dialog id="refuges" class="dialog" aria-labelledby="refuges-title"><div class="dialog-head"><h2 id="refuges-title">ΚΑΤΑΦΥΓΙΑ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p>Καταφύγια στο Παναχαϊκό όρος.</p><p>Βρες τα καταφύγια και τις διαδρομές πρόσβασης στον υπάρχοντα διαδραστικό χάρτη.</p><a class="text-link" href="/map">Άνοιξε τον χάρτη ↗</a></div></dialog>
 <dialog id="weather" class="dialog" aria-labelledby="weather-title"><div class="dialog-head"><h2 id="weather-title">ΚΑΙΡΟΣ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content" id="weather-content" aria-live="polite"><p>Φόρτωση μετρήσεων…</p></div></dialog>
 

@@ -141,7 +141,7 @@ body{background:#f4efe1;color:#20221d}
 .poster-hero{position:relative;isolation:isolate;background:#ef641b;min-height:560px;overflow:hidden;padding:25px max(5vw,20px) 22px;display:flex;flex-direction:column;justify-content:space-between;border-bottom:3px solid #20221d}
 .poster-meta,.poster-bottom{display:flex;justify-content:space-between;gap:20px;position:relative;z-index:2;font:700 11px/1.5 Inter,Arial,sans-serif;letter-spacing:.09em}
 .poster-meta{color:#f8f0d9}
-.poster-bottom{color:#20221d;margin-top:24px}
+.poster-bottom{color:#20221d;margin-top:24px;justify-content:flex-end}
 .poster-bottom a{border-bottom:1px solid currentColor;padding-bottom:4px}.poster-bottom a span{padding-left:15px}
 .poster-mountain{position:absolute;z-index:-1;width:min(1100px,94%);height:480px;left:50%;bottom:52px;transform:translateX(-50%)}
 .poster-title{margin:100px auto 24px;text-align:center;color:#f8f0d9;line-height:.9;font-family:Oswald,Impact,'Arial Narrow',sans-serif;font-weight:700;width:min(920px,90%)}
@@ -207,7 +207,7 @@ body{font-family:Inter,Arial,sans-serif}
 <div class="poster-meta"><span>ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ</span><div class="hero-weather" aria-label="Θερμοκρασίες Πάτρας και Παναχαϊκού" aria-live="polite"><span>Πάτρα <strong id="temp-patra">— °C</strong></span><span>Παναχαϊκό <strong id="temp-panachaiko">— °C</strong></span></div></div>
 <aside class="hero-map-stats" aria-label="Ο χάρτης σε αριθμούς"><dl>{mapStats.map(stat => <div><dt>{stat.label}</dt><dd>{stat.value}</dd></div>)}</dl><p>Στοιχεία χάρτη · όλες οι καταχωρημένες διαδρομές</p></aside>
 <img class="poster-logo" src="/panachaiko-trails-logo.svg" alt="Panachaiko Trails" />
-<div class="poster-bottom"><span>ΤΟ ΒΟΥΝΟ ΕΙΝΑΙ ΔΙΠΛΑ ΣΟΥ.</span><a href="#hub">ΒΡΕΣ ΤΗ ΔΙΑΔΡΟΜΗ ΣΟΥ <span aria-hidden="true">↓</span></a></div>
+<div class="poster-bottom"><a href="#hub">ΒΡΕΣ ΤΗ ΔΙΑΔΡΟΜΗ ΣΟΥ <span aria-hidden="true">↓</span></a></div>
 </header>
 <main id="hub" class="split">
 <section class="dashboard" aria-label="Πίνακας ενημέρωσης">

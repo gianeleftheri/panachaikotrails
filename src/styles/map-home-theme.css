@@ -1,0 +1,176 @@
+/* Shared homepage visual language, scoped to the map. Geometry and map data stay in their own styles. */
+body.map-home-theme {
+  --sans: Inter, Arial, sans-serif; --serif: Inter, Arial, sans-serif;
+  --ink:#f4efe1; --ink-2:#e8e2d3; --ink-3:#f4efe1;
+  --parchment:#20221d; --parchment-dim:#53564b; --parchment-faint:#606357;
+  --brass:#b5b2a4; --brass-solid:#20221d; --rust:#b7430e; --rust-dim:#f4dccb;
+  --moss:#346341; --stone:#59636b; --shadow:5px 5px 0 #20221d;
+  --map-ink:#20221d; --map-paper:#f4efe1; --map-cyan:#ced8b9;
+  --map-yellow:#ead694; --map-pink:#dbbea8; --map-orange:#ef641b;
+  --map-lime:#ced8b9; --map-violet:#d6c8dc;
+  color:#20221d; font-family:var(--sans);
+}
+.map-home-theme .trail-app {
+  --ui-surface:#f4efe1; --ui-border:#20221d; --ui-accent:#b7430e;
+  --ui-accent-text:#79330e; --pt-icon-accent:#b7430e;
+}
+.map-home-theme .topbar {
+  background:#f4efe1!important; border-bottom:3px solid #20221d!important;
+  box-shadow:0 4px 0 #20221d!important; backdrop-filter:none!important;
+}
+.map-home-theme .topbar .brand-text h1 {color:#20221d!important;font-family:var(--sans)!important;font-weight:900!important;letter-spacing:-.04em!important}
+.map-home-theme .topbar .brand-text p {color:#53564b!important}
+.map-home-theme .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle,.submit-trail-cta) {
+  border:2px solid #20221d!important;border-radius:2px!important;color:#20221d!important;
+  background:#f4efe1!important;box-shadow:3px 3px 0 #20221d!important;
+  font-family:var(--sans);font-weight:800!important;filter:none!important;
+}
+.map-home-theme #trailMenuToggle {background:#ced8b9!important}
+.map-home-theme #recreationMenuToggle {background:#b8d9d8!important}
+.map-home-theme #routeBuilderToggle {background:#dbbea8!important}
+.map-home-theme #locateBtn {background:#ead694!important}
+.map-home-theme #recenterBtn {background:#bacbdc!important}
+.map-home-theme #shelterBtn {background:#dbbea8!important}
+.map-home-theme .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child) {color:#20221d!important;font-weight:800!important}
+.map-home-theme .map-tool-icon {background:transparent!important;border:0!important;border-radius:0!important;color:#20221d!important;box-shadow:none!important;--pt-icon-accent:#20221d}
+.map-home-theme .map-tool-icon svg [fill]:not([fill="none"]) {fill:none}
+.map-home-theme .map-tool-icon svg [stroke]:not([stroke="none"]) {stroke:#20221d}
+.map-home-theme .topbar-actions :is(button,a):hover:not(:disabled) {border-color:#20221d!important;box-shadow:1px 1px 0 #20221d!important;transform:translate(2px,2px)!important;filter:none!important}
+.map-home-theme .topbar-actions :is(button.open,button.active,.recenter-btn.following),
+.map-home-theme .topbar-actions .basemap-control.open .basemap-toggle {outline:2px solid #20221d;outline-offset:2px;box-shadow:inset 0 -4px #20221d!important}
+.map-home-theme .topbar-actions button:disabled,.map-home-theme #recenterBtn:disabled {opacity:.5!important;color:#53564b!important;background:#e1dfd5!important;border-color:#53564b!important;box-shadow:none!important;transform:none!important}
+.map-home-theme :is(button,a,input,select,textarea):focus-visible {outline:3px solid #a83e0c!important;outline-offset:3px!important}
+.map-home-theme :is(.panel,.route-builder-panel,.trail-drawer,.shelter-panel,.content-panel,.nav-hud,.basemap-menu,.distance-badge,.on-trail-panel) {
+  background:#f4efe1!important;color:#20221d!important;border:2px solid #20221d!important;
+  border-radius:2px!important;box-shadow:5px 5px 0 #20221d!important;backdrop-filter:none!important;
+}
+.map-home-theme .topbar-actions .basemap-menu {border:2px solid #20221d!important;border-radius:2px!important;background:#f4efe1!important;box-shadow:5px 5px 0 #20221d!important}
+.map-home-theme #recreationPanel {border-color:#20221d!important}
+.map-home-theme .left-panel-head {background:#ced8b9!important;border-bottom:2px solid #20221d!important}
+.map-home-theme #recreationPanel .left-panel-head {background:#b8d9d8!important}
+.map-home-theme .count-row>div:first-child {background:#f4efe1!important;border:1px solid #20221d;border-radius:0}
+.map-home-theme .count-row,.map-home-theme .count-row strong {color:#20221d!important}
+.map-home-theme :is(.trail-panel-pin,.trail-panel-close,.td-undock,.td-close,.cp-close,.view3d-close,.nav-back,.sh-close,.lightbox-close,.lightbox-nav) {
+  border:1px solid #20221d!important;border-radius:2px!important;background:#f4efe1!important;color:#20221d!important;box-shadow:2px 2px 0 #20221d!important;
+}
+.map-home-theme :is(.trail-panel-pin.active,.td-undock.active) {background:#ead694!important}
+.map-home-theme :is(.trail-list,.recreation-list) {background:#f4efe1!important}
+.map-home-theme :is(.trail-row,.recreation-row) {background:#fffdf6!important;border-radius:2px!important;border-color:#b5b2a4!important;box-shadow:none!important;color:#20221d!important}
+.map-home-theme .trail-row {border-left-color:var(--trail-color,#708256)!important}
+.map-home-theme .recreation-row {border-left-color:#658d8b!important}
+.map-home-theme :is(.trail-row:hover,.trail-row.active) {background:#e3e8d8!important;border-top-color:#20221d!important;border-right-color:#20221d!important;border-bottom-color:#20221d!important;box-shadow:none!important}
+.map-home-theme :is(.recreation-row:hover,.recreation-row.active) {background:#dceae5!important;border-color:#20221d!important}
+.map-home-theme :is(.trail-row-name,.recreation-row-name,.trail-row-dist,.rb-title,.basemap-menu-title,.trail-card-title,.td-titleblock .big,.stat-box .value,.note-item-title,.media-card-title,.cp-title,.view3d-title,.nav-title) {color:#20221d!important;font-family:var(--sans)!important;font-weight:800!important}
+.map-home-theme :is(.trail-row-code,.trail-card-code) {color:#79330e!important}
+.map-home-theme :is(.trail-row-meta,.recreation-row-meta,.rb-step-label,.rb-help,.rb-status,.td-titleblock p,.stat-box .label,.trail-meta-line,.poi-kind,.media-card-text,.cp-label,.cp-coords,.cp-moderation-note,.traffic-copy small) {color:#53564b!important}
+.map-home-theme .recreation-row-pin {background:#b8d9d8!important;color:#20221d!important;border:1px solid #20221d!important;border-radius:2px!important}
+.map-home-theme .recreation-row-pin.watchtower {background:#ead694!important}
+.map-home-theme :is(.rb-step,.stat-box,.trail-description,.note-item,.media-card,.nav-leg,.nav-guidance) {background:#fffdf6!important;color:#20221d!important;border:1px solid #b5b2a4!important;border-radius:2px!important}
+.map-home-theme :is(.rb-gps-btn,.rb-select,.cp-input,.cp-textarea,.cp-file,.poi-map-btn,.cat-btn,.basemap-3d-option) {background:#fffdf6!important;color:#20221d!important;border:1px solid #20221d!important;border-radius:2px!important}
+.map-home-theme :is(.rb-calc-btn,.cp-btn,.nav-follow,.nav-sound,.nav-finish) {background:#dbbea8!important;color:#20221d!important;border:2px solid #20221d!important;border-radius:2px!important;box-shadow:3px 3px 0 #20221d!important;font-weight:800!important}
+.map-home-theme .rb-calc-btn:disabled {background:#deddd3!important;color:#606357!important;box-shadow:none!important}
+.map-home-theme .rb-step-num {background:#dbbea8!important;color:#20221d!important}
+.map-home-theme .rb-mode-option>span {background:#fffdf6!important;color:#53564b!important;border:1px solid #b5b2a4!important;border-radius:2px!important}
+.map-home-theme .rb-mode-option b {color:#20221d!important}
+.map-home-theme .rb-mode-option small {color:#53564b!important}
+.map-home-theme .rb-mode-option input:checked+span {background:#eadccc!important;border-color:#20221d!important;box-shadow:inset 4px 0 #20221d!important}
+.map-home-theme .rb-mode-option input:focus-visible+span {outline:3px solid #a83e0c;outline-offset:2px}
+.map-home-theme .rb-status.ok {color:#346341!important}
+.map-home-theme .rb-status.warn {color:#8b4b0f!important}
+.map-home-theme .td-tabs {background:#e8e2d3;border-color:#20221d!important}
+.map-home-theme .td-tab {color:#53564b!important;font-weight:700}
+.map-home-theme .td-tab.active {color:#20221d!important;background:#ced8b9;border-bottom:3px solid #20221d!important}
+.map-home-theme .trail-drawer-handle:not([hidden]) {background:#ead694!important;color:#20221d!important;border-color:#20221d!important;border-radius:0!important;box-shadow:3px 3px 0 #20221d!important;animation:none!important}
+.map-home-theme .trail-drawer-handle .trail-grab-line {background:#20221d!important;box-shadow:none!important}
+.map-home-theme .status-existing {background:#ced8b9;color:#29472e}
+.map-home-theme .status-planned {background:#bacbdc;color:#263c49}
+.map-home-theme .elevation-grid {stroke:#b5b2a4}
+.map-home-theme .basemap-options button {color:#53564b!important}
+.map-home-theme .basemap-options button.active {color:#20221d!important;font-weight:900!important}
+.map-home-theme .basemap-preview {border-radius:2px!important}
+.map-home-theme .basemap-options button.active .basemap-preview {border-color:#20221d!important;box-shadow:2px 2px 0 #20221d!important}
+.map-home-theme .basemap-3d-icon {background:#bacbdc;color:#20221d;border-color:#20221d;border-radius:2px}
+.map-home-theme .traffic-option {color:#20221d}
+.map-home-theme .traffic-option.active .traffic-switch {background:#346341}
+.map-home-theme .leaflet-popup .leaflet-popup-content-wrapper,
+.map-home-theme .maplibregl-popup-content {background:#f4efe1!important;color:#20221d!important;border:2px solid #20221d!important;border-radius:2px!important;box-shadow:4px 4px 0 #20221d!important}
+.map-home-theme .leaflet-popup .leaflet-popup-content-wrapper::before {background:#ef641b!important}
+.map-home-theme .leaflet-popup .leaflet-popup-tip {background:#f4efe1!important}
+.map-home-theme :is(.poi-popup,.poi-popup strong,.recreation-popup,.leaflet-popup-close-button,.maplibregl-popup-close-button) {color:#20221d!important;font-family:var(--sans)!important}
+.map-home-theme :is(.recreation-popup-type,.recreation-popup-meta,.recreation-popup-coords,.poi-popup p) {color:#53564b!important}
+.map-home-theme .recreation-popup-source {color:#79330e!important}
+.map-home-theme .poi-popup>div {background:#b8d9d8;color:#20221d;border-radius:2px}
+.map-home-theme .add-choice-bubble button {color:#20221d;border-radius:2px}
+.map-home-theme .leaflet-bar {border:2px solid #20221d!important;border-radius:2px!important;box-shadow:3px 3px 0 #20221d!important}
+.map-home-theme .leaflet-bar a {background:#f4efe1!important;color:#20221d!important;border-color:#b5b2a4!important;border-radius:0!important}
+.map-home-theme .leaflet-control-scale-line {background:#f4efe1;color:#20221d;border-color:#20221d}
+.map-home-theme .view3d-topbar {background:#f4efe1;border-bottom:2px solid #20221d;color:#20221d}
+.map-home-theme #map3d .maplibregl-ctrl-group {background:#f4efe1;border:2px solid #20221d;border-radius:2px;box-shadow:3px 3px 0 #20221d}
+.map-home-theme #map3d .maplibregl-ctrl-group button {filter:none}
+.map-home-theme .view3d-hint {background:#f4efe1;color:#20221d;padding:8px 12px;border:1px solid #20221d}
+.map-home-theme .nav-view-switch {border-color:#20221d;border-radius:2px}
+.map-home-theme .nav-view-switch button {color:#20221d;border-radius:0}
+.map-home-theme .nav-view-switch button.active {background:#ced8b9;color:#20221d}
+.map-home-theme .nav-leg.active,.map-home-theme .nav-leg.done {background:#e3e8d8!important;border-color:#346341!important}
+.map-home-theme .nav-hud.off-route .nav-guidance {background:#f2dfb4!important;color:#754009!important;border-color:#8b4b0f!important}
+.map-home-theme .nav-hud.arrived .nav-guidance {background:#ced8b9!important;color:#29472e!important}
+.map-home-theme .nav-progress {background:#346341}
+.map-home-theme .nav-actions .active {background:#ced8b9!important}
+.map-home-theme .nav-finish {background:#dbbea8!important}
+@media (max-width:1100px) and (min-width:761px) {
+  .map-home-theme #locateBtn {width:40px!important;min-width:40px!important;padding:0!important}
+  .map-home-theme #locateBtn .tool-label {display:none!important}
+}
+@media (max-width:760px) {
+  .map-home-theme .topbar-actions {background:#f4efe1!important;border-top:2px solid #20221d!important;box-shadow:0 -3px 0 #20221d!important;overflow:visible!important;gap:4px!important;grid-template-columns:repeat(7,minmax(0,1fr))}
+  .map-home-theme .topbar-actions.has-submit-cta {grid-template-columns:repeat(8,minmax(0,1fr))}
+  .map-home-theme .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle,.submit-trail-cta) {width:100%!important;min-width:0!important;height:52px!important;min-height:52px!important;padding:3px!important;margin:0!important;box-shadow:1px 1px 0 #20221d!important}
+  .map-home-theme .topbar-actions>.recenter-btn {position:static!important;display:flex!important;flex-direction:column!important}
+  .map-home-theme .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child) {display:block!important;font-size:8px!important;line-height:1.1;white-space:normal}
+  .map-home-theme .topbar-actions .map-tool-icon {width:22px!important;height:22px!important;flex-basis:22px!important}
+  .map-home-theme .topbar-actions .basemap-menu {top:auto!important;bottom:calc(100% + 12px)!important;right:0!important;width:min(310px,calc(100vw - 16px))!important}
+  .map-home-theme :is(.left-panel,#recreationPanel,.route-builder-panel) {top:auto!important;bottom:calc(82px + env(safe-area-inset-bottom))!important;left:8px!important;right:8px!important;width:auto!important}
+  .map-home-theme .left-panel.open {max-height:calc(100dvh - 160px)!important}
+  .map-home-theme .route-builder-panel {max-height:calc(100dvh - 160px)!important}
+}
+
+/* Crisp outline icons and consistent Greek typography across map controls. */
+.map-home-theme .map-tool-icon,
+.map-home-theme .map-tool-icon svg {
+  color:#20221d!important; --pt-icon-accent:currentColor;
+}
+.map-home-theme .map-tool-icon svg {
+  width:24px!important;height:24px!important;fill:none!important;
+  stroke:currentColor!important;stroke-width:1.8!important;
+  stroke-linecap:round;stroke-linejoin:round;shape-rendering:geometricPrecision;
+}
+.map-home-theme .map-tool-icon svg :is(path,circle,rect,polyline,line,polygon) {
+  fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.map-home-theme .topbar-actions {gap:10px!important}
+.map-home-theme .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle,.submit-trail-cta) {
+  height:44px!important;min-height:44px!important;padding:0 13px!important;
+  gap:9px!important;align-items:center;justify-content:center;
+}
+.map-home-theme .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child) {
+  font-family:Inter,Arial,sans-serif!important;font-size:12px!important;
+  font-weight:700!important;line-height:1.4!important;letter-spacing:0!important;
+}
+.map-home-theme :is(.panel,.trail-drawer,.route-builder-panel,.basemap-menu,.content-panel,.nav-hud,.leaflet-popup,.view3d-topbar) {
+  font-family:Inter,Arial,sans-serif!important;
+}
+.map-home-theme :is(.trail-row-name,.recreation-row-name,.td-tab,.rb-select,.rb-gps-btn,.rb-calc-btn,.basemap-options button,.traffic-copy strong) {
+  font-family:Inter,Arial,sans-serif!important;font-weight:600!important;line-height:1.45!important;
+}
+.map-home-theme :is(.trail-card-title,.rb-title,.count-row strong,.basemap-menu-title,.cp-title) {font-weight:800!important;letter-spacing:-.025em!important}
+@media(min-width:761px) and (max-width:1100px) {
+  .map-home-theme .topbar-actions {gap:6px!important}
+  .map-home-theme .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle) {width:40px!important;min-width:40px!important;padding:0!important}
+}
+@media(max-width:760px) {
+  .map-home-theme .topbar-actions {gap:4px!important}
+  .map-home-theme .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle,.submit-trail-cta) {height:56px!important;min-height:56px!important;padding:3px 1px!important;gap:3px!important}
+  .map-home-theme .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child) {font-size:8px!important;line-height:1.2!important;font-weight:600!important}
+  .map-home-theme .map-tool-icon svg {width:22px!important;height:22px!important}
+}

@@ -147,7 +147,7 @@ const normalizeCollection = (collection: Record<string, unknown>): TrailCollecti
 
 const bundledTrails: TrailCollection = normalizeCollection(rawBundledTrails);
 
-const normalizeApiResponse = (payload: unknown): TrailCollection | null => {
+export const normalizeApiResponse = (payload: unknown): TrailCollection | null => {
   if (!Array.isArray(payload) || !payload.length) return null;
 
   // CMS fields override the bundled source, but the original 13 trails remain

@@ -4,6 +4,7 @@ import { PRIVATE_PREVIEW_COOKIE, isPrivatePreviewCookieValid, privatePreviewSecr
 import { getPanachaikoSiteStatus } from '../lib/site-status';
 import '../styles/global.css';
 import '../styles/front-end-refresh.css';
+import '../styles/map-home-theme.css';
 
 export const prerender = false;
 
@@ -26,13 +27,16 @@ const title = isPrivatePreview ? 'Ιδιωτική προεπισκόπηση | 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content={isPrivatePreview ? 'noindex,nofollow' : 'index,follow'} />
-    <meta name="theme-color" content="#12201a" />
+    <meta name="theme-color" content="#f4efe1" />
     <link rel="preconnect" href="https://server.arcgisonline.com" crossorigin />
     <link rel="preconnect" href="https://cms.panachaikotrails.gr" crossorigin />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <title>{title}</title>
   </head>
-  <body>
+  <body class="map-home-theme">
     <TrailExplorer allowTrailSubmissions={siteStatus.public_trail_submissions} />
     {isPrivatePreview && (
       <aside class="preview-bar">

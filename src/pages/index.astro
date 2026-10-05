@@ -1,17 +1,45 @@
 ---
 export const prerender = false;
 Astro.response.headers.set('Cache-Control', 'no-store');
-const bundled = Object.values(import.meta.glob('../data/trails/*.json', { eager: true, import: 'default' })) as any[];
-let trails = bundled;
+import { loadInitialTrails, normalizeApiResponse } from '../scripts/trail-data';
+import { API_URL as recreationApiUrl, fallbackSpots } from '../data/recreation-spots';
+let collection = loadInitialTrails();
 let source = 'Αποθηκευμένα δεδομένα διαδρομών';
-try {
+let recreation = fallbackSpots;
+await Promise.all([
+ (async () => {try {
   const response = await fetch(import.meta.env.PUBLIC_TRAILS_API_URL || 'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/trails', { signal: AbortSignal.timeout(4000) });
-  if (!response.ok) throw new Error('CMS unavailable');
-  const data = await response.json();
-  if (!Array.isArray(data) || !data.every(x => typeof x?.key === 'string' && typeof x?.trail?.name === 'string')) throw new Error('Invalid trails');
-  trails = data;
-  source = 'Δεδομένα από το CMS';
-} catch {}
+  if (!response.ok) return;
+  const normalized = normalizeApiResponse(await response.json());
+  if (normalized) { collection = normalized; source = 'Δεδομένα από το CMS'; }
+ } catch {}})(),
+ (async () => {try {
+  const response = await fetch(recreationApiUrl, { signal: AbortSignal.timeout(4000) });
+  if (!response.ok) return;
+  const payload = await response.json();
+  if (!Array.isArray(payload)) return;
+  const valid = payload.filter(item => item && Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lng)));
+  if (valid.length) recreation = valid;
+ } catch {}})()
+]);
+let trails = Object.entries(collection).map(([key, trail]) => ({key, trail}));
+const totalKm = trails.reduce((sum, {trail}) => sum + (Number.isFinite(trail.length_km) && trail.length_km > 0 ? trail.length_km : 0), 0);
+const poiKeys = new Set<string>();
+const addPoint = (point: any) => {
+ if (point.lat === null || point.lat === undefined || point.lng === null || point.lng === undefined) return;
+ const lat = Number(point.lat), lng = Number(point.lng);
+ if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+ poiKeys.add(lat.toFixed(6) + ':' + lng.toFixed(6));
+};
+trails.forEach(({trail}) => [...trail.notes, ...trail.photos, ...trail.videos].forEach(addPoint));
+recreation.forEach(addPoint);
+const recreationCount = new Set(recreation.map(point => Number(point.lat).toFixed(6) + ':' + Number(point.lng).toFixed(6))).size;
+const mapStats = [
+ {label:'Σύνολο διαδρομών', value:trails.length.toLocaleString('el-GR')},
+ {label:'Συνολικά χιλιόμετρα', value:totalKm.toLocaleString('el-GR', {maximumFractionDigits:1}) + ' km'},
+ {label:'Σημεία ενδιαφέροντος', value:poiKeys.size.toLocaleString('el-GR')},
+ {label:'Αναψυχή & θέα', value:recreationCount.toLocaleString('el-GR')}
+];
 trails.sort((a,b) => a.key.localeCompare(b.key, 'el', { numeric: true }));
 const icons = {
  trail: 'M7 27c0-5 12-3 12-8 0-4-9-2-9-6 0-2 3-3 6-4 M21 3v9 M21 3h7l-2 3 2 3h-7',
@@ -113,7 +141,7 @@ body{background:#f4efe1;color:#20221d}
 .poster-hero{position:relative;isolation:isolate;background:#ef641b;min-height:560px;overflow:hidden;padding:25px max(5vw,20px) 22px;display:flex;flex-direction:column;justify-content:space-between;border-bottom:3px solid #20221d}
 .poster-meta,.poster-bottom{display:flex;justify-content:space-between;gap:20px;position:relative;z-index:2;font:700 11px/1.5 Inter,Arial,sans-serif;letter-spacing:.09em}
 .poster-meta{color:#f8f0d9}
-.poster-bottom{color:#20221d;margin-top:24px}
+.poster-bottom{color:#20221d;margin-top:24px;justify-content:flex-end}
 .poster-bottom a{border-bottom:1px solid currentColor;padding-bottom:4px}.poster-bottom a span{padding-left:15px}
 .poster-mountain{position:absolute;z-index:-1;width:min(1100px,94%);height:480px;left:50%;bottom:52px;transform:translateX(-50%)}
 .poster-title{margin:100px auto 24px;text-align:center;color:#f8f0d9;line-height:.9;font-family:Oswald,Impact,'Arial Narrow',sans-serif;font-weight:700;width:min(920px,90%)}
@@ -142,6 +170,8 @@ body{font-family:Inter,Arial,sans-serif}
 @media(max-width:1000px){.tile h2{font-size:25px}}
 @media(max-width:760px){.tile h2{font-size:clamp(24px,6.5vw,34px);line-height:1.12}.box-label h2{font-size:23px}.digits{font-size:80px}.digits span{font-size:30px}}
 .poster-meta .hero-weather{display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:flex-end;font:700 11px/1.5 Inter,Arial,sans-serif;letter-spacing:0}.hero-weather strong{font-weight:800;white-space:nowrap}.poster-meta .hero-weather span{max-width:none;text-align:inherit}@media(max-width:760px){.poster-meta .hero-weather{font-size:10px;gap:4px 12px;max-width:200px}}
+.hero-map-stats{position:absolute;top:68px;left:max(5vw,20px);z-index:3;width:210px;color:#20221d}.hero-map-stats dl{margin:0}.hero-map-stats dl>div{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:10px 0;border-bottom:1px solid #20221d35}.hero-map-stats dt{font:600 11px/1.4 Inter,Arial,sans-serif}.hero-map-stats dd{margin:0;font:800 19px/1.2 Inter,Arial,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}.hero-map-stats p{font:500 9px/1.5 Inter,Arial,sans-serif;max-width:200px;opacity:.75;margin:9px 0 0}@media(max-width:1000px){.hero-map-stats{position:relative;top:auto;left:auto;width:min(100%,440px);margin-top:22px}.hero-map-stats dl{display:grid;grid-template-columns:1fr 1fr;column-gap:24px}.hero-map-stats p{max-width:none}.poster-logo{margin-top:54px}}@media(max-width:420px){.hero-map-stats dl{column-gap:16px}.hero-map-stats dt{font-size:10px}.hero-map-stats dd{font-size:16px}}
+.weather-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:0 0 28px}.weather-card{min-width:0;background:#fcfbf9;border:3px solid #20221d;box-shadow:5px 5px 0 #20221d}.weather-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--weather-color);padding:16px;border-bottom:2px solid #20221d}.weather-card-head h2{font:800 clamp(15px,1.5vw,21px)/1.2 Inter,Arial,sans-serif;letter-spacing:-.035em;margin:0}.weather-card-head svg{width:28px;height:28px;flex-shrink:0}.weather-card-body{padding:16px}.weather-temperature{font:800 clamp(30px,3.2vw,44px)/1.1 Inter,Arial,sans-serif;letter-spacing:-.055em;margin:0 0 8px;font-variant-numeric:tabular-nums}.weather-metrics{margin:16px 0}.weather-metrics>div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:9px 0;border-top:1px solid #20221d24;font-size:10px;line-height:1.4}.weather-metrics dt{font-weight:500}.weather-metrics dd{margin:0;text-align:right;font-weight:800;font-variant-numeric:tabular-nums}.weather-state,.weather-source{font-size:10px;line-height:1.6;margin:8px 0;overflow-wrap:anywhere}.weather-state{color:#615649}.weather-source{border-top:1px solid #20221d24;padding-top:10px}.weather-state[data-stale="true"]{font-weight:700;color:#864419}@media(min-width:761px) and (max-width:1150px){.weather-cards{grid-template-columns:1fr}}@media(max-width:460px){.weather-cards{grid-template-columns:1fr}.weather-card-head h2{font-size:22px}.weather-temperature{font-size:44px}.weather-metrics>div{font-size:12px}}
 </style>
 </head>
 <body>
@@ -175,13 +205,20 @@ body{font-family:Inter,Arial,sans-serif}
 <div class="eyebrow"><span class="location"><i class="dot" aria-hidden="true"></i>ΠΑΝΑΧΑΪΚΟ / ΑΧΑΪΑ</span><span>EXPLORE AT YOUR OWN PACE.</span></div>
 <header class="poster-hero" aria-label="Panachaiko Trails">
 <div class="poster-meta"><span>ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ</span><div class="hero-weather" aria-label="Θερμοκρασίες Πάτρας και Παναχαϊκού" aria-live="polite"><span>Πάτρα <strong id="temp-patra">— °C</strong></span><span>Παναχαϊκό <strong id="temp-panachaiko">— °C</strong></span></div></div>
+<aside class="hero-map-stats" aria-label="Ο χάρτης σε αριθμούς"><dl>{mapStats.map(stat => <div><dt>{stat.label}</dt><dd>{stat.value}</dd></div>)}</dl><p>Στοιχεία χάρτη · όλες οι καταχωρημένες διαδρομές</p></aside>
 <img class="poster-logo" src="/panachaiko-trails-logo.svg" alt="Panachaiko Trails" />
-<div class="poster-bottom"><span>ΤΟ ΒΟΥΝΟ ΕΙΝΑΙ ΔΙΠΛΑ ΣΟΥ.</span><a href="#hub">ΒΡΕΣ ΤΗ ΔΙΑΔΡΟΜΗ ΣΟΥ <span aria-hidden="true">↓</span></a></div>
+<div class="poster-bottom"><a href="/map">ΒΡΕΣ ΤΗ ΔΙΑΔΡΟΜΗ ΣΟΥ <span aria-hidden="true">↗</span></a></div>
 </header>
 <main id="hub" class="split">
 <section class="dashboard" aria-label="Πίνακας ενημέρωσης">
 
 <section class="updates"><div class="box-label"><h2>ΝΕΑ / ΕΝΗΜΕΡΩΣΕΙΣ</h2><span>02</span></div><div id="updates-feed" aria-live="polite"><p>Φόρτωση δημοσιεύσεων…</p></div><a class="text-link" href="#news" data-dialog="news">Όλες οι ενημερώσεις ↗</a></section>
+<div class="weather-cards" aria-label="Αναλυτικές μετρήσεις καιρού">
+{[{key:'patra',name:'ΠΑΤΡΑ',color:'#b8d9d8'},{key:'panachaiko',name:'ΠΑΝΑΧΑΪΚΟ',color:'#ead694'}].map(station => <section class="weather-card" style={`--weather-color:${station.color}`} aria-labelledby={`weather-title-${station.key}`}>
+<div class="weather-card-head"><h2 id={`weather-title-${station.key}`}>ΚΑΙΡΟΣ<br/>{station.name}</h2><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d={icons.sun}/></svg></div>
+<div class="weather-card-body" id={`weather-detail-${station.key}`} aria-live="polite"><p class="weather-state">Φόρτωση μετρήσεων…</p></div>
+</section>)}
+</div>
 <p class="dashboard-note">Διαδρομές, σημεία ενδιαφέροντος και πληροφορίες για την επόμενη εξόρμησή σου.</p>
 </section>
 <section class="navigation"><div class="section-label"><span>03 / ΕΠΙΛΕΞΕ ΚΑΤΕΥΘΥΝΣΗ</span><span>↙</span></div><nav class="hub" aria-label="Κεντρική πλοήγηση">
@@ -206,18 +243,41 @@ async function loadUpdates(){
 loadUpdates();
 
 const format=v=>typeof v==='number'&&Number.isFinite(v)?v.toLocaleString('el-GR',{maximumFractionDigits:1}):'—';
+function renderStationDetails(key,station){
+ const root=document.getElementById('weather-detail-'+key);if(!root)return;root.replaceChildren();
+ const available=station&&station.status!=='unavailable';
+ const measurement=(value,unit)=>available&&typeof value==='number'&&Number.isFinite(value)?format(value)+' '+unit:'—';
+ const temp=document.createElement('p');temp.className='weather-temperature';temp.textContent=measurement(station?.temp,'°C');root.append(temp);
+ const state=document.createElement('p');state.className='weather-state';
+ state.dataset.stale=String(station?.status==='stale');
+ state.textContent=!available?'Οι μετρήσεις δεν είναι διαθέσιμες αυτή τη στιγμή.':station.status==='stale'?'Παλαιότερη μέτρηση':'Τελευταία διαθέσιμη μέτρηση';
+ if(available&&station.observed)state.textContent+=' · '+station.observed;root.append(state);
+ const metrics=document.createElement('dl');metrics.className='weather-metrics';
+ const rows=[
+ ['Αίσθηση',measurement(station?.feels,'°C')],
+ ['Υγρασία',measurement(station?.humidity,'%')],
+ ['Άνεμος',measurement(station?.wind,'km/h')+(available&&station.windDir?' · '+station.windDir:'')],
+ ['Πίεση',measurement(station?.pressure,'hPa')],
+ ['Βροχή σήμερα',measurement(station?.rainToday,'mm')],
+ ['Ένταση βροχής',measurement(station?.rainRate,'mm/h')],
+ ['Σημείο δρόσου',measurement(station?.dewPoint,'°C')]
+ ];
+ for(const [label,value] of rows){const row=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;row.append(dt,dd);metrics.append(row)}root.append(metrics);
+ if(station?.source){const source=document.createElement('p');source.className='weather-source';source.textContent='Πηγή: '+station.source;root.append(source)}
+}
 async function weather(){
  try{
   const r=await fetch('/api/weather-live',{signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error();const data=await r.json();
   if(!data.stations)throw Error();
   for(const key of ['patra','panachaiko']){
    const station=data.stations[key],root=document.getElementById('temp-'+key);
+   renderStationDetails(key,station);
    if(!root)continue;
    const available=station&&station.status!=='unavailable'&&typeof station.temp==='number'&&Number.isFinite(station.temp);
    root.textContent=available?format(station.temp)+' °C':'— °C';
    root.title=station?.status==='stale'?'Παλαιότερη μέτρηση'+(station.observed?' · '+station.observed:''):available?'Τελευταία διαθέσιμη μέτρηση'+(station.observed?' · '+station.observed:''):'Μη διαθέσιμη θερμοκρασία';
   }
- }catch{for(const key of ['patra','panachaiko']){const root=document.getElementById('temp-'+key);if(root){root.textContent='— °C';root.title='Μη διαθέσιμη θερμοκρασία'}}}
+ }catch{for(const key of ['patra','panachaiko']){renderStationDetails(key,null);const root=document.getElementById('temp-'+key);if(root){root.textContent='— °C';root.title='Μη διαθέσιμη θερμοκρασία'}}}
 }
 weather();
 function open(id){const d=document.getElementById(id);if(!(d instanceof HTMLDialogElement))return;if(!d.open)d.showModal();}

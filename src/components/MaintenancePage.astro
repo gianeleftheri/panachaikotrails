@@ -2,44 +2,26 @@
 import { trailIcon } from '../lib/trail-icons';
 ---
 <section class="maintenance-page" aria-labelledby="maintenance-title">
-  <div class="scene" aria-hidden="true">
-    <div class="scene-media">
-      <img class="scene-image" src="/maintenance-hero.svg" alt="" />
-    </div>
-    <div class="scene-blend"></div>
-    <div class="scene-shade"></div>
-  </div>
-
-  <div class="inner">
-    <header>
-      <a class="brand" href="/" aria-label="Panachaiko Trails – Αρχική">
-        <img src="/logo-panachaiko.svg" alt="Panachaiko Trails" width="256" height="140" />
-      </a>
-    </header>
-
-    <main class="layout">
-      <div class="copy">
-        <p class="kicker"><i></i> ΠΡΟΣΩΡΙΝΗ ΕΝΗΜΕΡΩΣΗ</p>
-        <h1 id="maintenance-title">Η ιστοσελίδα<br />βρίσκεται <em>υπό<br />κατασκευή.</em></h1>
-        <p class="message">Χαρτογραφούμε το Παναχαϊκό και δημιουργούμε μια νέα εμπειρία για πεζοπόρους, ποδηλάτες και φίλους του βουνού.</p>
-
-        <div class="progress">
-          <span class="pulse"></span>
-          <div>
-            <strong>Οι εργασίες βρίσκονται σε εξέλιξη</strong>
-            <small>Σύντομα θα είμαστε κοντά σας.</small>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button class="contact" type="button" data-contact-open>ΕΠΙΚΟΙΝΩΝΙΑ <span>→</span></button>
-          <a class="preview" href="/preview">ΙΔΙΩΤΙΚΗ ΠΡΟΕΠΙΣΚΟΠΗΣΗ</a>
-        </div>
-      </div>
-    </main>
-
-    <footer class="feature-icons" aria-label="Εξερεύνηση Παναχαϊκού"><div><Fragment set:html={trailIcon('hike')} /><span>Διαδρομές</span></div><div><Fragment set:html={trailIcon('mountain')} /><span>Αξιοθέατα</span></div><div><Fragment set:html={trailIcon('rest')} /><span>Αναψυχή</span></div><div><Fragment set:html={trailIcon('view')} /><span>Σημεία θέας</span></div><div><Fragment set:html={trailIcon('shelter')} /><span>Καταφύγια</span></div></footer>
-  </div>
+  <header class="maintenance-poster">
+    <div class="poster-meta"><span>ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ / ΑΧΑΪΑ</span><a href="https://cms.panachaikotrails.gr/wp-login.php">ΔΙΑΧΕΙΡΙΣΗ ↗</a></div>
+    <a href="/" class="poster-art"><img src="/panachaiko-trails-logo.svg" alt="Panachaiko Trails — βουνό με ορειβάτη" width="1732" height="693" /></a>
+    <div class="poster-meta"><span>ΒΟΥΝΟ. ΔΙΑΔΡΟΜΕΣ. ΑΝΘΡΩΠΟΙ.</span><span>ΣΥΝΤΟΜΑ ΚΟΝΤΑ ΣΑΣ</span></div>
+  </header>
+  <main class="maintenance-content">
+    <section class="maintenance-copy">
+      <p class="kicker">01 / ΤΟ ΕΠΟΜΕΝΟ ΜΟΝΟΠΑΤΙ</p>
+      <h1 id="maintenance-title">ΥΠΟ<br/>ΚΑΤΑΣΚΕΥΗ.</h1>
+      <p class="message">Χαρτογραφούμε το Παναχαϊκό και δημιουργούμε μια νέα εμπειρία για πεζοπόρους, ποδηλάτες και φίλους του βουνού.</p>
+      <p class="construction-note">Οι εργασίες βρίσκονται σε εξέλιξη. Σύντομα θα είμαστε κοντά σας.</p>
+    </section>
+    <section class="maintenance-access" aria-labelledby="access-title">
+      <p class="kicker">02 / ΜΕΙΝΕ ΣΕ ΕΠΑΦΗ</p>
+      <h2 id="access-title">ΤΟ ΒΟΥΝΟ<br/>ΜΑΣ ΠΕΡΙΜΕΝΕΙ.</h2>
+      <div class="actions"><button class="contact" type="button" data-contact-open>ΕΠΙΚΟΙΝΩΝΙΑ <span>↗</span></button><a class="preview" href="/preview?redirect=/">ΕΙΣΟΔΟΣ ΕΠΙΣΚΕΠΤΗ ↗</a></div>
+      <p>Έχεις κωδικό; Δες την προεπισκόπηση της ιστοσελίδας.</p>
+    </section>
+  </main>
+  <footer class="maintenance-footer"><span>PANACHAIKO TRAILS</span><span>EXPLORE AT YOUR OWN PACE.</span></footer>
 
   <div class="contact-backdrop" data-contact-backdrop hidden></div>
 
@@ -547,6 +529,36 @@ import { trailIcon } from '../lib/trail-icons';
   .feature-icons div{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}
   .feature-icons :global(svg){width:28px;height:28px;flex:none}
   @media(max-width:560px){.feature-icons{display:grid;grid-template-columns:1fr 1fr;gap:18px}.feature-icons div{font-size:13px}}
+
+  /* Shared expedition poster identity from the homepage. */
+  :global(html),:global(body){background:#f4efe1;color:#20221d;font-family:Inter,Arial,sans-serif}
+  .maintenance-page{--lime:#ef641b;background:#f4efe1;color:#20221d}
+  .maintenance-poster{display:block;background:#ef641b;padding:24px max(5vw,20px);border-bottom:3px solid #20221d}
+  .poster-meta{display:flex;justify-content:space-between;gap:18px;font-size:10px;font-weight:800;letter-spacing:.09em}
+  .poster-meta a{color:inherit;text-decoration:none;border-bottom:1px solid currentColor}
+  .poster-art{display:block;width:min(1100px,100%);margin:42px auto 32px}
+  .poster-art img{display:block;width:100%;height:auto}
+  .maintenance-content{display:grid;grid-template-columns:1.2fr 1fr;gap:64px;max-width:1300px;margin:auto;padding:48px max(4vw,20px)}
+  .maintenance-content .kicker{color:#20221d;margin:0 0 24px;font:800 10px/1.5 Inter,Arial,sans-serif;letter-spacing:.12em}
+  .maintenance-content h1{color:#20221d;font:900 clamp(40px,5vw,78px)/.95 Inter,Arial,sans-serif;letter-spacing:-.055em;margin:0 0 26px;max-width:none}
+  .maintenance-content h2{font:800 clamp(27px,3vw,42px)/1.05 Inter,Arial,sans-serif;letter-spacing:-.045em;margin:0 0 30px}
+  .maintenance-content .message{color:#20221d;font-size:16px;line-height:1.7;max-width:600px;margin:0 0 22px}
+  .construction-note{border-top:2px solid #20221d;padding-top:18px;font-size:12px;line-height:1.7}
+  .maintenance-access{padding:28px;background:#b8d9d8;border:3px solid #20221d;box-shadow:6px 6px 0 #20221d;align-self:start}
+  .maintenance-access p:last-child{font-size:12px;line-height:1.7;margin-top:22px}
+  .actions{display:flex;align-items:stretch;flex-direction:column;gap:16px;margin:0}
+  .actions .contact{background:#20221d;color:#f8f0d9;border:2px solid #20221d;border-radius:0;min-height:52px;justify-content:space-between}
+  .actions .contact:hover{background:#f8f0d9;color:#20221d}
+  .actions .preview{color:#20221d;font-size:11px;font-weight:800;letter-spacing:.04em;text-decoration:underline;text-underline-offset:5px}
+  .maintenance-footer{display:flex;justify-content:space-between;gap:20px;padding:22px max(5vw,20px);border-top:2px solid #20221d;font-size:9px;font-weight:800;letter-spacing:.08em}
+  .contact-drawer{background:#f4efe1;color:#20221d;border-left:3px solid #20221d}
+  .contact-drawer-head h2,.contact-intro,.contact-eyebrow,.contact-form label span,.contact-turnstile-wrap small{color:#20221d}
+  .contact-form input:not([type="checkbox"]),.contact-form textarea{background:#fcfbf9;color:#20221d;border:2px solid #20221d;border-radius:0}
+  .contact-close,.contact-cancel{color:#20221d;border-color:#20221d;background:transparent}
+  .contact-submit{background:#20221d;color:#f8f0d9;border-radius:0}
+  .contact-success-panel{background:#f4efe1;color:#20221d}
+  :global(a:focus-visible),button:focus-visible{outline:3px dashed #20221d;outline-offset:5px}
+  @media(max-width:760px){.maintenance-content{grid-template-columns:1fr;gap:26px;padding-top:30px}.poster-meta{font-size:8px}.poster-art{margin:38px auto}.maintenance-access{padding:23px;margin-right:6px}.maintenance-content h1{font-size:clamp(36px,9vw,64px)}.maintenance-footer{font-size:8px}}
 </style>
 
 

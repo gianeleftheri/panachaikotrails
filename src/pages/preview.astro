@@ -12,19 +12,20 @@ Astro.response.headers.set('Cache-Control', 'private, no-store, max-age=0');
 <!doctype html>
 <html lang="el">
   <head>
-    <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/><meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex,nofollow" />
-    <meta name="theme-color" content="#0b2118" />
+    <meta name="theme-color" content="#ef641b" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Ιδιωτική προεπισκόπηση | Panachaiko Trails</title>
   </head>
   <body>
     <main class="preview-login">
+      <section class="preview-poster" aria-label="Panachaiko Trails"><div class="poster-meta"><span>ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ</span><a href="/">ΑΡΧΙΚΗ ↗</a></div><img src="/panachaiko-trails-logo.svg" alt="Panachaiko Trails — βουνό με ορειβάτη" width="1732" height="693"/><p>EXPLORE AT YOUR OWN PACE.</p></section>
       <section class="preview-card">
-        <div class="brand"><img src="/logo-panachaiko.svg" alt="" /><strong>PANACHAIKO TRAILS</strong></div>
-        <span class="preview-kicker"><i></i> ΙΔΙΩΤΙΚΗ ΠΡΟΕΠΙΣΚΟΠΗΣΗ</span>
-        <h1>{isActive ? 'Η προεπισκόπηση είναι ενεργή.' : 'Δείτε το site πριν δημοσιευτεί.'}</h1>
+        <div class="brand"><strong>PANACHAIKO TRAILS / ΕΙΣΟΔΟΣ ΕΠΙΣΚΕΠΤΗ</strong></div>
+        <span class="preview-kicker"><i></i> ΠΡΟΣΒΑΣΗ ΜΕ ΚΩΔΙΚΟ</span>
+        <h1>{isActive ? 'Η προεπισκόπηση είναι ενεργή.' : 'Το επόμενο μονοπάτι ξεκινά εδώ.'}</h1>
         <p>{isActive ? 'Σε αυτόν τον browser βλέπετε ολόκληρη την εφαρμογή, ενώ οι επισκέπτες συνεχίζουν να βλέπουν τη σελίδα «Υπό κατασκευή».' : 'Πληκτρολογήστε τον προσωπικό κωδικό. Η πρόσβαση θα παραμείνει ενεργή μόνο σε αυτόν τον browser για 8 ώρες.'}</p>
         {error === 'invalid' && <p class="alert" role="alert">Ο κωδικός δεν είναι σωστός. Δοκιμάστε ξανά.</p>}
         {error === 'config' && <p class="alert" role="alert">Η ιδιωτική προεπισκόπηση δεν έχει ρυθμιστεί ακόμη.</p>}
@@ -36,7 +37,21 @@ Astro.response.headers.set('Cache-Control', 'private, no-store, max-age=0');
       </section>
     </main>
     <style>
-      *{box-sizing:border-box}html{min-height:100%;background:#07130f}body{margin:0;min-height:100%;font-family:Arial,sans-serif;color:#fff;background:#07130f}.preview-login{position:relative;display:grid;place-items:center;min-height:100svh;padding:32px 20px;overflow:hidden;background:radial-gradient(circle at 90% 12%,rgba(213,239,74,.1),transparent 32%),linear-gradient(135deg,#102b21,#07130f)}.preview-login::before{position:absolute;inset:0;content:"";opacity:.14;background-image:linear-gradient(rgba(153,190,166,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(153,190,166,.25) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,black,transparent 85%)}.preview-card{position:relative;width:min(100%,620px);padding:clamp(30px,6vw,58px);border:1px solid #294438;background:rgba(9,30,22,.94);box-shadow:0 30px 90px rgba(0,0,0,.35)}.brand{display:flex;align-items:center;gap:15px;margin-bottom:52px}.brand img{width:60px;height:60px}.brand strong{font-size:15px;letter-spacing:.08em}.preview-kicker{display:flex;align-items:center;gap:12px;margin-bottom:22px;color:#a6b9ae;font-size:11px;font-weight:700;letter-spacing:.2em}.preview-kicker i{display:block;width:27px;height:2px;background:#d5ef4a}h1{max-width:520px;margin:0 0 18px;font-size:clamp(35px,6vw,58px);line-height:1.02;font-weight:500;letter-spacing:-.035em}p{margin:0 0 32px;color:#afc0b7;font-size:17px;line-height:1.7}.alert{margin-bottom:22px;padding:13px 15px;border-left:3px solid #d5ef4a;background:rgba(213,239,74,.08);color:#fff;font-size:14px}.preview-form{display:grid;gap:12px}label{font-size:10px;font-weight:700;letter-spacing:.16em;color:#b7c9bf}input[type="password"]{width:100%;height:55px;padding:0 16px;border:1px solid #3e5b4c;border-radius:0;outline:none;background:#0e291e;color:#fff;font:inherit}input[type="password"]:focus{border-color:#d5ef4a;box-shadow:0 0 0 3px rgba(213,239,74,.1)}.preview-actions{display:flex;flex-wrap:wrap;gap:12px}.preview-actions form{margin:0}.button{display:inline-flex;align-items:center;justify-content:center;gap:18px;width:max-content;min-height:52px;margin-top:8px;padding:0 23px;border:1px solid #c0da37;background:#c0da37;color:#102219;font-size:11px;font-weight:800;letter-spacing:.1em;text-decoration:none;cursor:pointer}.button:hover{background:#dcf65b;border-color:#dcf65b}.secondary{background:transparent;border-color:#60766a;color:#fff}@media(max-width:540px){.preview-card{padding:30px 24px}.brand{margin-bottom:42px}.preview-actions,.preview-actions form,.button{width:100%}}
+      *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#f4efe1;color:#20221d;font-family:Inter,Arial,sans-serif}
+      .preview-login{display:grid;grid-template-columns:1.25fr 1fr;min-height:100svh}
+      .preview-poster{display:flex;flex-direction:column;justify-content:space-between;padding:30px 4vw;background:#ef641b;border-right:3px solid #20221d;min-width:0}
+      .poster-meta{display:flex;justify-content:space-between;gap:14px;font-size:10px;letter-spacing:.09em;font-weight:800}.poster-meta a{color:inherit;text-decoration:none;border-bottom:1px solid currentColor}
+      .preview-poster img{display:block;width:100%;height:auto;margin:70px auto}.preview-poster p{font-size:10px;letter-spacing:.1em;font-weight:800;color:#20221d;margin:0}
+      .preview-card{width:100%;max-width:680px;padding:clamp(28px,5vw,72px);align-self:center;margin:auto}
+      .brand{margin-bottom:54px;font-size:10px;letter-spacing:.08em}.preview-kicker{display:flex;align-items:center;gap:12px;margin-bottom:22px;font-size:10px;font-weight:800;letter-spacing:.1em}.preview-kicker i{width:24px;height:3px;background:#ef641b}
+      h1{margin:0 0 24px;font-size:clamp(32px,4vw,59px);line-height:1.03;font-weight:900;letter-spacing:-.055em}p{margin:0 0 28px;font-size:15px;line-height:1.8}
+      .alert{padding:14px;border:2px solid #20221d;background:#ead694;font-size:14px}
+      .preview-form{display:grid;gap:14px}label{font-size:10px;font-weight:800;letter-spacing:.12em}input[type="password"]{width:100%;height:56px;padding:0 16px;border:2px solid #20221d;border-radius:0;background:#fcfbf9;color:#20221d;font:inherit}
+      .preview-actions{display:flex;flex-wrap:wrap;gap:14px}.preview-actions form{margin:0}
+      .button{display:inline-flex;justify-content:space-between;align-items:center;gap:20px;min-height:54px;padding:16px 20px;border:2px solid #20221d;background:#20221d;color:#f8f0d9;font:800 11px/1.4 Inter,Arial,sans-serif;letter-spacing:.06em;text-decoration:none;cursor:pointer;box-shadow:4px 4px 0 #ef641b}.button:hover{background:#ef641b;color:#20221d}.secondary{background:transparent;color:#20221d;box-shadow:none}
+      input:focus-visible,.button:focus-visible,a:focus-visible{outline:3px dashed #20221d;outline-offset:5px}
+      @media(max-width:760px){.preview-login{grid-template-columns:1fr}.preview-poster{border-right:0;border-bottom:3px solid #20221d;padding:20px}.preview-poster img{width:min(520px,100%);margin:35px auto}.preview-card{padding:34px 24px 46px}.brand{margin-bottom:32px}.preview-poster p{font-size:8px}h1{font-size:clamp(32px,8vw,48px)}}
+      @media(max-width:420px){.button,.preview-actions form{width:100%}.poster-meta{font-size:8px}}
     </style>
   </body>
 </html>

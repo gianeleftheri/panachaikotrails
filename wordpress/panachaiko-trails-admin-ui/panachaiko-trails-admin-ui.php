@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Panachaiko Trails — Admin UI
  * Description: Responsive branded WordPress dashboard and CMS landing; leaves the core and data plugin intact.
- * Version: 0.7.12
+ * Version: 0.7.13
  * Requires at least: 6.5
  * Requires PHP: 7.4
  * Text Domain: panachaiko-trails-admin-ui
@@ -10,7 +10,7 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class Panachaiko_Trails_Admin_UI {
-    private const VERSION = '0.7.12';
+    private const VERSION = '0.7.13';
     private const PAGE = 'panachaiko-trails-home';
 
     public static function init(): void {
@@ -37,7 +37,7 @@ final class Panachaiko_Trails_Admin_UI {
         return plugin_dir_url( __FILE__ ) . 'assets/' . $file;
     }
     private static function hero(): string {
-        return self::url( 'cms-hero-provided.svg' );
+        return self::url( 'poster-panachaiko.svg' );
     }
     private static function favicon(): string {
         $site_icon = get_site_icon_url( 64 );
@@ -79,7 +79,7 @@ final class Panachaiko_Trails_Admin_UI {
     }
     public static function login_assets(): void {
         wp_enqueue_style( 'panachaiko-admin-ui-login', self::url( 'admin.css' ), array(), self::VERSION );
-        wp_add_inline_style( 'panachaiko-admin-ui-login', 'body.login #login h1 a{background-image:url("' . esc_url( self::url( 'logo-panachaiko.svg' ) ) . '")!important}' );
+        wp_add_inline_style( 'panachaiko-admin-ui-login', 'body.login #login h1 a{background-image:url("' . esc_url( self::url( 'poster-panachaiko.svg' ) ) . '")!important}' );
     }
     public static function login_header_url(): string {
         return home_url( '/' );

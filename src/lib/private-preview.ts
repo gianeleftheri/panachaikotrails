@@ -52,8 +52,8 @@ export async function isPrivatePreviewPasswordValid(candidate: string, secret: s
 }
 
 export function safeInternalRedirect(value: FormDataEntryValue | null) {
-  if (typeof value !== 'string') return '/map';
+  if (typeof value !== 'string') return '/';
   const path = value.trim();
-  if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\') || /[\u0000-\u001f\u007f]/.test(path)) return '/map';
+  if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\') || /[\u0000-\u001f\u007f]/.test(path)) return '/';
   return path;
 }

@@ -171,6 +171,7 @@ body{font-family:Inter,Arial,sans-serif}
 @media(max-width:760px){.tile h2{font-size:clamp(24px,6.5vw,34px);line-height:1.12}.box-label h2{font-size:23px}.digits{font-size:80px}.digits span{font-size:30px}}
 .poster-meta .hero-weather{display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:flex-end;font:700 11px/1.5 Inter,Arial,sans-serif;letter-spacing:0}.hero-weather strong{font-weight:800;white-space:nowrap}.poster-meta .hero-weather span{max-width:none;text-align:inherit}@media(max-width:760px){.poster-meta .hero-weather{font-size:10px;gap:4px 12px;max-width:200px}}
 .hero-map-stats{position:absolute;top:68px;left:max(5vw,20px);z-index:3;width:210px;color:#20221d}.hero-map-stats dl{margin:0}.hero-map-stats dl>div{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:10px 0;border-bottom:1px solid #20221d35}.hero-map-stats dt{font:600 11px/1.4 Inter,Arial,sans-serif}.hero-map-stats dd{margin:0;font:800 19px/1.2 Inter,Arial,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}.hero-map-stats p{font:500 9px/1.5 Inter,Arial,sans-serif;max-width:200px;opacity:.75;margin:9px 0 0}@media(max-width:1000px){.hero-map-stats{position:relative;top:auto;left:auto;width:min(100%,440px);margin-top:22px}.hero-map-stats dl{display:grid;grid-template-columns:1fr 1fr;column-gap:24px}.hero-map-stats p{max-width:none}.poster-logo{margin-top:54px}}@media(max-width:420px){.hero-map-stats dl{column-gap:16px}.hero-map-stats dt{font-size:10px}.hero-map-stats dd{font-size:16px}}
+.weather-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:0 0 28px}.weather-card{min-width:0;background:#fcfbf9;border:3px solid #20221d;box-shadow:5px 5px 0 #20221d}.weather-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--weather-color);padding:16px;border-bottom:2px solid #20221d}.weather-card-head h2{font:800 clamp(15px,1.5vw,21px)/1.2 Inter,Arial,sans-serif;letter-spacing:-.035em;margin:0}.weather-card-head svg{width:28px;height:28px;flex-shrink:0}.weather-card-body{padding:16px}.weather-temperature{font:800 clamp(30px,3.2vw,44px)/1.1 Inter,Arial,sans-serif;letter-spacing:-.055em;margin:0 0 8px;font-variant-numeric:tabular-nums}.weather-metrics{margin:16px 0}.weather-metrics>div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:9px 0;border-top:1px solid #20221d24;font-size:10px;line-height:1.4}.weather-metrics dt{font-weight:500}.weather-metrics dd{margin:0;text-align:right;font-weight:800;font-variant-numeric:tabular-nums}.weather-state,.weather-source{font-size:10px;line-height:1.6;margin:8px 0;overflow-wrap:anywhere}.weather-state{color:#615649}.weather-source{border-top:1px solid #20221d24;padding-top:10px}.weather-state[data-stale="true"]{font-weight:700;color:#864419}@media(min-width:761px) and (max-width:1150px){.weather-cards{grid-template-columns:1fr}}@media(max-width:460px){.weather-cards{grid-template-columns:1fr}.weather-card-head h2{font-size:22px}.weather-temperature{font-size:44px}.weather-metrics>div{font-size:12px}}
 </style>
 </head>
 <body>
@@ -212,6 +213,12 @@ body{font-family:Inter,Arial,sans-serif}
 <section class="dashboard" aria-label="Πίνακας ενημέρωσης">
 
 <section class="updates"><div class="box-label"><h2>ΝΕΑ / ΕΝΗΜΕΡΩΣΕΙΣ</h2><span>02</span></div><div id="updates-feed" aria-live="polite"><p>Φόρτωση δημοσιεύσεων…</p></div><a class="text-link" href="#news" data-dialog="news">Όλες οι ενημερώσεις ↗</a></section>
+<div class="weather-cards" aria-label="Αναλυτικές μετρήσεις καιρού">
+{[{key:'patra',name:'ΠΑΤΡΑ',color:'#b8d9d8'},{key:'panachaiko',name:'ΠΑΝΑΧΑΪΚΟ',color:'#ead694'}].map(station => <section class="weather-card" style={`--weather-color:${station.color}`} aria-labelledby={`weather-title-${station.key}`}>
+<div class="weather-card-head"><h2 id={`weather-title-${station.key}`}>ΚΑΙΡΟΣ<br/>{station.name}</h2><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d={icons.sun}/></svg></div>
+<div class="weather-card-body" id={`weather-detail-${station.key}`} aria-live="polite"><p class="weather-state">Φόρτωση μετρήσεων…</p></div>
+</section>)}
+</div>
 <p class="dashboard-note">Διαδρομές, σημεία ενδιαφέροντος και πληροφορίες για την επόμενη εξόρμησή σου.</p>
 </section>
 <section class="navigation"><div class="section-label"><span>03 / ΕΠΙΛΕΞΕ ΚΑΤΕΥΘΥΝΣΗ</span><span>↙</span></div><nav class="hub" aria-label="Κεντρική πλοήγηση">
@@ -236,18 +243,41 @@ async function loadUpdates(){
 loadUpdates();
 
 const format=v=>typeof v==='number'&&Number.isFinite(v)?v.toLocaleString('el-GR',{maximumFractionDigits:1}):'—';
+function renderStationDetails(key,station){
+ const root=document.getElementById('weather-detail-'+key);if(!root)return;root.replaceChildren();
+ const available=station&&station.status!=='unavailable';
+ const measurement=(value,unit)=>available&&typeof value==='number'&&Number.isFinite(value)?format(value)+' '+unit:'—';
+ const temp=document.createElement('p');temp.className='weather-temperature';temp.textContent=measurement(station?.temp,'°C');root.append(temp);
+ const state=document.createElement('p');state.className='weather-state';
+ state.dataset.stale=String(station?.status==='stale');
+ state.textContent=!available?'Οι μετρήσεις δεν είναι διαθέσιμες αυτή τη στιγμή.':station.status==='stale'?'Παλαιότερη μέτρηση':'Τελευταία διαθέσιμη μέτρηση';
+ if(available&&station.observed)state.textContent+=' · '+station.observed;root.append(state);
+ const metrics=document.createElement('dl');metrics.className='weather-metrics';
+ const rows=[
+ ['Αίσθηση',measurement(station?.feels,'°C')],
+ ['Υγρασία',measurement(station?.humidity,'%')],
+ ['Άνεμος',measurement(station?.wind,'km/h')+(available&&station.windDir?' · '+station.windDir:'')],
+ ['Πίεση',measurement(station?.pressure,'hPa')],
+ ['Βροχή σήμερα',measurement(station?.rainToday,'mm')],
+ ['Ένταση βροχής',measurement(station?.rainRate,'mm/h')],
+ ['Σημείο δρόσου',measurement(station?.dewPoint,'°C')]
+ ];
+ for(const [label,value] of rows){const row=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;row.append(dt,dd);metrics.append(row)}root.append(metrics);
+ if(station?.source){const source=document.createElement('p');source.className='weather-source';source.textContent='Πηγή: '+station.source;root.append(source)}
+}
 async function weather(){
  try{
   const r=await fetch('/api/weather-live',{signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error();const data=await r.json();
   if(!data.stations)throw Error();
   for(const key of ['patra','panachaiko']){
    const station=data.stations[key],root=document.getElementById('temp-'+key);
+   renderStationDetails(key,station);
    if(!root)continue;
    const available=station&&station.status!=='unavailable'&&typeof station.temp==='number'&&Number.isFinite(station.temp);
    root.textContent=available?format(station.temp)+' °C':'— °C';
    root.title=station?.status==='stale'?'Παλαιότερη μέτρηση'+(station.observed?' · '+station.observed:''):available?'Τελευταία διαθέσιμη μέτρηση'+(station.observed?' · '+station.observed:''):'Μη διαθέσιμη θερμοκρασία';
   }
- }catch{for(const key of ['patra','panachaiko']){const root=document.getElementById('temp-'+key);if(root){root.textContent='— °C';root.title='Μη διαθέσιμη θερμοκρασία'}}}
+ }catch{for(const key of ['patra','panachaiko']){renderStationDetails(key,null);const root=document.getElementById('temp-'+key);if(root){root.textContent='— °C';root.title='Μη διαθέσιμη θερμοκρασία'}}}
 }
 weather();
 function open(id){const d=document.getElementById(id);if(!(d instanceof HTMLDialogElement))return;if(!d.open)d.showModal();}

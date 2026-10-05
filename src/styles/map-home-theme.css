@@ -33,7 +33,7 @@ body.map-home-theme {
 .map-home-theme #shelterBtn {background:#dbbea8!important}
 .map-home-theme .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child) {color:#20221d!important;font-weight:800!important}
 .map-home-theme .map-tool-icon {background:transparent!important;border:0!important;border-radius:0!important;color:#20221d!important;box-shadow:none!important;--pt-icon-accent:#20221d}
-.map-home-theme .map-tool-icon svg [fill]:not([fill="none"]) {fill:#20221d}
+.map-home-theme .map-tool-icon svg [fill]:not([fill="none"]) {fill:none}
 .map-home-theme .map-tool-icon svg [stroke]:not([stroke="none"]) {stroke:#20221d}
 .map-home-theme .topbar-actions :is(button,a):hover:not(:disabled) {border-color:#20221d!important;box-shadow:1px 1px 0 #20221d!important;transform:translate(2px,2px)!important;filter:none!important}
 .map-home-theme .topbar-actions :is(button.open,button.active,.recenter-btn.following),
@@ -132,4 +132,45 @@ body.map-home-theme {
   .map-home-theme :is(.left-panel,#recreationPanel,.route-builder-panel) {top:auto!important;bottom:calc(82px + env(safe-area-inset-bottom))!important;left:8px!important;right:8px!important;width:auto!important}
   .map-home-theme .left-panel.open {max-height:calc(100dvh - 160px)!important}
   .map-home-theme .route-builder-panel {max-height:calc(100dvh - 160px)!important}
+}
+
+/* Crisp outline icons and consistent Greek typography across map controls. */
+.map-home-theme .map-tool-icon,
+.map-home-theme .map-tool-icon svg {
+  color:#20221d!important; --pt-icon-accent:currentColor;
+}
+.map-home-theme .map-tool-icon svg {
+  width:24px!important;height:24px!important;fill:none!important;
+  stroke:currentColor!important;stroke-width:1.8!important;
+  stroke-linecap:round;stroke-linejoin:round;shape-rendering:geometricPrecision;
+}
+.map-home-theme .map-tool-icon svg :is(path,circle,rect,polyline,line,polygon) {
+  fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.map-home-theme .topbar-actions {gap:10px!important}
+.map-home-theme .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle,.submit-trail-cta) {
+  height:44px!important;min-height:44px!important;padding:0 13px!important;
+  gap:9px!important;align-items:center;justify-content:center;
+}
+.map-home-theme .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child) {
+  font-family:Inter,Arial,sans-serif!important;font-size:12px!important;
+  font-weight:700!important;line-height:1.4!important;letter-spacing:0!important;
+}
+.map-home-theme :is(.panel,.trail-drawer,.route-builder-panel,.basemap-menu,.content-panel,.nav-hud,.leaflet-popup,.view3d-topbar) {
+  font-family:Inter,Arial,sans-serif!important;
+}
+.map-home-theme :is(.trail-row-name,.recreation-row-name,.td-tab,.rb-select,.rb-gps-btn,.rb-calc-btn,.basemap-options button,.traffic-copy strong) {
+  font-family:Inter,Arial,sans-serif!important;font-weight:600!important;line-height:1.45!important;
+}
+.map-home-theme :is(.trail-card-title,.rb-title,.count-row strong,.basemap-menu-title,.cp-title) {font-weight:800!important;letter-spacing:-.025em!important}
+@media(min-width:761px) and (max-width:1100px) {
+  .map-home-theme .topbar-actions {gap:6px!important}
+  .map-home-theme .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle) {width:40px!important;min-width:40px!important;padding:0!important}
+}
+@media(max-width:760px) {
+  .map-home-theme .topbar-actions {gap:4px!important}
+  .map-home-theme .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle,.submit-trail-cta) {height:56px!important;min-height:56px!important;padding:3px 1px!important;gap:3px!important}
+  .map-home-theme .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child) {font-size:8px!important;line-height:1.2!important;font-weight:600!important}
+  .map-home-theme .map-tool-icon svg {width:22px!important;height:22px!important}
 }

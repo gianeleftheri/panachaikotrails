@@ -1,17 +1,45 @@
 ---
 export const prerender = false;
 Astro.response.headers.set('Cache-Control', 'no-store');
-const bundled = Object.values(import.meta.glob('../data/trails/*.json', { eager: true, import: 'default' })) as any[];
-let trails = bundled;
+import { loadInitialTrails, normalizeApiResponse } from '../scripts/trail-data';
+import { API_URL as recreationApiUrl, fallbackSpots } from '../data/recreation-spots';
+let collection = loadInitialTrails();
 let source = 'Αποθηκευμένα δεδομένα διαδρομών';
-try {
+let recreation = fallbackSpots;
+await Promise.all([
+ (async () => {try {
   const response = await fetch(import.meta.env.PUBLIC_TRAILS_API_URL || 'https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/trails', { signal: AbortSignal.timeout(4000) });
-  if (!response.ok) throw new Error('CMS unavailable');
-  const data = await response.json();
-  if (!Array.isArray(data) || !data.every(x => typeof x?.key === 'string' && typeof x?.trail?.name === 'string')) throw new Error('Invalid trails');
-  trails = data;
-  source = 'Δεδομένα από το CMS';
-} catch {}
+  if (!response.ok) return;
+  const normalized = normalizeApiResponse(await response.json());
+  if (normalized) { collection = normalized; source = 'Δεδομένα από το CMS'; }
+ } catch {}})(),
+ (async () => {try {
+  const response = await fetch(recreationApiUrl, { signal: AbortSignal.timeout(4000) });
+  if (!response.ok) return;
+  const payload = await response.json();
+  if (!Array.isArray(payload)) return;
+  const valid = payload.filter(item => item && Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lng)));
+  if (valid.length) recreation = valid;
+ } catch {}})()
+]);
+let trails = Object.entries(collection).map(([key, trail]) => ({key, trail}));
+const totalKm = trails.reduce((sum, {trail}) => sum + (Number.isFinite(trail.length_km) && trail.length_km > 0 ? trail.length_km : 0), 0);
+const poiKeys = new Set<string>();
+const addPoint = (point: any) => {
+ if (point.lat === null || point.lat === undefined || point.lng === null || point.lng === undefined) return;
+ const lat = Number(point.lat), lng = Number(point.lng);
+ if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+ poiKeys.add(lat.toFixed(6) + ':' + lng.toFixed(6));
+};
+trails.forEach(({trail}) => [...trail.notes, ...trail.photos, ...trail.videos].forEach(addPoint));
+recreation.forEach(addPoint);
+const recreationCount = new Set(recreation.map(point => Number(point.lat).toFixed(6) + ':' + Number(point.lng).toFixed(6))).size;
+const mapStats = [
+ {label:'Σύνολο διαδρομών', value:trails.length.toLocaleString('el-GR')},
+ {label:'Συνολικά χιλιόμετρα', value:totalKm.toLocaleString('el-GR', {maximumFractionDigits:1}) + ' km'},
+ {label:'Σημεία ενδιαφέροντος', value:poiKeys.size.toLocaleString('el-GR')},
+ {label:'Αναψυχή & θέα', value:recreationCount.toLocaleString('el-GR')}
+];
 trails.sort((a,b) => a.key.localeCompare(b.key, 'el', { numeric: true }));
 const icons = {
  trail: 'M7 27c0-5 12-3 12-8 0-4-9-2-9-6 0-2 3-3 6-4 M21 3v9 M21 3h7l-2 3 2 3h-7',
@@ -142,6 +170,7 @@ body{font-family:Inter,Arial,sans-serif}
 @media(max-width:1000px){.tile h2{font-size:25px}}
 @media(max-width:760px){.tile h2{font-size:clamp(24px,6.5vw,34px);line-height:1.12}.box-label h2{font-size:23px}.digits{font-size:80px}.digits span{font-size:30px}}
 .poster-meta .hero-weather{display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:flex-end;font:700 11px/1.5 Inter,Arial,sans-serif;letter-spacing:0}.hero-weather strong{font-weight:800;white-space:nowrap}.poster-meta .hero-weather span{max-width:none;text-align:inherit}@media(max-width:760px){.poster-meta .hero-weather{font-size:10px;gap:4px 12px;max-width:200px}}
+.hero-map-stats{position:absolute;top:68px;left:max(5vw,20px);z-index:3;width:210px;color:#20221d}.hero-map-stats dl{margin:0}.hero-map-stats dl>div{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:10px 0;border-bottom:1px solid #20221d35}.hero-map-stats dt{font:600 11px/1.4 Inter,Arial,sans-serif}.hero-map-stats dd{margin:0;font:800 19px/1.2 Inter,Arial,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}.hero-map-stats p{font:500 9px/1.5 Inter,Arial,sans-serif;max-width:200px;opacity:.75;margin:9px 0 0}@media(max-width:1000px){.hero-map-stats{position:relative;top:auto;left:auto;width:min(100%,440px);margin-top:22px}.hero-map-stats dl{display:grid;grid-template-columns:1fr 1fr;column-gap:24px}.hero-map-stats p{max-width:none}.poster-logo{margin-top:54px}}@media(max-width:420px){.hero-map-stats dl{column-gap:16px}.hero-map-stats dt{font-size:10px}.hero-map-stats dd{font-size:16px}}
 </style>
 </head>
 <body>
@@ -175,6 +204,7 @@ body{font-family:Inter,Arial,sans-serif}
 <div class="eyebrow"><span class="location"><i class="dot" aria-hidden="true"></i>ΠΑΝΑΧΑΪΚΟ / ΑΧΑΪΑ</span><span>EXPLORE AT YOUR OWN PACE.</span></div>
 <header class="poster-hero" aria-label="Panachaiko Trails">
 <div class="poster-meta"><span>ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ</span><div class="hero-weather" aria-label="Θερμοκρασίες Πάτρας και Παναχαϊκού" aria-live="polite"><span>Πάτρα <strong id="temp-patra">— °C</strong></span><span>Παναχαϊκό <strong id="temp-panachaiko">— °C</strong></span></div></div>
+<aside class="hero-map-stats" aria-label="Ο χάρτης σε αριθμούς"><dl>{mapStats.map(stat => <div><dt>{stat.label}</dt><dd>{stat.value}</dd></div>)}</dl><p>Στοιχεία χάρτη · όλες οι καταχωρημένες διαδρομές</p></aside>
 <img class="poster-logo" src="/panachaiko-trails-logo.svg" alt="Panachaiko Trails" />
 <div class="poster-bottom"><span>ΤΟ ΒΟΥΝΟ ΕΙΝΑΙ ΔΙΠΛΑ ΣΟΥ.</span><a href="#hub">ΒΡΕΣ ΤΗ ΔΙΑΔΡΟΜΗ ΣΟΥ <span aria-hidden="true">↓</span></a></div>
 </header>

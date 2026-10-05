@@ -20,8 +20,8 @@ const icons = {
  sun: 'M22 16a6 6 0 1 1-12 0 6 6 0 0 1 12 0z M16 2v3 M16 27v3 M2 16h3 M27 16h3 M6.1 6.1l2.1 2.1 M23.8 23.8l2.1 2.1 M6.1 25.9l2.1-2.1 M23.8 8.2l2.1-2.1'
 };
 const menu = [
+{id:'trails',title:'ΔΙΑΔΡΟΜΕΣ',label:'Διαδρομές',detail:'Βρες τη διαδρομή σου',icon:icons.trail,color:'#ced8b9'},
 {id:'pois',title:'ΣΗΜΕΙΑ ΕΝΔΙΑΦΕΡΟΝΤΟΣ',label:'Σημεία ενδιαφέροντος',detail:'Ανακάλυψε το βουνό',icon:icons.map,color:'#b8d9d8'},
-{id:'weather',title:'ΚΑΙΡΟΣ',label:'Καιρός',detail:'Μετρήσεις σταθμών',icon:icons.sun,color:'#ead694'},
 {id:'tips',title:'ΣΥΜΒΟΥΛΕΣ',label:'Συμβουλές',detail:'Πριν ξεκινήσεις',icon:icons.person,color:'#dbbea8'},
 {id:'gear',title:'ΕΞΟΠΛΙΣΜΟΣ',label:'Εξοπλισμός',detail:'Τα απαραίτητα μαζί σου',icon:icons.trail,color:'#bacbdc'},
 {id:'news',title:'ΝΕΑ / ΑΡΧΕΙΟ',label:'Νέα / Αρχείο',detail:'Ενημερώσεις του βουνού',icon:icons.map,color:'#d6c8dc'}
@@ -141,6 +141,7 @@ body{font-family:Inter,Arial,sans-serif}
 .station strong{font:800 44px/1.1 Inter,Arial,sans-serif;letter-spacing:-.05em}
 @media(max-width:1000px){.tile h2{font-size:25px}}
 @media(max-width:760px){.tile h2{font-size:clamp(24px,6.5vw,34px);line-height:1.12}.box-label h2{font-size:23px}.digits{font-size:80px}.digits span{font-size:30px}}
+.poster-meta .hero-weather{display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:flex-end;font:700 11px/1.5 Inter,Arial,sans-serif;letter-spacing:0}.hero-weather strong{font-weight:800;white-space:nowrap}.poster-meta .hero-weather span{max-width:none;text-align:inherit}@media(max-width:760px){.poster-meta .hero-weather{font-size:10px;gap:4px 12px;max-width:200px}}
 </style>
 </head>
 <body>
@@ -173,25 +174,23 @@ body{font-family:Inter,Arial,sans-serif}
 
 <div class="eyebrow"><span class="location"><i class="dot" aria-hidden="true"></i>ΠΑΝΑΧΑΪΚΟ / ΑΧΑΪΑ</span><span>EXPLORE AT YOUR OWN PACE.</span></div>
 <header class="poster-hero" aria-label="Panachaiko Trails">
-<div class="poster-meta"><span>ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ</span><span>ΜΟΝΟΠΑΤΙΑ / ΦΥΣΗ / ΕΞΕΡΕΥΝΗΣΗ</span></div>
+<div class="poster-meta"><span>ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ</span><div class="hero-weather" aria-label="Θερμοκρασίες Πάτρας και Παναχαϊκού" aria-live="polite"><span>Πάτρα <strong id="temp-patra">— °C</strong></span><span>Παναχαϊκό <strong id="temp-panachaiko">— °C</strong></span></div></div>
 <img class="poster-logo" src="/panachaiko-trails-logo.svg" alt="Panachaiko Trails" />
 <div class="poster-bottom"><span>ΤΟ ΒΟΥΝΟ ΕΙΝΑΙ ΔΙΠΛΑ ΣΟΥ.</span><a href="#hub">ΒΡΕΣ ΤΗ ΔΙΑΔΡΟΜΗ ΣΟΥ <span aria-hidden="true">↓</span></a></div>
 </header>
 <main id="hub" class="split">
 <section class="dashboard" aria-label="Πίνακας ενημέρωσης">
 
-<section class="routes-panel" id="routes-panel"><div class="box-label"><h2>ΔΙΑΔΡΟΜΕΣ</h2><span>{String(trails.length).padStart(2,'0')}</span></div><div class="routes-list">{trails.map(({key,trail})=><a class="route-card" href={`/map?trail=${encodeURIComponent(key)}`} aria-label={`Άνοιγμα διαδρομής ${trail.name} στον χάρτη`}><span class="route-code">{key}</span><span><strong>{trail.name}</strong><small>{Number.isFinite(trail.length_km) ? `${trail.length_km.toLocaleString('el-GR')} km` : 'Άνοιγμα στον χάρτη'}</small></span><span aria-hidden="true">↗</span></a>)}</div><p class="panel-note">{source} · Κάντε κλικ σε μια διαδρομή για να ανοίξει απευθείας στον χάρτη.</p></section>
-<section class="weather-panel" id="weather-panel"><div class="box-label"><h2>ΚΑΙΡΟΣ</h2><span>LIVE</span></div><div id="weather-panel-content" aria-live="polite"><p>Φόρτωση μετρήσεων…</p></div></section>
 <section class="updates"><div class="box-label"><h2>ΝΕΑ / ΕΝΗΜΕΡΩΣΕΙΣ</h2><span>02</span></div><div id="updates-feed" aria-live="polite"><p>Φόρτωση δημοσιεύσεων…</p></div><a class="text-link" href="#news" data-dialog="news">Όλες οι ενημερώσεις ↗</a></section>
 <p class="dashboard-note">Διαδρομές, σημεία ενδιαφέροντος και πληροφορίες για την επόμενη εξόρμησή σου.</p>
 </section>
 <section class="navigation"><div class="section-label"><span>03 / ΕΠΙΛΕΞΕ ΚΑΤΕΥΘΥΝΣΗ</span><span>↙</span></div><nav class="hub" aria-label="Κεντρική πλοήγηση">
-{menu.map((item,i)=><a href={item.id==='weather'?'#weather-panel':`#${item.id}`} data-dialog={item.id==='weather'?undefined:item.id} class="tile" style={`--tile:${item.color}`} aria-label={item.label}><div class="tile-top"><span>0{i+1}</span><svg class="pixel-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={item.icon}/></svg></div><h2>{item.title}</h2><div class="tile-bottom"><span>{item.detail}</span><span aria-hidden="true">↗</span></div></a>)}
+{menu.map((item,i)=><a href={`#${item.id}`} data-dialog={item.id} class="tile" style={`--tile:${item.color}`} aria-label={item.label}><div class="tile-top"><span>0{i+1}</span><svg class="pixel-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={item.icon}/></svg></div><h2>{item.title}</h2><div class="tile-bottom"><span>{item.detail}</span><span aria-hidden="true">↗</span></div></a>)}
 </nav></section></main>
 <footer class="footer"><strong>ΛΙΓΟΤΕΡΗ ΟΘΟΝΗ. ΠΕΡΙΣΣΟΤΕΡΟ ΒΟΥΝΟ.</strong><a href="/map">ΑΝΟΙΓΜΑ ΧΑΡΤΗ ↗</a></footer>
 </div>
+<dialog id="trails" class="dialog" aria-labelledby="trails-title"><div class="dialog-head"><h2 id="trails-title">ΔΙΑΔΡΟΜΕΣ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><div class="routes-list">{trails.map(({key,trail})=><a class="route-card" href={`/map?trail=${encodeURIComponent(key)}`} aria-label={`Άνοιγμα διαδρομής ${trail.name} στον χάρτη`}><span class="route-code">{key}</span><span><strong>{trail.name}</strong><small>{Number.isFinite(trail.length_km) ? `${trail.length_km.toLocaleString('el-GR')} km` : 'Άνοιγμα στον χάρτη'}</small></span><span aria-hidden="true">↗</span></a>)}</div></div></dialog>
 <dialog id="refuges" class="dialog" aria-labelledby="refuges-title"><div class="dialog-head"><h2 id="refuges-title">ΚΑΤΑΦΥΓΙΑ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p>Καταφύγια στο Παναχαϊκό όρος.</p><p>Βρες τα καταφύγια και τις διαδρομές πρόσβασης στον υπάρχοντα διαδραστικό χάρτη.</p><a class="text-link" href="/map">Άνοιξε τον χάρτη ↗</a></div></dialog>
-<dialog id="weather" class="dialog" aria-labelledby="weather-title"><div class="dialog-head"><h2 id="weather-title">ΚΑΙΡΟΣ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content" id="weather-content" aria-live="polite"><p>Φόρτωση μετρήσεων…</p></div></dialog>
 
 <dialog id="pois" class="dialog" aria-labelledby="pois-title"><div class="dialog-head"><h2 id="pois-title">ΣΗΜΕΙΑ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p>Εξερεύνησε τα σημεία ενδιαφέροντος και τα καταφύγια στον χάρτη του Παναχαϊκού.</p><a class="text-link" href="/map">Άνοιγμα διαδραστικού χάρτη ↗</a></div></dialog>
 <dialog id="tips" class="dialog" aria-labelledby="tips-title"><div class="dialog-head"><h2 id="tips-title">ΣΥΜΒΟΥΛΕΣ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content"><p>Έλεγξε την πρόγνωση και τις διαθέσιμες ώρες φωτός. Διάλεξε διαδρομή κατάλληλη για την εμπειρία και τη φυσική σου κατάσταση.</p><p>Ενημέρωσε κάποιον για τη διαδρομή και την αναμενόμενη ώρα επιστροφής. Κράτησε αντίγραφο του χάρτη εκτός σύνδεσης.</p><p>Ακολούθησε τη σήμανση, πάρε μαζί σου τα απορρίμματα και γύρισε πίσω αν οι συνθήκες χειροτερέψουν.</p></div></dialog>
@@ -199,7 +198,6 @@ body{font-family:Inter,Arial,sans-serif}
 <dialog id="news" class="dialog" aria-labelledby="news-title"><div class="dialog-head"><h2 id="news-title">ΝΕΑ / ΑΡΧΕΙΟ</h2><button class="close" aria-label="Κλείσιμο">×</button></div><div class="content" id="news-feed">Φόρτωση δημοσιεύσεων…</div></dialog>
 <script is:inline>
 (()=>{
-let weatherLoaded=false;
 async function loadUpdates(){
  try{const r=await fetch('/api/homepage',{signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error();const d=await r.json();const items=d.blog?.items||[];
  for(const [id,limit] of [['updates-feed',3],['news-feed',20]]){const root=document.getElementById(id);root.replaceChildren();if(!items.length){root.textContent='Δεν υπάρχουν διαθέσιμες δημοσιεύσεις αυτή τη στιγμή.';continue}for(const item of items.slice(0,limit)){const a=document.createElement('a');a.className='news-row';a.textContent=item.title;a.href='https://cms.panachaikotrails.gr/?p='+encodeURIComponent(item.id);a.target='_blank';a.rel='noopener';root.append(a)}}
@@ -208,31 +206,21 @@ async function loadUpdates(){
 loadUpdates();
 
 const format=v=>typeof v==='number'&&Number.isFinite(v)?v.toLocaleString('el-GR',{maximumFractionDigits:1}):'—';
-function renderWeather(root,data){
- if(!root)return;
- root.replaceChildren();
- for(const key of ['patra','panachaiko']){
-  const s=data.stations[key];if(!s)continue;
-  const box=document.createElement('section');box.className='station';
-  const title=document.createElement('h3');title.textContent=s.name;
-  const temp=document.createElement('strong');temp.textContent=s.status==='unavailable'?'—':format(s.temp)+' °C';
-  const details=document.createElement('p');details.textContent=s.status==='unavailable'?'Οι μετρήσεις δεν είναι διαθέσιμες.':`Άνεμος ${format(s.wind)} km/h · Υγρασία ${format(s.humidity)}%`;
-  const status=document.createElement('p');status.className='source';status.textContent=(s.status==='live'?'Τελευταία διαθέσιμη μέτρηση':s.status==='stale'?'Παλαιότερη μέτρηση':'Μη διαθέσιμο')+(s.observed?' · '+s.observed:'');
-  const source=document.createElement('p');source.className='source';source.textContent='Πηγή: '+s.source;
-  box.append(title,temp,details,status,source);root.append(box);
- }
-}
 async function weather(){
- const roots=[document.getElementById('weather-panel-content'),document.getElementById('weather-content')].filter(Boolean);
  try{
   const r=await fetch('/api/weather-live',{signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error();const data=await r.json();
   if(!data.stations)throw Error();
-  roots.forEach(root=>renderWeather(root,data));
-  if(!roots.some(root=>root.children.length))throw Error();weatherLoaded=true;
- }catch{roots.forEach(root=>root.textContent='Οι μετρήσεις δεν είναι διαθέσιμες αυτή τη στιγμή.')}
+  for(const key of ['patra','panachaiko']){
+   const station=data.stations[key],root=document.getElementById('temp-'+key);
+   if(!root)continue;
+   const available=station&&station.status!=='unavailable'&&typeof station.temp==='number'&&Number.isFinite(station.temp);
+   root.textContent=available?format(station.temp)+' °C':'— °C';
+   root.title=station?.status==='stale'?'Παλαιότερη μέτρηση'+(station.observed?' · '+station.observed:''):available?'Τελευταία διαθέσιμη μέτρηση'+(station.observed?' · '+station.observed:''):'Μη διαθέσιμη θερμοκρασία';
+  }
+ }catch{for(const key of ['patra','panachaiko']){const root=document.getElementById('temp-'+key);if(root){root.textContent='— °C';root.title='Μη διαθέσιμη θερμοκρασία'}}}
 }
 weather();
-function open(id){const d=document.getElementById(id);if(!(d instanceof HTMLDialogElement))return;if(!d.open)d.showModal();if(id==='weather'&&!weatherLoaded)weather()}
+function open(id){const d=document.getElementById(id);if(!(d instanceof HTMLDialogElement))return;if(!d.open)d.showModal();}
 document.querySelectorAll('[data-dialog]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();open(a.dataset.dialog)}));
 document.querySelectorAll('dialog').forEach(d=>{d.querySelector('.close').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()}})});
 if(location.hash)open(location.hash.slice(1));

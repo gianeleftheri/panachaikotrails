@@ -8,7 +8,7 @@ const overlayClose = document.getElementById('view3dClose') as HTMLButtonElement
 
 const style = document.createElement('style');
 style.textContent = `
-  body.navigation-active .topbar-actions{display:none!important}
+  body.navigation-active .topbar-actions > :not(#sosButton):not(#sosDialog){display:none!important}
   body.navigation-active #navigationHud.open{z-index:4300!important;display:block!important}
   body.navigation-active #navReopenBtn{z-index:4301!important}
   body.navigation-active #navBackBtn{width:auto!important;min-width:94px!important;padding:0 12px!important;border-radius:18px!important;font-size:11px!important;white-space:nowrap}

@@ -1,0 +1,67 @@
+<button id="sosButton" class="sos-button" type="button" aria-label="SOS — κρατήστε πατημένο για 3 δευτερόλεπτα">SOS</button>
+<dialog id="sosDialog" aria-labelledby="sosTitle">
+  <header><h2 id="sosTitle">SOS · Βοήθεια</h2><button id="sosClose" type="button" aria-label="Κλείσιμο">×</button></header>
+  <p>Κοινοποιήστε τη θέση σας στην επαφή έκτακτης ανάγκης. Δεν ειδοποιείται αυτόματα υπηρεσία διάσωσης.</p>
+  <form id="sosSettings">
+    <label>Το όνομά σας<input id="sosName" maxlength="100" autocomplete="name" /></label>
+    <label>Email επαφής<input id="sosEmail" type="email" maxlength="160" autocomplete="email" /></label>
+    <label>Κινητό επαφής<input id="sosPhone" type="tel" maxlength="25" placeholder="π.χ. +3069…" autocomplete="tel" /></label>
+    <button type="submit">Αποθήκευση επαφής</button>
+    <small>Αποθηκεύεται μόνο σε αυτόν τον browser. Δεν συγχρονίζεται με άλλες συσκευές.</small>
+  </form>
+  <p id="sosPosition" role="status">Δεν έχει ληφθεί θέση.</p>
+  <button id="sosRefresh" type="button">Λήψη τρέχουσας θέσης GPS</button>
+  <div class="sos-actions">
+    <button id="sosSendEmail" type="button" disabled>Αποστολή email</button>
+    <a id="sosSms" aria-disabled="true">Άνοιγμα SMS</a>
+    <button id="sosCopy" type="button" disabled>Αντιγραφή θέσης</button>
+    <a href="tel:112" class="sos-call">Κλήση 112</a>
+  </div>
+  <p id="sosStatus" role="status"></p>
+  <p id="sosEmailAvailability">Έλεγχος υπηρεσίας email…</p>
+  <small>Στο SMS πατάτε εσείς «Αποστολή». Αν δεν συμπληρωθεί το κείμενο, χρησιμοποιήστε «Αντιγραφή θέσης».</small>
+</dialog>
+<style>
+.sos-button{position:relative;flex:none;width:64px;height:44px;min-height:44px;border:2px solid #7c1010;border-radius:2px;align-self:center;display:grid;place-items:center;padding:0!important;background:#bb2424;color:white;font:900 16px Arial;box-shadow:0 3px 12px #0005;touch-action:none;user-select:none;cursor:pointer}
+@media(max-width:760px){#sosButton{width:100%!important;height:56px!important;min-height:56px!important;font-size:13px!important}}
+.sos-button.holding{background:#781414;outline:6px solid #bb242455}
+#sosDialog{width:min(400px,calc(100vw - 32px));max-height:calc(100dvh - 40px);overflow:auto;border:2px solid #bb2424;border-radius:12px;background:#f4efe1;color:#20221d;padding:18px;box-sizing:border-box;font:14px/1.5 Inter,Arial,sans-serif}
+#sosDialog::backdrop{background:#0007}header{display:flex;align-items:center;justify-content:space-between;gap:12px}h2{margin:0;font-size:20px}header button{font-size:24px;padding:3px 12px}label{display:block;margin:8px 0}input{display:block;width:100%;box-sizing:border-box;padding:9px;border:1px solid #858779;border-radius:5px;background:white;color:#20221d;font:inherit}button,.sos-actions a{padding:10px;border:1px solid #858779;border-radius:5px;background:white;color:#20221d;font:600 13px Inter,Arial,sans-serif;cursor:pointer;text-align:center;text-decoration:none}small{display:block;font-size:11px;color:#53564b;margin-top:6px}.sos-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.sos-actions .sos-call{background:#bb2424;color:white;border-color:#bb2424}button:disabled,a[aria-disabled="true"]{opacity:.5;cursor:not-allowed}#sosPosition{font-weight:600}#sosStatus{font-weight:600}#sosRefresh{width:100%}
+</style>
+<script>
+const dialog=document.getElementById('sosDialog') as HTMLDialogElement;
+const trigger=document.getElementById('sosButton') as HTMLButtonElement;
+const field=(id:string)=>document.getElementById(id) as HTMLInputElement;
+const status=document.getElementById('sosStatus')!;
+const positionLabel=document.getElementById('sosPosition')!;
+const emailButton=document.getElementById('sosSendEmail') as HTMLButtonElement;
+const copyButton=document.getElementById('sosCopy') as HTMLButtonElement;
+const sms=document.getElementById('sosSms') as HTMLAnchorElement;
+let emailConfigured=false;
+fetch('/api/sos').then(r=>r.json()).then(result=>{emailConfigured=result.configured===true;document.getElementById('sosEmailAvailability')!.textContent=emailConfigured?'':'Η αυτόματη αποστολή email δεν έχει ακόμη ενεργοποιηθεί. Χρησιμοποιήστε SMS, αντιγραφή θέσης ή κλήση 112.';sync();}).catch(()=>{document.getElementById('sosEmailAvailability')!.textContent='Η υπηρεσία email δεν είναι διαθέσιμη.';});
+let position:GeolocationPosition|null=null;
+let requestId=0;
+let hold:ReturnType<typeof setTimeout>|null=null;
+let confirmed=false;
+try{const saved=JSON.parse(localStorage.getItem('pt-sos-contact')||'{}');for(const [id,key] of [['sosName','name'],['sosEmail','email'],['sosPhone','phone']]) if(typeof saved[key]==='string')field(id).value=saved[key];}catch{}
+const mapLink=()=>position?`https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`:'';
+const message=()=>position?`SOS — Χρειάζομαι βοήθεια.\n${field('sosName').value.trim()||'Πεζοπόρος'}\nΘέση: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}\n${mapLink()}\nΣτίγμα: ${new Date(position.timestamp).toLocaleString('el-GR')}\nΑκρίβεια GPS: ±${Math.round(position.coords.accuracy)} μ.\n${(window as any).__panachaikoNavigationPlan?.name||''}`:'';
+const sync=()=>{emailButton.disabled=!position||!emailConfigured;copyButton.disabled=!position;const phone=field('sosPhone').value.trim();const enabled=!!position&&/^\+?[0-9 ()-]{6,25}$/.test(phone);sms.setAttribute('aria-disabled',String(!enabled));if(enabled){const separator=/iPad|iPhone|iPod/.test(navigator.userAgent)?'&':'?';sms.href=`sms:${phone.replace(/[^+\d]/g,'')}${separator}body=${encodeURIComponent(message())}`;}else sms.removeAttribute('href');};
+const locate=()=>{const id=++requestId;status.textContent='';positionLabel.textContent='Αναζήτηση νέας θέσης GPS…';if(!navigator.geolocation){positionLabel.textContent='Το GPS δεν υποστηρίζεται σε αυτόν τον browser.';return;}navigator.geolocation.getCurrentPosition(p=>{if(id!==requestId)return;position=p;positionLabel.textContent=`${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)} · ±${Math.round(p.coords.accuracy)} μ. · ${new Date(p.timestamp).toLocaleTimeString('el-GR')}`;sync();},()=>{if(id!==requestId)return;positionLabel.textContent=position?`Δεν βρέθηκε νέο στίγμα. Τελευταία θέση: ${new Date(position.timestamp).toLocaleString('el-GR')} · ±${Math.round(position.coords.accuracy)} μ.`:'Δεν βρέθηκε θέση. Επιτρέψτε την πρόσβαση GPS και δοκιμάστε ξανά. Μπορείτε να καλέσετε το 112.';sync();},{enableHighAccuracy:true,maximumAge:0,timeout:15000});};
+const open=()=>{if(!dialog.open)dialog.showModal();locate();};
+const cancelHold=()=>{if(hold!==null)clearTimeout(hold);hold=null;trigger.classList.remove('holding');};
+const startHold=()=>{cancelHold();confirmed=false;trigger.classList.add('holding');hold=setTimeout(()=>{confirmed=true;cancelHold();open();},3000);};
+trigger.addEventListener('pointerdown',e=>{if(e.button!==0)return;trigger.setPointerCapture(e.pointerId);startHold();});
+for(const event of ['pointerup','pointercancel','lostpointercapture','blur'])trigger.addEventListener(event,cancelHold);
+trigger.addEventListener('keydown',e=>{if((e.key===' '||e.key==='Enter')&&!e.repeat){e.preventDefault();startHold();}});
+trigger.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();cancelHold();}});
+trigger.addEventListener('click',()=>{if(!confirmed){if(!dialog.open)dialog.showModal();status.textContent='Κρατήστε το SOS πατημένο 3 δευτερόλεπτα ή πατήστε «Λήψη τρέχουσας θέσης GPS». Δεν στάλθηκε μήνυμα.';}});
+document.getElementById('sosClose')!.addEventListener('click',()=>dialog.close());
+document.getElementById('sosRefresh')!.addEventListener('click',locate);
+document.getElementById('sosSettings')!.addEventListener('submit',e=>{e.preventDefault();try{localStorage.setItem('pt-sos-contact',JSON.stringify({name:field('sosName').value.trim(),email:field('sosEmail').value.trim(),phone:field('sosPhone').value.trim()}));status.textContent='Η επαφή αποθηκεύτηκε σε αυτήν τη συσκευή.';}catch{status.textContent='Δεν επιτρέπεται αποθήκευση στον browser. Η επαφή ισχύει μόνο όσο είναι ανοιχτή η σελίδα.';}sync();});
+field('sosPhone').addEventListener('input',sync);
+field('sosName').addEventListener('input',sync);
+copyButton.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(message());status.textContent='Η θέση αντιγράφηκε.';}catch{status.textContent=message();}});
+sms.addEventListener('click',e=>{sync();if(sms.getAttribute('aria-disabled')==='true'){e.preventDefault();status.textContent='Συμπληρώστε κινητό επαφής και λάβετε θέση GPS.';}else status.textContent='Ανοίγουν τα μηνύματα. Πατήστε «Αποστολή» εκεί — δεν έχει επιβεβαιωθεί αποστολή από την ιστοσελίδα.';});
+emailButton.addEventListener('click',async()=>{if(!position)return;const email=field('sosEmail').value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){status.textContent='Συμπληρώστε έγκυρο email επαφής.';return;}emailButton.disabled=true;status.textContent='Αποστολή email…';try{const response=await fetch('/api/sos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,name:field('sosName').value.trim(),latitude:position.coords.latitude,longitude:position.coords.longitude,accuracy:position.coords.accuracy,timestamp:position.timestamp,trail:(window as any).__panachaikoNavigationPlan?.name||''}),signal:AbortSignal.timeout(15000)});const result=await response.json();if(!response.ok)throw new Error(result.message||'Η αποστολή απέτυχε.');status.textContent='Το email έγινε δεκτό από την υπηρεσία αποστολής. Δεν έχει επιβεβαιωθεί παραλαβή από την επαφή σας.';}catch(error){status.textContent=`${error instanceof Error?error.message:'Η αποστολή απέτυχε.'} Χρησιμοποιήστε SMS ή κλήση 112.`;}finally{sync();}});
+</script>

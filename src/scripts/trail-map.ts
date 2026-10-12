@@ -199,7 +199,9 @@ if (app) {
       }, 0);
       return control;
   };
-  document.querySelector('.topbar-actions')?.appendChild(createBasemapControl());
+  const toolbar = document.querySelector('.topbar-actions');
+  const sosButton = document.getElementById('sosButton');
+  toolbar?.insertBefore(createBasemapControl(), sosButton?.parentElement === toolbar ? sosButton : null);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
 

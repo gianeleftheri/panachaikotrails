@@ -62,7 +62,10 @@ const start = () => {
     routePanel.classList.add('open');
     lat.value = point[0].toFixed(6); lng.value = point[1].toFixed(6);
     if (marker) marker.remove();
-    marker = L.marker(point).addTo(map);
+    marker = L.marker(point, {
+      title: 'Επιλεγμένος προορισμός',
+      icon: L.divIcon({className:'destination-selected-marker',html:'<span aria-hidden="true">Π</span>',iconSize:[30,30],iconAnchor:[15,15]})
+    }).addTo(map);
     status.hidden = true; status.textContent = '';
     clearPlan(); calc.disabled = false;
   });
@@ -105,6 +108,7 @@ const start = () => {
     setKind('recreation'); recreationSelect.value = String(index); chooseRecreation();
   });
   document.addEventListener('panachaiko:navigation-start', () => {
+    if (marker) { marker.remove(); marker = null; }
     stop(); notice.hidden = true;
     panel.querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLSelectElement>('input,button,select').forEach(input => { input.disabled = true; });
   });

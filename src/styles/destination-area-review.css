@@ -10,3 +10,5 @@
 .destination-boundary-notice{position:fixed;z-index:1500;bottom:100px;left:50%;transform:translateX(-50%);width:min(440px,calc(100vw - 32px));padding:16px 48px 16px 16px;background:var(--map-paper);color:var(--map-ink);border:2px solid var(--map-ink);box-shadow:4px 4px 0 var(--map-ink);font:13px/1.5 var(--sans)}
 .destination-boundary-notice[hidden]{display:none}.destination-boundary-notice button{position:absolute;right:4px;top:4px;width:40px;height:40px;background:transparent;border:0;font-size:26px;cursor:pointer;color:inherit}
 .area-review-body label input[readonly]{width:140px;height:36px;border:1px solid var(--map-ink);background:var(--map-paper);color:var(--map-ink);padding:6px;font:12px var(--sans)}
+
+.destination-selected-marker{display:grid;place-items:center;background:#b7430e;color:#fff;border:2px solid #fff;border-radius:50%;box-sizing:border-box;box-shadow:0 2px 6px #0005;font:700 15px var(--sans)}

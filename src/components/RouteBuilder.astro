@@ -12,22 +12,23 @@ import { trailIcon } from '../lib/trail-icons';
 
   <div class="rb-step">
     <div class="rb-step-label"><span class="rb-step-num">2</span>Προορισμός</div>
-    <div id="destinationAreaReview" class="rb-map-destination">
-      <div class="area-review-actions"><button type="button" id="areaReviewFit">Όρια 12 χλμ.</button><button type="button" id="areaReviewPick" aria-pressed="false">Επιλογή στον χάρτη</button></div>
-      <div class="rb-coordinates"><label>Γεωγραφικό πλάτος<input class="rb-select" id="destinationLat" readonly /></label><label>Γεωγραφικό μήκος<input class="rb-select" id="destinationLng" readonly /></label></div>
+    <div id="destinationAreaReview" class="rb-map-destination" data-kind="trail">
+      <label class="rb-destination-choice"><input type="radio" name="rbDestinationKind" value="trail" checked />Μονοπάτι</label>
+      <select class="rb-select" id="rbTrailSelect"><option value="">— Διάλεξε μονοπάτι —</option></select>
+      <div class="rb-help" id="rbTrailHelp">GPS → καταχωρημένη αρχή → τέλος μονοπατιού.</div>
+      <label class="rb-destination-choice"><input type="radio" name="rbDestinationKind" value="recreation" />Σημείο αναψυχής</label>
+      <select class="rb-select" id="rbRecreationSelect" disabled><option value="">— Διάλεξε σημείο αναψυχής —</option></select>
+      <label class="rb-destination-choice"><input type="radio" name="rbDestinationKind" value="custom" />Δικό μου σημείο ενδιαφέροντος</label>
+      <div class="area-review-actions"><button type="button" id="areaReviewFit" disabled>Όρια 12 χλμ.</button><button type="button" id="areaReviewPick" aria-pressed="false" disabled>Επιλογή στον χάρτη</button></div>
+      <div class="rb-coordinates"><label>Γεωγραφικό πλάτος<input class="rb-select" id="destinationLat" readonly disabled /></label><label>Γεωγραφικό μήκος<input class="rb-select" id="destinationLng" readonly disabled /></label></div>
     </div>
-    <div class="rb-help">Ή επιλέξτε καταχωρημένο μονοπάτι:</div>
-    <select class="rb-select" id="rbTrailSelect">
-      <option value="">— Διάλεξε μονοπάτι —</option>
-    </select>
-    <div class="rb-help">Η πλοήγηση θα σε πάει πρώτα στην καταχωρημένη αρχή του μονοπατιού και μετά θα συνεχίσει έως το τέλος του.</div>
   </div>
 
   <div class="rb-step">
     <div class="rb-step-label"><span class="rb-step-num">3</span>Τρόπος προσέγγισης</div>
     <input type="hidden" name="rbMode" value="ors" />
-    <div class="rb-option-title"><span set:html={trailIcon('mountain')} /><b>Έδαφος</b></div>
-    <div class="rb-help">Πεζοπορική πορεία στο διαθέσιμο δίκτυο δρόμων και μονοπατιών, από το GPS έως τον προορισμό σας.</div>
+    <div class="rb-option-title"><span set:html={trailIcon('mountain')} /><b id="rbApproachLabel">Διαδρομή μονοπατιού</b></div>
+    <div class="rb-help" id="rbApproachHelp">Προσέγγιση από GPS και συνέχεια πάνω στο επιλεγμένο μονοπάτι.</div>
   </div>
 
   <button class="rb-calc-btn" id="rbCalcBtn" type="button" disabled>Υπολογισμός διαδρομής</button>
@@ -36,6 +37,7 @@ import { trailIcon } from '../lib/trail-icons';
 
 <style>
   .route-builder-panel{z-index:1200!important;pointer-events:auto!important}
+  .rb-destination-choice{display:flex;align-items:center;gap:8px;margin:14px 0 8px;font-weight:700;font-size:12px}.rb-destination-choice input{accent-color:var(--rust);width:18px;height:18px}.rb-select:disabled,.area-review-actions button:disabled{opacity:.45;cursor:not-allowed}
   .rb-coordinates{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.rb-coordinates label{font-size:11px}.rb-coordinates input{margin-top:4px;width:100%;box-sizing:border-box}
   .rb-mode-grid{display:grid;gap:7px}
   .rb-mode-option{position:relative;display:block;cursor:pointer}

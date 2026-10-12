@@ -513,10 +513,11 @@
 
     const trailSelect = document.getElementById('rbTrailSelect') as HTMLSelectElement | null;
     const result = document.getElementById('rbResultStatus');
-    const code = trailSelect?.value ?? '';
+    const destinationKind = (document.querySelector<HTMLInputElement>('input[name="rbDestinationKind"]:checked')?.value ?? 'trail');
+    const code = destinationKind === 'trail' ? trailSelect?.value ?? '' : '';
     const lat = (document.getElementById('destinationLat') as HTMLInputElement | null)?.value;
     const lng = (document.getElementById('destinationLng') as HTMLInputElement | null)?.value;
-    if (lat && lng) {
+    if (destinationKind !== 'trail' && lat && lng) {
       document.dispatchEvent(new CustomEvent('panachaiko:destination-route-request', {detail:{point:[Number(lat),Number(lng)]}}));
       return;
     }

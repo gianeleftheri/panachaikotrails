@@ -132,7 +132,9 @@ if (shell && trailPanel && recreationPanel && drawer) {
     const mapRect = map.getContainer().getBoundingClientRect();
     const rect = shell.getBoundingClientRect();
     // Desktop docked panels reserve width in the map; bottom sheets reserve height through padding.
-    const bottom = isBottomSheet() && !shell.hidden ? Math.max(16, mapRect.bottom - rect.top + 16) : 20;
+    const bottom = isBottomSheet() && !shell.hidden
+      ? Math.min(Math.max(16, mapRect.bottom - rect.top + 16), Math.max(16, mapRect.height - 184))
+      : 20;
     const right = shell.classList.contains('is-floating') && !shell.hidden ? Math.max(20, mapRect.right - rect.left + 16) : 20;
     if (category === 'trails' && selectedCode) {
       const trail = runtime.__panachaikoTrails?.[selectedCode];
@@ -147,7 +149,21 @@ if (shell && trailPanel && recreationPanel && drawer) {
       map.setView(center, zoom, { animate: false });
     }
   };
-  const deferFocus = () => window.requestAnimationFrame(() => window.requestAnimationFrame(focusSelection));
+  let focusTimer: ReturnType<typeof setTimeout> | null = null;
+  const deferFocus = () => {
+    if (focusTimer !== null) window.clearTimeout(focusTimer);
+    window.requestAnimationFrame(() => window.requestAnimationFrame(focusSelection));
+    // The mobile sheet slides for 240ms and changes height for 200ms.
+    // Its early bounding rect includes the animation transform, so refit after settling.
+    focusTimer = window.setTimeout(() => {
+      focusTimer = null;
+      if (!shell.hidden && view === 'detail') focusSelection();
+    }, 280);
+  };
+  document.getElementById('map')?.addEventListener('pointerdown', () => {
+    if (focusTimer !== null) window.clearTimeout(focusTimer);
+    focusTimer = null;
+  });
 
   const onTrail = (event: Event) => {
     selectedCode = (event as CustomEvent<{ code: string }>).detail.code;

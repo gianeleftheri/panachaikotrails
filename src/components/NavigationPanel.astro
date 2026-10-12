@@ -86,6 +86,7 @@
 
 <script>
   import L from 'leaflet';
+  import { assessRoutePosition, routeLineDistance, OFF_ROUTE_ALERT_INTERVAL_MS } from '../lib/navigation-accuracy';
 
   type RoutePoint = [number, number];
   type NavigationPlan = {
@@ -239,7 +240,7 @@
 
   const alertOffRoute = (distance: number) => {
     const now = Date.now();
-    if (!soundEnabled || now - lastAlertAt < 18000) return;
+    if (!soundEnabled || now - lastAlertAt < OFF_ROUTE_ALERT_INTERVAL_MS) return;
     lastAlertAt = now;
     beep(true);
     if ('vibrate' in navigator) navigator.vibrate?.([250, 120, 250]);
@@ -412,12 +413,12 @@
   const updatePosition = (position: GeolocationPosition) => {
     if (!plan || !plan.points.length) return;
     const current: RoutePoint = [position.coords.latitude, position.coords.longitude];
-    const threshold = 5;
+    const reliableGps = Number.isFinite(position.coords.accuracy) && position.coords.accuracy >= 0 && position.coords.accuracy <= 50;
     const entryThreshold = Math.max(30, Math.min(75, Math.max(position.coords.accuracy * 1.35, 30)));
     const approachNearest = nearestIndex(approachPoints, current);
     const trailNearest = nearestIndex(trailPoints, current);
     const trailStartDistance = trailPoints.length ? haversine(current, trailPoints[0]) : Number.POSITIVE_INFINITY;
-    if (!trailStarted && trailStartDistance <= entryThreshold) trailStarted = true;
+    if (reliableGps && !trailStarted && trailStartDistance <= entryThreshold) trailStarted = true;
 
     const approachRemaining = trailStarted ? 0 : approachNearest.distance + (approachRemainingFromIndex[approachNearest.index] ?? 0);
     const trailRemaining = trailStarted ? trailNearest.distance + (trailRemainingFromIndex[trailNearest.index] ?? 0) : plan.trailDistanceM;
@@ -427,16 +428,17 @@
     const total = Math.max(plan.totalDistanceM, 1);
     const progress = Math.max(0, Math.min(1, 1 - remaining / total));
     const etaSeconds = Math.max(0, plan.estimatedSeconds * (remaining / total));
-    const arrived = trailStarted && trailRemaining <= Math.max(25, Math.min(60, position.coords.accuracy));
-    const rawOffRoute = !arrived && activeNearest.distance > threshold;
-    offRouteStreak = rawOffRoute ? offRouteStreak + 1 : 0;
-    const offRoute = offRouteStreak >= 2;
+    const arrived = reliableGps && trailStarted && trailRemaining <= Math.max(25, Math.min(60, position.coords.accuracy));
+    const routeDistance = routeLineDistance(activePoints, current);
+    const assessment = assessRoutePosition(routeDistance, position.coords.accuracy, offRouteStreak, arrived);
+    offRouteStreak = assessment.streak;
+    const offRoute = assessment.offRoute;
 
     hud?.classList.toggle('off-route', offRoute);
     hud?.classList.toggle('arrived', arrived);
     if (remainingEl) remainingEl.textContent = formatDistance(Math.max(0, remaining));
     if (etaEl) etaEl.textContent = arrived ? '0′' : formatTime(etaSeconds);
-    if (offRouteEl) offRouteEl.textContent = arrived ? 'Τέλος' : activeNearest.distance < 20 ? 'Εντός' : formatDistance(activeNearest.distance);
+    if (offRouteEl) offRouteEl.textContent = !assessment.reliable ? 'GPS αβέβαιο' : arrived ? 'Τέλος' : routeDistance <= assessment.threshold ? 'Εντός' : formatDistance(routeDistance);
     if (progressEl) progressEl.style.width = `${Math.round(progress * 100)}%`;
     if (progressTextEl) progressTextEl.textContent = `${Math.round(progress * 100)}% διαδρομής`;
     if (accuracyEl) accuracyEl.textContent = `GPS ±${Math.round(position.coords.accuracy)} μ`;
@@ -453,10 +455,11 @@
 
     const target = activePoints[activeNearest.index] ?? plan.points.at(-1)!;
     if (guidance) {
-      if (arrived) guidance.textContent = plan.kind === 'point' ? '✓ Έφτασες στον προορισμό σου.' : plan.kind === 'shelter'
+      if (!assessment.reliable) guidance.textContent = `Χαμηλή ακρίβεια GPS (±${Math.round(position.coords.accuracy)} μ.). Περιμένω καλύτερο στίγμα· οι ειδοποιήσεις εκτός πορείας έχουν παύσει.`;
+      else if (arrived) guidance.textContent = plan.kind === 'point' ? '✓ Έφτασες στον προορισμό σου.' : plan.kind === 'shelter'
         ? `✓ Έφτασες στο ${plan.destinationLabel ?? 'καταφύγιο'}.`
         : `✓ Έφτασες στο τέλος Τ του ${plan.code}. Η πεζοπορία ολοκληρώθηκε.`;
-      else if (offRoute) guidance.textContent = `${bearingArrow(current, target)} ΕΚΤΟΣ ΠΟΡΕΙΑΣ · ${formatDistance(activeNearest.distance)} μέχρι το κοντινότερο σημείο. Γύρισε προς το βέλος.`;
+      else if (offRoute) guidance.textContent = `${bearingArrow(current, target)} ΕΚΤΟΣ ΠΟΡΕΙΑΣ · ${formatDistance(routeDistance)} μέχρι το κοντινότερο σημείο. Γύρισε προς το βέλος.`;
       else if (plan.kind === 'point') guidance.textContent = 'Ακολούθησε τη μπλε πορεία μέχρι τον προορισμό σου.';
       else if (plan.kind === 'shelter' && !trailStarted) guidance.textContent = `🥾 Στάδιο 1/2 · Πήγαινε στην επίσημη αφετηρία Α του ${plan.code} ακολουθώντας τη μπλε πορεία.`;
       else if (plan.kind === 'shelter') guidance.textContent = `🌲 Στάδιο 2/2 · Συνέχισε πάνω στο ${plan.code} μέχρι το ${plan.destinationLabel ?? 'καταφύγιο'}.`;
@@ -464,8 +467,8 @@
       else guidance.textContent = `🌲 Στάδιο 2/2 · Αφετηρία Α ολοκληρώθηκε. Συνέχισε πάνω στο ${plan.code} μέχρι το τέλος Τ.`;
     }
 
-    if (offRoute) alertOffRoute(activeNearest.distance);
-    if (plan.kind !== 'point' && trailStarted && !lastTrailEntryAlert) {
+    if (offRoute) alertOffRoute(routeDistance);
+    if (assessment.reliable && plan.kind !== 'point' && trailStarted && !lastTrailEntryAlert) {
       lastTrailEntryAlert = true;
       beep(false);
       speak(plan.kind === 'shelter'

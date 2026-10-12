@@ -1,22 +1,13 @@
-<aside class="destination-area-review" id="destinationAreaReview" aria-label="Σύγκριση ορίων προορισμών">
-  <details id="areaReviewDetails" open>
-    <summary>Όρια προορισμών <span>PREVIEW</span></summary>
+<aside class="destination-area-review" id="destinationAreaReview" aria-label="Προορισμός στον χάρτη">
+  <details id="areaReviewDetails">
+    <summary>Προορισμός στον χάρτη <span>12 χλμ.</span></summary>
     <div class="area-review-body">
-      <p>Σύγκριση περιοχών πριν οριστικοποιήσουμε το όριο. Η αφετηρία παραμένει ελεύθερη.</p>
-      <fieldset><legend>Εμφάνιση στον χάρτη</legend>
-        <label><input type="checkbox" data-review-layer="12" /><i class="area-key key-12"></i>Κύκλος 12 χλμ.</label>
-        <label><input type="checkbox" data-review-layer="15" checked /><i class="area-key key-15"></i>Κύκλος 15 χλμ.</label>
-        <label><input type="checkbox" data-review-layer="18" /><i class="area-key key-18"></i>Κύκλος 18 χλμ.</label>
-        <label><input type="checkbox" data-review-layer="network" checked /><i class="area-key key-network"></i>Περίγραμμα δικτύου + 1 χλμ.</label>
-      </fieldset>
-      <p class="area-review-note">Το περίγραμμα προκύπτει από τα μονοπάτια και τους χώρους αναψυχής. Δεν είναι επίσημο όριο του βουνού ή της Natura. Οι κύκλοι περιλαμβάνουν και θάλασσα· δεν έχουν περικοπεί στη στεριά.</p>
-      <div class="area-review-actions"><button type="button" id="areaReviewFit">Δείτε τα όρια</button><button type="button" id="areaReviewPick" aria-pressed="false">Έλεγχος σημείου</button></div>
-      <p id="areaReviewPoint" role="status">Επιλέξτε «Έλεγχος σημείου» και πατήστε στον χάρτη.</p>
-      <div class="area-review-table"><table><caption>Κάλυψη καταχωρημένων δεδομένων</caption><thead><tr><th>Περιοχή</th><th>Μονοπάτια*</th><th>Αναψυχή</th></tr></thead><tbody id="areaReviewCoverage"></tbody></table></div>
-      <p class="area-review-note">* Όλα τα σημεία της χάραξης πρέπει να περιλαμβάνονται. Η σύγκριση αυτή δεν περιορίζει την πορεία ή την αφετηρία.</p>
-      <div id="areaReviewLandmarks"></div>
-      <p class="area-review-note" id="areaReviewSource">Φόρτωση δεδομένων…</p>
-      <a href="https://e-patras.gr/el/qrcode-panahaiko" target="_blank" rel="noopener">Χάρτες και πληροφορίες Δήμου Πατρέων ↗</a>
+      <p>Επιλέξτε σημείο μέσα στον κύκλο για διαδρομή από τη θέση σας (GPS).</p>
+      <div class="area-review-actions"><button type="button" id="areaReviewFit">Δείτε τα όρια</button><button type="button" id="areaReviewPick" aria-pressed="false">Επιλογή σημείου</button></div>
+      <label>Γεωγραφικό πλάτος <input id="destinationLat" readonly /></label>
+      <label>Γεωγραφικό μήκος <input id="destinationLng" readonly /></label>
+      <p id="destinationRouteStatus" role="status" hidden></p>
     </div>
   </details>
 </aside>
+<div id="destinationBoundaryNotice" class="destination-boundary-notice" role="status" hidden><span></span><button type="button" aria-label="Κλείσιμο μηνύματος">×</button></div>

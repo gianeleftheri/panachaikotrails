@@ -1,5 +1,6 @@
 <script>
   import L from 'leaflet';
+  import { REVIEW_CENTER, distanceKm, validPoint } from '../lib/destination-area-review';
   import { getTrailNavigationConfig } from '../data/trail-navigation';
   import { decodeHtmlEntities } from '../scripts/text-normalize';
 
@@ -34,7 +35,7 @@
     code: string;
     name: string;
     mode: string;
-    kind?: 'trail' | 'shelter';
+    kind?: 'trail' | 'shelter' | 'point';
     destinationLabel?: string;
     points: RoutePoint[];
     approachPointCount: number;
@@ -463,6 +464,45 @@
     startButton.hidden = false;
     return startButton;
   };
+
+  let destinationRequest = 0;
+  document.addEventListener('panachaiko:destination-route-request', async event => {
+    const point = (event as CustomEvent<{ point: RoutePoint }>).detail?.point;
+    if (!point || !validPoint(point) || distanceKm(REVIEW_CENTER, point) > 12) return;
+    const request = ++destinationRequest;
+    const status = document.getElementById('destinationRouteStatus');
+    pendingPlan = null;
+    const oldButton = document.getElementById('destinationStartNav');
+    oldButton?.remove();
+    try {
+      cachedPosition = null;
+      const position = await getPosition();
+      if (request !== destinationRequest) return;
+      const start: RoutePoint = [position.coords.latitude, position.coords.longitude];
+      const approach = await routeApproach(start, point, 'ors');
+      if (request !== destinationRequest) return;
+      pendingPlan = { code: 'GPS', name: 'Επιλεγμένος προορισμός', mode:'ors', kind:'point', points: approach.points,
+        approachPointCount: approach.points.length, totalDistanceM: approach.distanceM,
+        approachDistanceM: approach.distanceM, trailDistanceM:0, estimatedSeconds:approach.seconds };
+      runtime.__panachaikoNavigationPlan = pendingPlan;
+      drawPlan(approach.points, []);
+      document.dispatchEvent(new CustomEvent('panachaiko:route-preview', {detail:pendingPlan}));
+      if (status) { status.hidden = false; status.textContent = `${formatDistance(approach.distanceM)} · περίπου ${formatTime(approach.seconds)}`; }
+      const details = document.getElementById('areaReviewDetails') as HTMLDetailsElement | null;
+      if (details) details.open = true;
+      const button = document.createElement('button');
+      button.id = 'destinationStartNav'; button.type = 'button'; button.className = 'rb-calc-btn';
+      button.textContent = 'Κλείδωμα & έναρξη πλοήγησης';
+      const plan = pendingPlan;
+      button.addEventListener('click', () => document.dispatchEvent(new CustomEvent('panachaiko:navigation-start',{detail:plan})));
+      status?.after(button);
+    } catch (error) {
+      if (request !== destinationRequest) return;
+      if (status) { status.hidden = false; status.textContent = error instanceof Error ? error.message : 'Δεν ήταν δυνατός ο υπολογισμός. Ελέγξτε την πρόσβαση GPS και δοκιμάστε ξανά.'; }
+      const details = document.getElementById('areaReviewDetails') as HTMLDetailsElement | null;
+      if (details) details.open = true;
+    }
+  });
 
   document.addEventListener('click', async event => {
     const target = event.target as HTMLElement | null;

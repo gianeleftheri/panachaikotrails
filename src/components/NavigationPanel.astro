@@ -66,7 +66,7 @@
     code: string;
     name: string;
     mode: string;
-    kind?: 'trail' | 'shelter';
+    kind?: 'trail' | 'shelter' | 'point';
     destinationLabel?: string;
     points: RoutePoint[];
     approachPointCount: number;
@@ -272,6 +272,10 @@
     const end = detail.points.at(-1)!;
     const splitIndex = Math.max(0, Math.min(detail.points.length - 1, detail.approachPointCount - 1));
     const start = detail.points[splitIndex];
+    if (detail.kind === 'point') {
+      L.marker(end,{icon:waypointIcon('Π',false),interactive:false}).bindTooltip('Προορισμός',{direction:'top'}).addTo(group);
+      return;
+    }
     L.marker(start,{icon:waypointIcon('Α',true),interactive:false}).bindTooltip('Αφετηρία μονοπατιού',{direction:'top'}).addTo(group);
     if (detail.kind === 'shelter') {
       L.marker(end,{icon:waypointIcon('Κ',false),interactive:false}).bindTooltip(detail.destinationLabel ?? 'Καταφύγιο',{direction:'top'}).addTo(group);
@@ -282,6 +286,8 @@
 
   const enterFocusedMap = (detail: NavigationPlan) => {
     closeNonNavigationUi();
+    const destinationDetails = document.getElementById('areaReviewDetails') as HTMLDetailsElement | null;
+    if (destinationDetails) destinationDetails.open = false;
     lockOtherControls(true);
     addRouteWaypoints(detail);
     const map = runtime.__panachaikoMap;
@@ -382,10 +388,11 @@
 
     const target = activePoints[activeNearest.index] ?? plan.points.at(-1)!;
     if (guidance) {
-      if (arrived) guidance.textContent = plan.kind === 'shelter'
+      if (arrived) guidance.textContent = plan.kind === 'point' ? '✓ Έφτασες στον προορισμό σου.' : plan.kind === 'shelter'
         ? `✓ Έφτασες στο ${plan.destinationLabel ?? 'καταφύγιο'}.`
         : `✓ Έφτασες στο τέλος Τ του ${plan.code}. Η πεζοπορία ολοκληρώθηκε.`;
       else if (offRoute) guidance.textContent = `${bearingArrow(current, target)} ΕΚΤΟΣ ΠΟΡΕΙΑΣ · ${formatDistance(activeNearest.distance)} μέχρι το κοντινότερο σημείο. Γύρισε προς το βέλος.`;
+      else if (plan.kind === 'point') guidance.textContent = 'Ακολούθησε τη μπλε πορεία μέχρι τον προορισμό σου.';
       else if (plan.kind === 'shelter' && !trailStarted) guidance.textContent = `🥾 Στάδιο 1/2 · Πήγαινε στην επίσημη αφετηρία Α του ${plan.code} ακολουθώντας τη μπλε πορεία.`;
       else if (plan.kind === 'shelter') guidance.textContent = `🌲 Στάδιο 2/2 · Συνέχισε πάνω στο ${plan.code} μέχρι το ${plan.destinationLabel ?? 'καταφύγιο'}.`;
       else if (!trailStarted) guidance.textContent = `🥾 Στάδιο 1/2 · Πήγαινε στην επίσημη αφετηρία Α του ${plan.code} ακολουθώντας τη μπλε πορεία.`;
@@ -393,7 +400,7 @@
     }
 
     if (offRoute) alertOffRoute(activeNearest.distance);
-    if (trailStarted && !lastTrailEntryAlert) {
+    if (plan.kind !== 'point' && trailStarted && !lastTrailEntryAlert) {
       lastTrailEntryAlert = true;
       beep(false);
       speak(plan.kind === 'shelter'
@@ -403,7 +410,7 @@
     if (arrived && soundEnabled && lastAlertAt !== -1) {
       lastAlertAt = -1;
       beep(false);
-      speak(plan.kind === 'shelter'
+      speak(plan.kind === 'point' ? 'Έφτασες στον προορισμό σου.' : plan.kind === 'shelter'
         ? `Έφτασες στο ${plan.destinationLabel ?? 'καταφύγιο'}.`
         : `Έφτασες στο τέλος του μονοπατιού ${plan.code}.`);
     }
@@ -459,7 +466,8 @@
     lastTrailEntryAlert = false;
     lastPosition = null;
     if (title) title.textContent = plan.kind === 'shelter' ? plan.name : `${plan.code} — ${plan.name}`;
-    if (approachTitleEl) approachTitleEl.textContent = '1 · GPS → Αφετηρία Α';
+    if (approachTitleEl) approachTitleEl.textContent = plan.kind === 'point' ? 'GPS → Προορισμός' : '1 · GPS → Αφετηρία Α';
+    if (trailTitleEl?.parentElement) trailTitleEl.parentElement.hidden = plan.kind === 'point';
     if (trailTitleEl) trailTitleEl.textContent = plan.kind === 'shelter' ? '2 · Αφετηρία Α → Καταφύγιο' : '2 · Αφετηρία Α → Τέλος Τ';
     if (remainingEl) remainingEl.textContent = formatDistance(plan.totalDistanceM);
     if (etaEl) etaEl.textContent = formatTime(plan.estimatedSeconds);
@@ -470,7 +478,7 @@
     if (progressEl) progressEl.style.width = '0%';
     if (progressTextEl) progressTextEl.textContent = '0% διαδρομής';
     updateLegUi(plan.approachDistanceM, plan.trailDistanceM, false);
-    if (guidance) guidance.textContent = plan.kind === 'shelter'
+    if (guidance) guidance.textContent = plan.kind === 'point' ? 'Η διαδρομή κλειδώθηκε. Ακολούθησε τη μπλε πορεία μέχρι τον προορισμό σου.' : plan.kind === 'shelter'
       ? `🔒 Η διαδρομή κλειδώθηκε. Στάδιο 1/2: GPS → επίσημη αφετηρία Α του ${plan.code}. Μετά ακολουθείς το μονοπάτι μέχρι το ${plan.destinationLabel ?? 'καταφύγιο'}.`
       : '🔒 Η διαδρομή κλειδώθηκε. Στάδιο 1/2: GPS → επίσημη αφετηρία Α. Μετά αρχίζει το μονοπάτι Α → Τ.';
     enterFocusedMap(detail);

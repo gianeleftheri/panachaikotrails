@@ -5,10 +5,11 @@ const start = () => {
   const map = runtime.__panachaikoMap;
   if (!map) { window.setTimeout(start, 60); return; }
   const panel = document.getElementById('destinationAreaReview')!;
-  const details = document.getElementById('areaReviewDetails') as HTMLDetailsElement;
+  const routePanel = document.getElementById('routeBuilderPanel')!;
+  const trailSelect = document.getElementById('rbTrailSelect') as HTMLSelectElement;
   const pick = document.getElementById('areaReviewPick') as HTMLButtonElement;
   const notice = document.getElementById('destinationBoundaryNotice')!;
-  const status = document.getElementById('destinationRouteStatus')!;
+  const status = document.getElementById('rbResultStatus')!;
   const lat = document.getElementById('destinationLat') as HTMLInputElement;
   const lng = document.getElementById('destinationLng') as HTMLInputElement;
   L.DomEvent.disableClickPropagation(panel);
@@ -24,7 +25,7 @@ const start = () => {
     selecting = !selecting;
     pick.setAttribute('aria-pressed',String(selecting));
     map.getContainer().style.cursor = selecting ? 'crosshair' : '';
-    if (selecting && window.innerWidth <= 760) details.open = false;
+    if (selecting && window.innerWidth <= 760) routePanel.classList.remove('open');
   });
   map.on('click', (event: L.LeafletMouseEvent) => {
     notice.hidden = true;
@@ -37,11 +38,18 @@ const start = () => {
       return;
     }
     stop();
+    trailSelect.value = '';
+    routePanel.classList.add('open');
     lat.value = point[0].toFixed(6); lng.value = point[1].toFixed(6);
     if (marker) marker.remove();
     marker = L.marker(point).addTo(map);
     status.hidden = true; status.textContent = '';
     document.dispatchEvent(new CustomEvent('panachaiko:destination-route-request',{detail:{point}}));
+  });
+  trailSelect.addEventListener('change', () => {
+    stop(); lat.value = ''; lng.value = '';
+    if (marker) { marker.remove(); marker = null; }
+    document.dispatchEvent(new CustomEvent('panachaiko:destination-clear'));
   });
   document.addEventListener('keydown', event => { if (event.key === 'Escape') { stop(); notice.hidden = true; } });
 };

@@ -11,7 +11,12 @@ import { trailIcon } from '../lib/trail-icons';
   </div>
 
   <div class="rb-step">
-    <div class="rb-step-label"><span class="rb-step-num">2</span>Μονοπάτι προορισμού</div>
+    <div class="rb-step-label"><span class="rb-step-num">2</span>Προορισμός</div>
+    <div id="destinationAreaReview" class="rb-map-destination">
+      <div class="area-review-actions"><button type="button" id="areaReviewFit">Όρια 12 χλμ.</button><button type="button" id="areaReviewPick" aria-pressed="false">Επιλογή στον χάρτη</button></div>
+      <div class="rb-coordinates"><label>Γεωγραφικό πλάτος<input class="rb-select" id="destinationLat" readonly /></label><label>Γεωγραφικό μήκος<input class="rb-select" id="destinationLng" readonly /></label></div>
+    </div>
+    <div class="rb-help">Ή επιλέξτε καταχωρημένο μονοπάτι:</div>
     <select class="rb-select" id="rbTrailSelect">
       <option value="">— Διάλεξε μονοπάτι —</option>
     </select>
@@ -20,28 +25,18 @@ import { trailIcon } from '../lib/trail-icons';
 
   <div class="rb-step">
     <div class="rb-step-label"><span class="rb-step-num">3</span>Τρόπος προσέγγισης</div>
-    <div class="rb-mode-grid" role="radiogroup" aria-label="Τρόπος προσέγγισης στην αρχή του μονοπατιού">
-      <label class="rb-mode-option">
-        <input type="radio" name="rbMode" value="ors" checked />
-        <span><b class="rb-option-title"><span set:html={trailIcon('hike')} />Πραγματική πεζοπορική</b><small>Δρόμοι και πεζοπορικό δίκτυο μέχρι την αρχή</small></span>
-      </label>
-      <label class="rb-mode-option">
-        <input type="radio" name="rbMode" value="straight" />
-        <span><b class="rb-option-title"><span set:html={trailIcon('compass')} />Ευθεία προσέγγιση</b><small>Μόνο για γρήγορη εκτίμηση απόστασης</small></span>
-      </label>
-      <label class="rb-mode-option">
-        <input type="radio" name="rbMode" value="ai" />
-        <span><b class="rb-option-title"><span set:html={trailIcon('mountain')} />Έδαφος</b><small>Πειραματική άμεση προσέγγιση — όχι πλήρες terrain routing ακόμα</small></span>
-      </label>
-    </div>
+    <input type="hidden" name="rbMode" value="ors" />
+    <div class="rb-option-title"><span set:html={trailIcon('mountain')} /><b>Έδαφος</b></div>
+    <div class="rb-help">Πεζοπορική πορεία στο διαθέσιμο δίκτυο δρόμων και μονοπατιών, από το GPS έως τον προορισμό σας.</div>
   </div>
 
-  <button class="rb-calc-btn" id="rbCalcBtn" type="button" disabled>Υπολογισμός ολόκληρης διαδρομής</button>
+  <button class="rb-calc-btn" id="rbCalcBtn" type="button" disabled>Υπολογισμός διαδρομής</button>
   <div class="rb-status" id="rbResultStatus"></div>
 </section>
 
 <style>
   .route-builder-panel{z-index:1200!important;pointer-events:auto!important}
+  .rb-coordinates{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.rb-coordinates label{font-size:11px}.rb-coordinates input{margin-top:4px;width:100%;box-sizing:border-box}
   .rb-mode-grid{display:grid;gap:7px}
   .rb-mode-option{position:relative;display:block;cursor:pointer}
   .rb-mode-option input{position:absolute;opacity:0;pointer-events:none}

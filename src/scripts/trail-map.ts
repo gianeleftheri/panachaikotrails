@@ -750,7 +750,7 @@ if (app) {
   };
 
   const syncRouteCalculationState = () => {
-    if (rbCalcBtn) rbCalcBtn.disabled = !(userPosition && rbTrailSelect?.value);
+    if (rbCalcBtn) rbCalcBtn.disabled = !((userPosition && rbTrailSelect?.value) || (document.getElementById('destinationLat') as HTMLInputElement | null)?.value);
   };
 
   const maybeCalculateAfterGps = () => {
@@ -889,7 +889,7 @@ if (app) {
     const open = routeBuilderPanel?.classList.toggle('open') ?? false;
     routeBuilderToggle.classList.toggle('open', open);
     routeBuilderToggle.setAttribute('aria-expanded', String(open));
-    if (open && selectedCode && rbTrailSelect) rbTrailSelect.value = selectedCode;
+    if (open && selectedCode && rbTrailSelect && !(document.getElementById('destinationLat') as HTMLInputElement | null)?.value) rbTrailSelect.value = selectedCode;
     syncRouteCalculationState();
     setTrailPanelOpen(false);
     closeDrawer();

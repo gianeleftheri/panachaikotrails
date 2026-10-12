@@ -405,11 +405,6 @@
   };
 
   const routeApproach = async (start: RoutePoint, end: RoutePoint, mode: string) => {
-    if (mode !== 'ors') {
-      const points = [start, end];
-      const distanceM = haversine(start, end);
-      return { points, distanceM, seconds: distanceM / 1.2 };
-    }
     const response = await fetch('https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/route', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -470,10 +465,12 @@
     const point = (event as CustomEvent<{ point: RoutePoint }>).detail?.point;
     if (!point || !validPoint(point) || distanceKm(REVIEW_CENTER, point) > 12) return;
     const request = ++destinationRequest;
-    const status = document.getElementById('destinationRouteStatus');
+    const status = document.getElementById('rbResultStatus');
+    const calc = document.getElementById('rbCalcBtn') as HTMLButtonElement | null;
+    if (calc) { calc.disabled = true; calc.textContent = 'Υπολογισμός διαδρομής…'; }
     pendingPlan = null;
-    const oldButton = document.getElementById('destinationStartNav');
-    oldButton?.remove();
+    const oldButton = document.getElementById('rbStartNavBtn');
+    if (oldButton) oldButton.hidden = true;
     try {
       cachedPosition = null;
       const position = await getPosition();
@@ -488,20 +485,22 @@
       drawPlan(approach.points, []);
       document.dispatchEvent(new CustomEvent('panachaiko:route-preview', {detail:pendingPlan}));
       if (status) { status.hidden = false; status.textContent = `${formatDistance(approach.distanceM)} · περίπου ${formatTime(approach.seconds)}`; }
-      const details = document.getElementById('areaReviewDetails') as HTMLDetailsElement | null;
-      if (details) details.open = true;
-      const button = document.createElement('button');
-      button.id = 'destinationStartNav'; button.type = 'button'; button.className = 'rb-calc-btn';
-      button.textContent = 'Κλείδωμα & έναρξη πλοήγησης';
-      const plan = pendingPlan;
-      button.addEventListener('click', () => document.dispatchEvent(new CustomEvent('panachaiko:navigation-start',{detail:plan})));
-      status?.after(button);
+      document.getElementById('routeBuilderPanel')?.classList.add('open');
+      ensureStartButton();
     } catch (error) {
       if (request !== destinationRequest) return;
       if (status) { status.hidden = false; status.textContent = error instanceof Error ? error.message : 'Δεν ήταν δυνατός ο υπολογισμός. Ελέγξτε την πρόσβαση GPS και δοκιμάστε ξανά.'; }
-      const details = document.getElementById('areaReviewDetails') as HTMLDetailsElement | null;
-      if (details) details.open = true;
+      document.getElementById('routeBuilderPanel')?.classList.add('open');
+    } finally {
+      if (request === destinationRequest && calc) { calc.disabled = false; calc.textContent = 'Υπολογισμός διαδρομής'; }
     }
+  });
+  document.addEventListener('panachaiko:destination-clear', () => {
+    destinationRequest++; pendingPlan = null;
+    const button = document.getElementById('rbStartNavBtn');
+    if (button) button.hidden = true;
+    const status = document.getElementById('rbResultStatus');
+    if (status) { status.hidden = false; status.textContent = ''; }
   });
 
   document.addEventListener('click', async event => {
@@ -515,7 +514,14 @@
     const trailSelect = document.getElementById('rbTrailSelect') as HTMLSelectElement | null;
     const result = document.getElementById('rbResultStatus');
     const code = trailSelect?.value ?? '';
+    const lat = (document.getElementById('destinationLat') as HTMLInputElement | null)?.value;
+    const lng = (document.getElementById('destinationLng') as HTMLInputElement | null)?.value;
+    if (lat && lng) {
+      document.dispatchEvent(new CustomEvent('panachaiko:destination-route-request', {detail:{point:[Number(lat),Number(lng)]}}));
+      return;
+    }
     if (!code) return;
+    destinationRequest++;
     const mode = document.querySelector<HTMLInputElement>('input[name="rbMode"]:checked')?.value ?? 'ors';
     const startButton = document.getElementById('rbStartNavBtn') as HTMLButtonElement | null;
     if (startButton) startButton.hidden = true;
@@ -581,7 +587,7 @@
       }
     } finally {
       calcButton.disabled = false;
-      calcButton.textContent = 'Υπολογισμός ολόκληρης διαδρομής';
+      calcButton.textContent = 'Υπολογισμός διαδρομής';
     }
   }, { capture: true });
 

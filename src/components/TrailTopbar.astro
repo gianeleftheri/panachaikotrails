@@ -9,7 +9,6 @@ const { allowTrailSubmissions = false } = Astro.props;
       <h1>Παναχαϊκό</h1>
       <p>Δίκτυο μονοπατιών · δεδομένα ΟΦΥΠΕΚΑ</p>
     </div>
-    <SosPanel />
   </div>
 
   <div class:list={['topbar-actions', { 'has-submit-cta': allowTrailSubmissions }]}>
@@ -40,12 +39,16 @@ const { allowTrailSubmissions = false } = Astro.props;
       <span class="tool-label">Ακολούθησε τη θέση μου</span>
     </button>
     <button class="shelter-btn" id="shelterBtn" type="button" title="Βρες το κοντινότερο καταφύγιο" aria-label="Βρες το κοντινότερο καταφύγιο"><span class="map-tool-icon icon-shelter"><Fragment set:html={trailIcon('shelter')} /></span><span class="tool-label">Καταφύγιο</span></button>
+    <SosPanel />
   </div>
 </header>
 
 <style>
   :global(.topbar .brand){display:flex;align-items:center;gap:14px}
   :global(.topbar){z-index:4200!important}
-  :global(body:has(#view3dOverlay.open) .topbar-actions){visibility:hidden}
+  :global(body:has(#view3dOverlay.open) .topbar-actions > :not(#sosButton):not(#sosDialog)){display:none!important}
+  :global(body.navigation-active .topbar-actions),:global(body:has(#view3dOverlay.open) .topbar-actions){opacity:1!important;pointer-events:none!important;background:transparent!important;border:0!important;box-shadow:none!important;display:flex!important;justify-content:flex-end}
+  :global(#sosButton){pointer-events:auto!important}
+  @media(max-width:760px){:global(.map-home-theme .topbar-actions){grid-template-columns:repeat(8,minmax(0,1fr))!important}:global(.map-home-theme .topbar-actions.has-submit-cta){grid-template-columns:repeat(9,minmax(0,1fr))!important}}
   @media(max-width:760px){:global(.topbar .brand){gap:10px}}
 </style>

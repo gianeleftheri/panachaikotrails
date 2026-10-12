@@ -49,11 +49,12 @@ const enablePanelDrag = (panel: HTMLElement) => {
     panelHeight = rect.height;
     pointerId = event.pointerId;
 
-    panel.style.left = `${rect.left - parentRect.left}px`;
-    panel.style.top = `${rect.top - parentRect.top}px`;
-    panel.style.right = 'auto';
-    panel.style.bottom = 'auto';
-    panel.style.transform = 'none';
+    // Theme defaults use !important; dragged coordinates must override them.
+    panel.style.setProperty('left', `${rect.left - parentRect.left}px`, 'important');
+    panel.style.setProperty('top', `${rect.top - parentRect.top}px`, 'important');
+    panel.style.setProperty('right', 'auto', 'important');
+    panel.style.setProperty('bottom', 'auto', 'important');
+    panel.style.setProperty('transform', 'none', 'important');
     panel.classList.add('panel-dragging');
 
     handle.setPointerCapture(event.pointerId);
@@ -72,13 +73,14 @@ const enablePanelDrag = (panel: HTMLElement) => {
     const viewportLeft = Math.min(maxLeft, Math.max(minLeft, startLeft + event.clientX - startX));
     const viewportTop = Math.min(maxTop, Math.max(minTop, startTop + event.clientY - startY));
 
-    panel.style.left = `${viewportLeft - parentRect.left}px`;
-    panel.style.top = `${viewportTop - parentRect.top}px`;
+    panel.style.setProperty('left', `${viewportLeft - parentRect.left}px`, 'important');
+    panel.style.setProperty('top', `${viewportTop - parentRect.top}px`, 'important');
     event.preventDefault();
   });
 
   handle.addEventListener('pointerup', finishDrag);
   handle.addEventListener('pointercancel', finishDrag);
+  handle.addEventListener('lostpointercapture', finishDrag);
 
   const observer = new MutationObserver(() => {
     const isOpen = panel.classList.contains('open');

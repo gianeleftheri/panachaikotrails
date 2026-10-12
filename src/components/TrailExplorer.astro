@@ -4,6 +4,7 @@ import RecreationPanel from './RecreationPanel.astro';
 import RouteBuilder from './RouteBuilder.astro';
 import TrailDrawer from './TrailDrawer.astro';
 import MapExplorerPanel from './MapExplorerPanel.astro';
+import DestinationAreaReview from './DestinationAreaReview.astro';
 import MapOverlays from './MapOverlays.astro';
 import NavigationPanel from './NavigationPanel.astro';
 import Navigation3dHudLayer from './Navigation3dHudLayer.astro';
@@ -35,6 +36,7 @@ const { allowTrailSubmissions = false } = Astro.props;
 
   <TrailDrawer />
   <MapExplorerPanel />
+  <DestinationAreaReview />
   <MapOverlays />
   <NavigationPanel />
   <Navigation3dHudLayer />
@@ -52,4 +54,5 @@ const { allowTrailSubmissions = false } = Astro.props;
   import '../scripts/recreation-spots';
   import '../scripts/movable-panels';
   import '../scripts/map-explorer';
+  import '../scripts/destination-area-review';
 </script>

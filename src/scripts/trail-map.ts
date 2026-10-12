@@ -750,14 +750,13 @@ if (app) {
   };
 
   const syncRouteCalculationState = () => {
-    if (rbCalcBtn) rbCalcBtn.disabled = !(userPosition && rbTrailSelect?.value);
+    const kind = document.querySelector<HTMLInputElement>('input[name="rbDestinationKind"]:checked')?.value ?? 'trail';
+    if (rbCalcBtn) rbCalcBtn.disabled = kind === 'trail' ? !(userPosition && rbTrailSelect?.value) : !(document.getElementById('destinationLat') as HTMLInputElement | null)?.value;
   };
 
   const maybeCalculateAfterGps = () => {
     syncRouteCalculationState();
-    if (!autoCalculateAfterGps || !userPosition || !rbTrailSelect?.value || rbCalcBtn?.disabled) return;
     autoCalculateAfterGps = false;
-    window.setTimeout(() => rbCalcBtn?.click(), 0);
   };
 
   const selectTrail = (code: string, fly = true, pulse = true) => {
@@ -889,7 +888,7 @@ if (app) {
     const open = routeBuilderPanel?.classList.toggle('open') ?? false;
     routeBuilderToggle.classList.toggle('open', open);
     routeBuilderToggle.setAttribute('aria-expanded', String(open));
-    if (open && selectedCode && rbTrailSelect) rbTrailSelect.value = selectedCode;
+    if (open && selectedCode && rbTrailSelect && document.querySelector<HTMLInputElement>('input[name="rbDestinationKind"]:checked')?.value === 'trail') rbTrailSelect.value = selectedCode;
     syncRouteCalculationState();
     setTrailPanelOpen(false);
     closeDrawer();

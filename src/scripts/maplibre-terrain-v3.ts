@@ -30,7 +30,7 @@ import './maplibre-worker';
     };
   };
   type TrailModule = { key: string; trail: TrailShape };
-  type Runtime = typeof window & { __panachaikoNavigationPlan?: NavigationPlan; __panachaikoTrails?: Record<string, TrailShape> };
+  type Runtime = typeof window & { __panachaikoNavigationPlan?: NavigationPlan; __panachaikoNavigationFollow?: boolean; __panachaikoTrails?: Record<string, TrailShape> };
 
   const modules = import.meta.glob<TrailModule>('../data/trails/*.json', { eager: true, import: 'default' });
   const bundledTrails = Object.values(modules).reduce<Record<string, TrailShape>>((acc, item) => {
@@ -286,11 +286,19 @@ import './maplibre-worker';
       el.className='terrain-v3-gps';
       gpsMarker=new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(point).addTo(map);
     } else gpsMarker.setLngLat(point);
-    if (follow && navigationActive && runtime.__panachaikoNavigationPlan && overlay?.classList.contains('open')) {
+    if (follow && runtime.__panachaikoNavigationFollow !== false && navigationActive && runtime.__panachaikoNavigationPlan && overlay?.classList.contains('open')) {
       const heading=Number.isFinite(position.coords.heading ?? NaN) ? Number(position.coords.heading) : map.getBearing();
       map.easeTo({center:point,zoom:Math.max(map.getZoom(),16),pitch:72,bearing:heading,duration:550});
     }
   };
+
+  document.addEventListener('panachaiko:navigation-follow', event => {
+    const follow = (event as CustomEvent<{ follow: boolean }>).detail.follow;
+    runtime.__panachaikoNavigationFollow = follow;
+    // Cancel an in-flight camera animation immediately when switching to free map.
+    if (!follow) map?.stop();
+    else if (lastGps) updateGps(lastGps, true);
+  });
 
   const startGps = () => {
     if (gpsWatch !== null || !navigator.geolocation) return;

@@ -1,6 +1,6 @@
 const desktopQuery = window.matchMedia('(min-width: 761px)');
 
-const panelIds = ['trailPanel', 'recreationPanel'];
+const panelIds = ['trailPanel', 'recreationPanel', 'routeBuilderPanel', 'navigationHud'];
 
 const clearDraggedPosition = (panel: HTMLElement) => {
   panel.classList.remove('panel-dragging');
@@ -12,7 +12,7 @@ const clearDraggedPosition = (panel: HTMLElement) => {
 };
 
 const enablePanelDrag = (panel: HTMLElement) => {
-  const handle = panel.querySelector<HTMLElement>('.left-panel-head');
+  const handle = panel.querySelector<HTMLElement>('.left-panel-head, .rb-title, .nav-hud-head');
   if (!handle) return;
 
   let wasOpen = panel.classList.contains('open');

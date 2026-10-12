@@ -1,5 +1,6 @@
 <script>
   import L from 'leaflet';
+  import { REVIEW_CENTER, distanceKm, validPoint } from '../lib/destination-area-review';
   import { getTrailNavigationConfig } from '../data/trail-navigation';
   import { decodeHtmlEntities } from '../scripts/text-normalize';
 
@@ -34,7 +35,7 @@
     code: string;
     name: string;
     mode: string;
-    kind?: 'trail' | 'shelter';
+    kind?: 'trail' | 'shelter' | 'point';
     destinationLabel?: string;
     points: RoutePoint[];
     approachPointCount: number;
@@ -404,11 +405,6 @@
   };
 
   const routeApproach = async (start: RoutePoint, end: RoutePoint, mode: string) => {
-    if (mode !== 'ors') {
-      const points = [start, end];
-      const distanceM = haversine(start, end);
-      return { points, distanceM, seconds: distanceM / 1.2 };
-    }
     const response = await fetch('https://cms.panachaikotrails.gr/?rest_route=/panachaiko/v1/route', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -464,6 +460,51 @@
     return startButton;
   };
 
+  let destinationRequest = 0;
+  document.addEventListener('panachaiko:destination-route-request', async event => {
+    const point = (event as CustomEvent<{ point: RoutePoint }>).detail?.point;
+    if (!point || !validPoint(point) || distanceKm(REVIEW_CENTER, point) > 12) return;
+    const request = ++destinationRequest;
+    const status = document.getElementById('rbResultStatus');
+    const calc = document.getElementById('rbCalcBtn') as HTMLButtonElement | null;
+    if (calc) { calc.disabled = true; calc.textContent = 'Υπολογισμός διαδρομής…'; }
+    pendingPlan = null;
+    const oldButton = document.getElementById('rbStartNavBtn');
+    if (oldButton) oldButton.hidden = true;
+    try {
+      cachedPosition = null;
+      const position = await getPosition();
+      if (request !== destinationRequest) return;
+      const start: RoutePoint = [position.coords.latitude, position.coords.longitude];
+      const approach = await routeApproach(start, point, 'ors');
+      if (request !== destinationRequest) return;
+      pendingPlan = { code: 'GPS', name: 'Επιλεγμένος προορισμός', mode:'ors', kind:'point', points: approach.points,
+        approachPointCount: approach.points.length, totalDistanceM: approach.distanceM,
+        approachDistanceM: approach.distanceM, trailDistanceM:0, estimatedSeconds:approach.seconds };
+      runtime.__panachaikoNavigationPlan = pendingPlan;
+      drawPlan(approach.points, []);
+      document.dispatchEvent(new CustomEvent('panachaiko:route-preview', {detail:pendingPlan}));
+      if (status) { status.hidden = false; status.textContent = `${formatDistance(approach.distanceM)} · περίπου ${formatTime(approach.seconds)}`; }
+      document.getElementById('routeBuilderPanel')?.classList.add('open');
+      ensureStartButton();
+    } catch (error) {
+      if (request !== destinationRequest) return;
+      if (status) { status.hidden = false; status.textContent = error instanceof Error ? error.message : 'Δεν ήταν δυνατός ο υπολογισμός. Ελέγξτε την πρόσβαση GPS και δοκιμάστε ξανά.'; }
+      document.getElementById('routeBuilderPanel')?.classList.add('open');
+    } finally {
+      if (request === destinationRequest && calc) { calc.disabled = false; calc.textContent = 'Υπολογισμός διαδρομής'; }
+    }
+  });
+  document.addEventListener('panachaiko:destination-clear', () => {
+    destinationRequest++; pendingPlan = null;
+    const calc = document.getElementById('rbCalcBtn');
+    if (calc) calc.textContent = 'Υπολογισμός διαδρομής';
+    const button = document.getElementById('rbStartNavBtn');
+    if (button) button.hidden = true;
+    const status = document.getElementById('rbResultStatus');
+    if (status) { status.hidden = false; status.textContent = ''; }
+  });
+
   document.addEventListener('click', async event => {
     const target = event.target as HTMLElement | null;
     const calcButton = target?.closest<HTMLButtonElement>('#rbCalcBtn');
@@ -474,8 +515,16 @@
 
     const trailSelect = document.getElementById('rbTrailSelect') as HTMLSelectElement | null;
     const result = document.getElementById('rbResultStatus');
-    const code = trailSelect?.value ?? '';
+    const destinationKind = (document.querySelector<HTMLInputElement>('input[name="rbDestinationKind"]:checked')?.value ?? 'trail');
+    const code = destinationKind === 'trail' ? trailSelect?.value ?? '' : '';
+    const lat = (document.getElementById('destinationLat') as HTMLInputElement | null)?.value;
+    const lng = (document.getElementById('destinationLng') as HTMLInputElement | null)?.value;
+    if (destinationKind !== 'trail' && lat && lng) {
+      document.dispatchEvent(new CustomEvent('panachaiko:destination-route-request', {detail:{point:[Number(lat),Number(lng)]}}));
+      return;
+    }
     if (!code) return;
+    const request = ++destinationRequest;
     const mode = document.querySelector<HTMLInputElement>('input[name="rbMode"]:checked')?.value ?? 'ors';
     const startButton = document.getElementById('rbStartNavBtn') as HTMLButtonElement | null;
     if (startButton) startButton.hidden = true;
@@ -489,12 +538,15 @@
     try {
       const position = await getPosition();
       const start: RoutePoint = [position.coords.latitude, position.coords.longitude];
+      if (request !== destinationRequest) return;
       const trail = await loadTrail(code);
+      if (request !== destinationRequest) return;
       const mainRoute = buildMainTrailRoute(code, trail.segments!, trail.navigation);
       const trailPoints = mainRoute.points;
       if (trailPoints.length < 2 || !mainRoute.segments.length) throw new Error('Δεν βρέθηκε συνεχής κύρια πορεία μέσα στα τμήματα του μονοπατιού.');
 
       const approach = await routeApproach(start, trailPoints[0], mode);
+      if (request !== destinationRequest) return;
       const trailDistanceM = pathDistance(trailPoints);
       const fallbackAscent = Number(trail.gain_m ?? 0);
       const ascent = mainRoute.ascentM > 0 ? mainRoute.ascentM : fallbackAscent;
@@ -535,13 +587,15 @@
         result.className = 'rb-status ok';
       }
     } catch (error) {
+      if (request !== destinationRequest) return;
       if (result) {
         result.textContent = error instanceof Error ? error.message : 'Ο υπολογισμός απέτυχε.';
         result.className = 'rb-status warn';
       }
     } finally {
+      if (request !== destinationRequest) return;
       calcButton.disabled = false;
-      calcButton.textContent = 'Υπολογισμός ολόκληρης διαδρομής';
+      calcButton.textContent = 'Υπολογισμός διαδρομής';
     }
   }, { capture: true });
 

@@ -2,7 +2,7 @@
 import { trailIcon } from '../lib/trail-icons';
 ---
 <section class="route-builder-panel" id="routeBuilderPanel" aria-label="Σχεδιασμός πεζοπορικής διαδρομής">
-  <div class="rb-title">Διαδρομή</div>
+  <div class="rb-title" title="Σύρετε για μετακίνηση"><span>Διαδρομή</span><button id="rbCloseBtn" type="button" aria-label="Κλείσιμο παραθύρου διαδρομής" title="Κλείσιμο">×</button></div>
 
   <div class="rb-step">
     <div class="rb-step-label"><span class="rb-step-num">1</span>Αφετηρία</div>
@@ -11,37 +11,30 @@ import { trailIcon } from '../lib/trail-icons';
   </div>
 
   <div class="rb-step">
-    <div class="rb-step-label"><span class="rb-step-num">2</span>Μονοπάτι προορισμού</div>
-    <select class="rb-select" id="rbTrailSelect">
-      <option value="">— Διάλεξε μονοπάτι —</option>
-    </select>
-    <div class="rb-help">Η πλοήγηση θα σε πάει πρώτα στην καταχωρημένη αρχή του μονοπατιού και μετά θα συνεχίσει έως το τέλος του.</div>
-  </div>
-
-  <div class="rb-step">
-    <div class="rb-step-label"><span class="rb-step-num">3</span>Τρόπος προσέγγισης</div>
-    <div class="rb-mode-grid" role="radiogroup" aria-label="Τρόπος προσέγγισης στην αρχή του μονοπατιού">
-      <label class="rb-mode-option">
-        <input type="radio" name="rbMode" value="ors" checked />
-        <span><b class="rb-option-title"><span set:html={trailIcon('hike')} />Πραγματική πεζοπορική</b><small>Δρόμοι και πεζοπορικό δίκτυο μέχρι την αρχή</small></span>
-      </label>
-      <label class="rb-mode-option">
-        <input type="radio" name="rbMode" value="straight" />
-        <span><b class="rb-option-title"><span set:html={trailIcon('compass')} />Ευθεία προσέγγιση</b><small>Μόνο για γρήγορη εκτίμηση απόστασης</small></span>
-      </label>
-      <label class="rb-mode-option">
-        <input type="radio" name="rbMode" value="ai" />
-        <span><b class="rb-option-title"><span set:html={trailIcon('mountain')} />Έδαφος</b><small>Πειραματική άμεση προσέγγιση — όχι πλήρες terrain routing ακόμα</small></span>
-      </label>
+    <div class="rb-step-label"><span class="rb-step-num">2</span>Προορισμός</div>
+    <div id="destinationAreaReview" class="rb-map-destination" data-kind="trail">
+      <label class="rb-destination-choice"><input type="radio" name="rbDestinationKind" value="trail" checked />Μονοπάτι</label>
+      <select class="rb-select" id="rbTrailSelect"><option value="">— Διάλεξε μονοπάτι —</option></select>
+      <div class="rb-help" id="rbTrailHelp">GPS → καταχωρημένη αρχή → τέλος μονοπατιού.</div>
+      <label class="rb-destination-choice"><input type="radio" name="rbDestinationKind" value="recreation" />Σημείο αναψυχής</label>
+      <select class="rb-select" id="rbRecreationSelect" disabled><option value="">— Διάλεξε σημείο αναψυχής —</option></select>
+      <label class="rb-destination-choice"><input type="radio" name="rbDestinationKind" value="custom" />Δικό μου σημείο ενδιαφέροντος</label>
+      <div class="area-review-actions"><button type="button" id="areaReviewFit" disabled>Όρια 12 χλμ.</button><button type="button" id="areaReviewPick" aria-pressed="false" disabled>Επιλογή στον χάρτη</button></div>
+      <div class="rb-coordinates"><label>Γεωγραφικό πλάτος<input class="rb-select" id="destinationLat" readonly disabled /></label><label>Γεωγραφικό μήκος<input class="rb-select" id="destinationLng" readonly disabled /></label></div>
     </div>
   </div>
 
-  <button class="rb-calc-btn" id="rbCalcBtn" type="button" disabled>Υπολογισμός ολόκληρης διαδρομής</button>
+  <input type="hidden" name="rbMode" value="ors" />
+
+  <button class="rb-calc-btn" id="rbCalcBtn" type="button" disabled>Υπολογισμός διαδρομής</button>
   <div class="rb-status" id="rbResultStatus"></div>
 </section>
 
 <style>
+  .rb-title{display:flex;align-items:center;justify-content:space-between;gap:12px}.rb-title button{display:grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid var(--brass);background:transparent;color:inherit;font-size:26px;line-height:1;cursor:pointer}
   .route-builder-panel{z-index:1200!important;pointer-events:auto!important}
+  .rb-destination-choice{display:flex;align-items:center;gap:8px;margin:14px 0 8px;font-weight:700;font-size:12px}.rb-destination-choice input{accent-color:var(--rust);width:18px;height:18px}.rb-select:disabled,.area-review-actions button:disabled{opacity:.45;cursor:not-allowed}
+  .rb-coordinates{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.rb-coordinates label{font-size:11px}.rb-coordinates input{margin-top:4px;width:100%;box-sizing:border-box}
   .rb-mode-grid{display:grid;gap:7px}
   .rb-mode-option{position:relative;display:block;cursor:pointer}
   .rb-mode-option input{position:absolute;opacity:0;pointer-events:none}
@@ -63,6 +56,12 @@ import { trailIcon } from '../lib/trail-icons';
   const drawer = document.getElementById('trailDrawer');
   const drawerHandle = document.getElementById('trailDrawerHandle');
   const result = document.getElementById('rbResultStatus');
+  document.getElementById('rbCloseBtn')?.addEventListener('click', () => {
+    routePanel?.classList.remove('open');
+    routeToggle?.classList.remove('open');
+    routeToggle?.setAttribute('aria-expanded', 'false');
+    document.dispatchEvent(new CustomEvent('panachaiko:destination-pick-cancel'));
+  });
 
   routeToggle?.addEventListener('click', () => {
     window.setTimeout(() => {

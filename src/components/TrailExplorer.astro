@@ -1,4 +1,5 @@
 ---
+import SosPanel from './SosPanel.astro';
 import TrailTopbar from './TrailTopbar.astro';
 import RecreationPanel from './RecreationPanel.astro';
 import RouteBuilder from './RouteBuilder.astro';
@@ -39,6 +40,7 @@ const { allowTrailSubmissions = false } = Astro.props;
   <DestinationAreaReview />
   <MapOverlays />
   <NavigationPanel />
+  <SosPanel />
   <Navigation3dHudLayer />
   <RouteNavigationController />
   <MapLibreTerrainV3 />

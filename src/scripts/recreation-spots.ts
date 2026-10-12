@@ -152,7 +152,12 @@ const start = async () => {
   };
 
   let pendingPopup: (() => void) | null = null;
+  const selectInExplorer = (spot: RecreationSpot) => !document.dispatchEvent(new CustomEvent('panachaiko:recreation-selected', {
+    cancelable: true, detail: { spot, html: popupHtml(spot) }
+  }));
+
   const focusSpot = (marker: L.Marker, spot: RecreationSpot) => {
+    if (selectInExplorer(spot)) return;
     if (pendingPopup) map.off('moveend', pendingPopup);
     pendingPopup = null;
     map.stop();
@@ -179,6 +184,7 @@ const start = async () => {
     const marker = L.marker([spot.lat, spot.lng], { icon: iconFor(), keyboard:true })
       .bindPopup(popupHtml(spot), { maxWidth:320, className:'recreation-leaflet-popup' })
       .on('popupopen', () => {
+        if (selectInExplorer(spot)) { marker.closePopup(); return; }
         fitPopup(marker);
         // The image changes the popup height after it finishes downloading.
         marker.getPopup()?.getElement()?.querySelectorAll<HTMLImageElement>('img').forEach(image => {
@@ -199,6 +205,7 @@ const start = async () => {
     const row = document.createElement('button');
     row.type = 'button';
     row.className = 'recreation-row';
+    row.dataset.spotType = spot.type;
     row.innerHTML =
       '<span class="recreation-row-pin">' + trailIcon('rest') + '</span>' +
       '<span class="recreation-row-copy">' +

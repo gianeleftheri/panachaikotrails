@@ -323,6 +323,13 @@
   };
 
   const updateLegUi = (approachRemaining: number, trailRemaining: number, arrived: boolean) => {
+    if (plan?.kind === 'point') {
+      if (approachRemainingEl) approachRemainingEl.textContent = formatDistance(Math.max(0, approachRemaining));
+      approachLeg?.classList.toggle('active', !arrived);
+      approachLeg?.classList.toggle('done', arrived);
+      if (approachStateEl) approachStateEl.textContent = arrived ? '✓ Έφτασες στον προορισμό' : 'Μέχρι τον προορισμό σου';
+      return;
+    }
     if (plan?.kind === 'shelter') {
       if (approachRemainingEl) approachRemainingEl.textContent = formatDistance(Math.max(0, approachRemaining));
       if (trailRemainingEl) trailRemainingEl.textContent = formatDistance(Math.max(0, trailRemaining));

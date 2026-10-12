@@ -174,3 +174,9 @@ body.map-home-theme {
   .map-home-theme .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child) {font-size:8px!important;line-height:1.2!important;font-weight:600!important}
   .map-home-theme .map-tool-icon svg {width:22px!important;height:22px!important}
 }
+
+@media(min-width:761px){
+  .map-home-theme #routeBuilderPanel{left:22px!important;right:auto!important}
+  #routeBuilderPanel .rb-title{cursor:grab;touch-action:none;user-select:none}
+  #routeBuilderPanel.panel-dragging .rb-title{cursor:grabbing}
+}

@@ -2,7 +2,7 @@
 import { trailIcon } from '../lib/trail-icons';
 ---
 <section class="route-builder-panel" id="routeBuilderPanel" aria-label="Σχεδιασμός πεζοπορικής διαδρομής">
-  <div class="rb-title">Διαδρομή</div>
+  <div class="rb-title" title="Σύρετε για μετακίνηση"><span>Διαδρομή</span><button id="rbCloseBtn" type="button" aria-label="Κλείσιμο παραθύρου διαδρομής" title="Κλείσιμο">×</button></div>
 
   <div class="rb-step">
     <div class="rb-step-label"><span class="rb-step-num">1</span>Αφετηρία</div>
@@ -31,6 +31,7 @@ import { trailIcon } from '../lib/trail-icons';
 </section>
 
 <style>
+  .rb-title{display:flex;align-items:center;justify-content:space-between;gap:12px}.rb-title button{display:grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid var(--brass);background:transparent;color:inherit;font-size:26px;line-height:1;cursor:pointer}
   .route-builder-panel{z-index:1200!important;pointer-events:auto!important}
   .rb-destination-choice{display:flex;align-items:center;gap:8px;margin:14px 0 8px;font-weight:700;font-size:12px}.rb-destination-choice input{accent-color:var(--rust);width:18px;height:18px}.rb-select:disabled,.area-review-actions button:disabled{opacity:.45;cursor:not-allowed}
   .rb-coordinates{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.rb-coordinates label{font-size:11px}.rb-coordinates input{margin-top:4px;width:100%;box-sizing:border-box}
@@ -55,6 +56,12 @@ import { trailIcon } from '../lib/trail-icons';
   const drawer = document.getElementById('trailDrawer');
   const drawerHandle = document.getElementById('trailDrawerHandle');
   const result = document.getElementById('rbResultStatus');
+  document.getElementById('rbCloseBtn')?.addEventListener('click', () => {
+    routePanel?.classList.remove('open');
+    routeToggle?.classList.remove('open');
+    routeToggle?.setAttribute('aria-expanded', 'false');
+    document.dispatchEvent(new CustomEvent('panachaiko:destination-pick-cancel'));
+  });
 
   routeToggle?.addEventListener('click', () => {
     window.setTimeout(() => {

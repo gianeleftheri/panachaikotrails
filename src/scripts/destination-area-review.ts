@@ -119,6 +119,7 @@ const start = () => {
     if (kind === 'recreation') chooseRecreation();
     else if (kind === 'custom') { lat.value = previousLat; lng.value = previousLng; calc.disabled = !lat.value; }
   });
+  document.addEventListener('panachaiko:destination-pick-cancel', stop);
   document.addEventListener('keydown', event => { if (event.key === 'Escape') { stop(); notice.hidden = true; } });
 };
 if (document.getElementById('destinationAreaReview')) start();

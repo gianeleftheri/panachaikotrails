@@ -412,7 +412,7 @@
   const updatePosition = (position: GeolocationPosition) => {
     if (!plan || !plan.points.length) return;
     const current: RoutePoint = [position.coords.latitude, position.coords.longitude];
-    const threshold = Math.max(35, Math.min(90, Math.max(position.coords.accuracy * 1.5, 35)));
+    const threshold = 5;
     const entryThreshold = Math.max(30, Math.min(75, Math.max(position.coords.accuracy * 1.35, 30)));
     const approachNearest = nearestIndex(approachPoints, current);
     const trailNearest = nearestIndex(trailPoints, current);

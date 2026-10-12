@@ -1,0 +1,33 @@
+<button id="explorerReopen" class="explorer-reopen" type="button" hidden aria-controls="mapExplorerPanel" aria-expanded="false">Εξερεύνηση ‹</button>
+<aside id="mapExplorerPanel" class="map-explorer" data-view="list" data-category="trails" data-size="half" aria-label="Εξερεύνηση χάρτη" hidden>
+  <div class="explorer-grip" id="explorerGrip" aria-hidden="true"><span></span></div>
+  <header class="explorer-header" id="explorerHeader">
+    <div class="explorer-heading"><strong id="explorerTitle">Εξερεύνηση</strong><small id="explorerSubtitle">Μονοπάτια και αναψυχή</small></div>
+    <div class="explorer-actions">
+      <button id="explorerFloat" type="button" aria-label="Αποδέσμευση για μετακίνηση" title="Αποδέσμευση για μετακίνηση" aria-pressed="false">↗</button>
+      <button id="explorerCollapse" type="button" aria-label="Σύμπτυξη πλαισίου" title="Σύμπτυξη">−</button>
+      <button id="explorerClose" type="button" aria-label="Κλείσιμο πλαισίου" title="Κλείσιμο">×</button>
+    </div>
+  </header>
+  <nav class="explorer-categories" aria-label="Τι θέλετε να εξερευνήσετε;">
+    <button type="button" data-explorer-category="trails" aria-pressed="true">Μονοπάτια</button>
+    <button type="button" data-explorer-category="recreation" aria-pressed="false">Αναψυχή</button>
+  </nav>
+  <div class="explorer-list-tools">
+    <label class="explorer-search"><span class="sr-only">Αναζήτηση στη λίστα</span><input id="explorerSearch" type="search" placeholder="Αναζήτηση μονοπατιού…" autocomplete="off" /></label>
+    <details class="explorer-filters"><summary>Φίλτρα</summary><label><span>Εμφάνιση</span><select id="explorerFilter"><option value="all">Όλα τα μονοπάτια</option><option value="existing">Υφιστάμενα</option><option value="planned">Σχεδιαζόμενα</option></select></label></details>
+    <p id="explorerResults" role="status"></p>
+  </div>
+  <div class="explorer-detail-nav"><button id="explorerBack" type="button">‹ Πίσω στη λίστα</button><button id="explorerShowMap" type="button">Στον χάρτη</button></div>
+  <div class="explorer-content" id="explorerContent">
+    <div id="explorerLists"></div>
+    <div id="explorerTrailDetails"></div>
+    <div id="explorerRecreationDetails" hidden></div>
+    <p id="explorerEmpty" hidden>Δεν βρέθηκαν αποτελέσματα. Δοκιμάστε άλλη αναζήτηση ή φίλτρο.</p>
+  </div>
+  <footer class="explorer-size-controls" aria-label="Μέγεθος πλαισίου">
+    <button type="button" data-explorer-size="peek" aria-pressed="false">Μικρό</button>
+    <button type="button" data-explorer-size="half" aria-pressed="true">Μεσαίο</button>
+    <button type="button" data-explorer-size="full" aria-pressed="false">Πλήρες</button>
+  </footer>
+</aside>

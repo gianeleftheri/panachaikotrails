@@ -101,10 +101,100 @@ const start = async () => {
     popupAnchor: [0, -36]
   });
 
+
+  // Measure the visible map space instead of assuming panels stay on the left.
+  // Dragged/pinned panels and mobile toolbars can occupy any side of the map.
+  const popupSpace = () => {
+    const bounds = map.getContainer().getBoundingClientRect();
+    type Box = { left: number; top: number; right: number; bottom: number };
+    let spaces: Box[] = [{ left: 12, top: 12, right: bounds.width - 12, bottom: bounds.height - 12 }];
+    document.querySelectorAll<HTMLElement>(
+      '.topbar, .topbar-actions, .left-panel.open, .route-builder-panel.open, .trail-drawer.open, .shelter-panel.show, .preview-bar'
+    ).forEach(element => {
+      const style = window.getComputedStyle(element);
+      if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return;
+      const rect = element.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const obstacle: Box = {
+        left: rect.left - bounds.left - 10, top: rect.top - bounds.top - 10,
+        right: rect.right - bounds.left + 10, bottom: rect.bottom - bounds.top + 10
+      };
+      spaces = spaces.flatMap(space => {
+        if (obstacle.right <= space.left || obstacle.left >= space.right ||
+            obstacle.bottom <= space.top || obstacle.top >= space.bottom) return [space];
+        return [
+          { ...space, right: Math.min(space.right, obstacle.left) },
+          { ...space, left: Math.max(space.left, obstacle.right) },
+          { ...space, bottom: Math.min(space.bottom, obstacle.top) },
+          { ...space, top: Math.max(space.top, obstacle.bottom) }
+        ].filter(box => box.right > box.left && box.bottom > box.top);
+      });
+    });
+    const score = (box: Box) => {
+      const width = box.right - box.left, height = box.bottom - box.top;
+      // Prefer space wide enough for the photo card over a narrow side strip.
+      return (width >= 260 ? 1e7 : 0) + width * height;
+    };
+    spaces.sort((a, b) => score(b) - score(a));
+    return spaces[0] ?? { left: 12, top: 12, right: bounds.width - 12, bottom: bounds.height - 12 };
+  };
+
+  const fitPopup = (marker: L.Marker) => {
+    const popup = marker.getPopup();
+    if (!popup) return;
+    const space = popupSpace();
+    const size = map.getSize();
+    popup.options.autoPanPaddingTopLeft = L.point(space.left, space.top);
+    popup.options.autoPanPaddingBottomRight = L.point(size.x - space.right, size.y - space.bottom);
+    popup.options.maxHeight = Math.max(80, space.bottom - space.top - 70);
+    popup.options.maxWidth = Math.min(320, Math.max(220, space.right - space.left - 40));
+    popup.update();
+  };
+
+  let pendingPopup: (() => void) | null = null;
+  const selectInExplorer = (spot: RecreationSpot) => !document.dispatchEvent(new CustomEvent('panachaiko:recreation-selected', {
+    cancelable: true, detail: { spot, html: popupHtml(spot) }
+  }));
+
+  const focusSpot = (marker: L.Marker, spot: RecreationSpot) => {
+    if (selectInExplorer(spot)) return;
+    if (pendingPopup) map.off('moveend', pendingPopup);
+    pendingPopup = null;
+    map.stop();
+    closeRecreationPanelAfterSelection();
+    const space = popupSpace();
+    const size = map.getSize();
+    const zoom = 15;
+    const anchor = L.point((space.left + space.right) / 2, space.bottom - 24);
+    const center = map.unproject(
+      map.project([spot.lat, spot.lng], zoom).add(L.point(size.x / 2, size.y / 2).subtract(anchor)),
+      zoom
+    );
+    pendingPopup = () => {
+      pendingPopup = null;
+      marker.openPopup();
+      fitPopup(marker);
+    };
+    map.once('moveend', pendingPopup);
+    map.flyTo(center, zoom, { animate: true, duration: .7 });
+  };
+
   spots.forEach(spot => {
     const id = String(spot.id);
     const marker = L.marker([spot.lat, spot.lng], { icon: iconFor(), keyboard:true })
       .bindPopup(popupHtml(spot), { maxWidth:320, className:'recreation-leaflet-popup' })
+      .on('popupopen', () => {
+        if (selectInExplorer(spot)) { marker.closePopup(); return; }
+        fitPopup(marker);
+        // The image changes the popup height after it finishes downloading.
+        marker.getPopup()?.getElement()?.querySelectorAll<HTMLImageElement>('img').forEach(image => {
+          const refit = () => { if (marker.isPopupOpen()) fitPopup(marker); };
+          if (!image.complete) {
+            image.addEventListener('load', refit, { once: true });
+            image.addEventListener('error', refit, { once: true });
+          }
+        });
+      })
       .on('click', () => {
         rowById.forEach(row => row.classList.remove('active'));
         rowById.get(id)?.classList.add('active');
@@ -115,6 +205,7 @@ const start = async () => {
     const row = document.createElement('button');
     row.type = 'button';
     row.className = 'recreation-row';
+    row.dataset.spotType = spot.type;
     row.innerHTML =
       '<span class="recreation-row-pin">' + trailIcon('rest') + '</span>' +
       '<span class="recreation-row-copy">' +
@@ -124,9 +215,7 @@ const start = async () => {
     row.addEventListener('click', () => {
       rowById.forEach(item => item.classList.remove('active'));
       row.classList.add('active');
-      map.flyTo([spot.lat, spot.lng], 15, { animate:true, duration:.7 });
-      marker.openPopup();
-      closeRecreationPanelAfterSelection();
+      focusSpot(marker, spot);
     });
     list.appendChild(row);
     rowById.set(id, row);

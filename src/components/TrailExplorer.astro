@@ -3,6 +3,7 @@ import TrailTopbar from './TrailTopbar.astro';
 import RecreationPanel from './RecreationPanel.astro';
 import RouteBuilder from './RouteBuilder.astro';
 import TrailDrawer from './TrailDrawer.astro';
+import MapExplorerPanel from './MapExplorerPanel.astro';
 import MapOverlays from './MapOverlays.astro';
 import NavigationPanel from './NavigationPanel.astro';
 import Navigation3dHudLayer from './Navigation3dHudLayer.astro';
@@ -33,6 +34,7 @@ const { allowTrailSubmissions = false } = Astro.props;
   </aside>
 
   <TrailDrawer />
+  <MapExplorerPanel />
   <MapOverlays />
   <NavigationPanel />
   <Navigation3dHudLayer />
@@ -49,4 +51,5 @@ const { allowTrailSubmissions = false } = Astro.props;
   import '../scripts/trail-endpoints';
   import '../scripts/recreation-spots';
   import '../scripts/movable-panels';
+  import '../scripts/map-explorer';
 </script>

@@ -497,6 +497,8 @@
   });
   document.addEventListener('panachaiko:destination-clear', () => {
     destinationRequest++; pendingPlan = null;
+    const calc = document.getElementById('rbCalcBtn');
+    if (calc) calc.textContent = 'Υπολογισμός διαδρομής';
     const button = document.getElementById('rbStartNavBtn');
     if (button) button.hidden = true;
     const status = document.getElementById('rbResultStatus');
@@ -522,7 +524,7 @@
       return;
     }
     if (!code) return;
-    destinationRequest++;
+    const request = ++destinationRequest;
     const mode = document.querySelector<HTMLInputElement>('input[name="rbMode"]:checked')?.value ?? 'ors';
     const startButton = document.getElementById('rbStartNavBtn') as HTMLButtonElement | null;
     if (startButton) startButton.hidden = true;
@@ -536,12 +538,15 @@
     try {
       const position = await getPosition();
       const start: RoutePoint = [position.coords.latitude, position.coords.longitude];
+      if (request !== destinationRequest) return;
       const trail = await loadTrail(code);
+      if (request !== destinationRequest) return;
       const mainRoute = buildMainTrailRoute(code, trail.segments!, trail.navigation);
       const trailPoints = mainRoute.points;
       if (trailPoints.length < 2 || !mainRoute.segments.length) throw new Error('Δεν βρέθηκε συνεχής κύρια πορεία μέσα στα τμήματα του μονοπατιού.');
 
       const approach = await routeApproach(start, trailPoints[0], mode);
+      if (request !== destinationRequest) return;
       const trailDistanceM = pathDistance(trailPoints);
       const fallbackAscent = Number(trail.gain_m ?? 0);
       const ascent = mainRoute.ascentM > 0 ? mainRoute.ascentM : fallbackAscent;
@@ -582,11 +587,13 @@
         result.className = 'rb-status ok';
       }
     } catch (error) {
+      if (request !== destinationRequest) return;
       if (result) {
         result.textContent = error instanceof Error ? error.message : 'Ο υπολογισμός απέτυχε.';
         result.className = 'rb-status warn';
       }
     } finally {
+      if (request !== destinationRequest) return;
       calcButton.disabled = false;
       calcButton.textContent = 'Υπολογισμός διαδρομής';
     }

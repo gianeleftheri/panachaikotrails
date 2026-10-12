@@ -235,17 +235,29 @@ if (shell && trailPanel && recreationPanel && drawer) {
   grip.addEventListener('pointerdown', event => {
     if (!isBottomSheet() || event.button !== 0) return;
     swipe = { pointer: event.pointerId, y: event.clientY, height: shell.getBoundingClientRect().height }; grip.setPointerCapture(event.pointerId); event.preventDefault();
+    shell.classList.add('is-swiping');
+    shell.style.setProperty('--explorer-sheet-height', swipe.height + 'px');
+  });
+  grip.addEventListener('pointermove', event => {
+    if (!swipe || swipe.pointer !== event.pointerId) return;
+    const height = Math.max(160, Math.min(window.innerHeight - 150, swipe.height + swipe.y - event.clientY));
+    shell.style.setProperty('--explorer-sheet-height', height + 'px');
+    event.preventDefault();
   });
   grip.addEventListener('pointerup', event => {
     if (!swipe || swipe.pointer !== event.pointerId) return;
     const height = swipe.height + swipe.y - event.clientY; swipe = null;
+    shell.classList.remove('is-swiping');
+    shell.style.removeProperty('--explorer-sheet-height');
     const fullHeight = window.innerHeight - 150, halfHeight = Math.min(window.innerHeight * .48, 460);
     const choices: Array<[SheetSize, number]> = [['peek', 160], ['half', halfHeight], ['full', fullHeight]];
     choices.sort((a, b) => Math.abs(a[1] - height) - Math.abs(b[1] - height)); setSize(choices[0][0]); window.setTimeout(focusSelection, 220);
   });
-  grip.addEventListener('pointercancel', () => { swipe = null; });
+  const cancelSwipe = () => { swipe = null; shell.classList.remove('is-swiping'); shell.style.removeProperty('--explorer-sheet-height'); };
+  grip.addEventListener('pointercancel', cancelSwipe);
+  grip.addEventListener('lostpointercapture', cancelSwipe);
   desktop.addEventListener('change', () => {
-    shell.classList.remove('is-floating'); floatButton.setAttribute('aria-pressed', 'false'); finishDrag(); syncOpen();
+    shell.classList.remove('is-floating'); floatButton.setAttribute('aria-pressed', 'false'); finishDrag(); cancelSwipe(); syncOpen();
     if (!shell.hidden) deferFocus();
   });
   window.addEventListener('resize', () => { if (!shell.hidden && view === 'detail') deferFocus(); });

@@ -27,6 +27,7 @@
  .map-explorer{top:auto;right:8px;left:8px;bottom:calc(82px + env(safe-area-inset-bottom));width:auto;max-width:none;height:min(48dvh,460px);max-height:calc(100dvh - 150px);animation:explorer-rise .24s ease-out;transition:height .2s ease}
  @keyframes explorer-rise{from{transform:translateY(105%)}to{transform:translateY(0)}}
  .map-explorer[data-size="peek"]{height:160px}.map-explorer[data-size="full"]{height:calc(100dvh - 150px)}
+ .map-explorer.is-swiping{height:var(--explorer-sheet-height)!important;transition:none}
  .explorer-grip{display:flex;justify-content:center;padding:8px 0;flex:none;touch-action:none;cursor:ns-resize}.explorer-grip span{width:32px;height:3px;background:var(--map-ink);border-radius:2px}
  .explorer-header{padding:8px 10px}.explorer-heading strong{font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.explorer-heading small{font-size:10px}.explorer-actions button{width:36px;height:36px}.explorer-actions #explorerFloat{display:none}
  .explorer-size-controls{display:flex;border-top:1px solid var(--map-ink);border-bottom:0}.explorer-size-controls button{min-height:36px;font-size:11px}

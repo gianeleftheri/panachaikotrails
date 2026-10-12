@@ -106,6 +106,7 @@
     __panachaikoMap?: L.Map;
     __panachaikoFullRouteLayer?: L.LayerGroup;
     __panachaikoNavigationPlan?: NavigationPlan;
+    __panachaikoNavigationFollow?: boolean;
   };
 
   const runtime = window as Runtime;
@@ -280,6 +281,8 @@
   };
 
   const syncFollowUi = () => {
+    runtime.__panachaikoNavigationFollow = follow;
+    document.dispatchEvent(new CustomEvent('panachaiko:navigation-follow', { detail: { follow } }));
     if (!followBtn) return;
     followBtn.classList.toggle('active', follow);
     followBtn.setAttribute('aria-pressed', String(follow));

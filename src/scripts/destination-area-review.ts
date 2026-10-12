@@ -77,8 +77,6 @@ const start = () => {
     pick.disabled = kind !== 'custom';
     (document.getElementById('areaReviewFit') as HTMLButtonElement).disabled = kind !== 'custom';
     lat.disabled = lng.disabled = kind === 'trail';
-    document.getElementById('rbApproachLabel')!.textContent = kind === 'trail' ? 'Διαδρομή μονοπατιού' : 'Εδαφική διαδρομή';
-    document.getElementById('rbApproachHelp')!.textContent = kind === 'trail' ? 'GPS → αρχή → τέλος επιλεγμένου μονοπατιού.' : 'Πεζοπορική πορεία από GPS έως το επιλεγμένο σημείο, στο διαθέσιμο δίκτυο δρόμων και μονοπατιών.';
     document.getElementById('rbTrailHelp')!.hidden = kind !== 'trail';
     clearPlan();
     calc.disabled = kind === 'trail' ? !trailSelect.value : true;

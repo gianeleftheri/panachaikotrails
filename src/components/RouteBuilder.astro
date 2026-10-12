@@ -24,12 +24,7 @@ import { trailIcon } from '../lib/trail-icons';
     </div>
   </div>
 
-  <div class="rb-step">
-    <div class="rb-step-label"><span class="rb-step-num">3</span>Τρόπος προσέγγισης</div>
-    <input type="hidden" name="rbMode" value="ors" />
-    <div class="rb-option-title"><span set:html={trailIcon('mountain')} /><b id="rbApproachLabel">Διαδρομή μονοπατιού</b></div>
-    <div class="rb-help" id="rbApproachHelp">Προσέγγιση από GPS και συνέχεια πάνω στο επιλεγμένο μονοπάτι.</div>
-  </div>
+  <input type="hidden" name="rbMode" value="ors" />
 
   <button class="rb-calc-btn" id="rbCalcBtn" type="button" disabled>Υπολογισμός διαδρομής</button>
   <div class="rb-status" id="rbResultStatus"></div>

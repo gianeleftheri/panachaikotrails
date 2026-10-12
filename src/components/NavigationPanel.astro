@@ -9,6 +9,11 @@
       <button class="active" id="nav2dBtn" type="button">2D</button>
       <button id="nav3dBtn" type="button">3D</button>
     </div>
+    <div class="nav-panel-tools">
+      <button id="navDockBtn" type="button" aria-label="Μεταφορά δεξιά" title="Αλλαγή πλευράς">⇄</button>
+      <button id="navSizeBtn" type="button" aria-label="Περισσότερα στοιχεία" aria-expanded="false" title="Μεγέθυνση">＋</button>
+      <button id="navHideBtn" type="button" aria-label="Απόκρυψη κάρτας πλοήγησης" title="Απόκρυψη">×</button>
+    </div>
   </div>
 
   <div class="nav-guidance" id="navGuidance">Περιμένω νέο στίγμα GPS…</div>
@@ -42,6 +47,7 @@
     <button class="nav-finish" id="navFinishBtn" type="button">Τερματισμός</button>
   </div>
 </section>
+<button class="nav-reopen" id="navReopenBtn" type="button" hidden aria-label="Εμφάνιση ενεργής πλοήγησης">🥾 Διαδρομή <span>›</span></button>
 
 <style>
   .nav-hud{display:none;position:fixed;left:50%;bottom:22px;z-index:2200;transform:translateX(-50%);width:min(720px,calc(100vw - 28px));background:rgba(16,43,67,.96);border:1px solid var(--brass-solid);border-radius:12px;box-shadow:0 14px 46px rgba(0,0,0,.6);backdrop-filter:blur(16px);padding:12px 14px;color:var(--parchment)}
@@ -56,6 +62,26 @@
   :global(.nav-route-waypoint){display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:3px solid #fff;color:#fff;font:700 12px/1 Arial,sans-serif;box-shadow:0 3px 13px rgba(0,0,0,.65)}:global(.nav-route-start){background:#22c55e}:global(.nav-route-end){background:#ef4444}
   body.navigation-active .topbar-actions{opacity:.28;pointer-events:none}body.navigation-active #trailPanel,body.navigation-active #routeBuilderPanel,body.navigation-active #trailDrawer,body.navigation-active #shelterPanel,body.navigation-active #contentPanelOverlay{display:none!important}body.navigation-active #distanceBadge{display:none!important}
   @media(max-width:760px){.nav-hud{bottom:max(8px,env(safe-area-inset-bottom));width:calc(100vw - 16px);padding:9px}.nav-title{font-size:12px}.nav-leg-grid{grid-template-columns:1fr}.nav-stats{grid-template-columns:repeat(2,1fr);gap:5px}.nav-stat-value{font-size:13px}.nav-guidance{font-size:12px;margin:8px 0}.nav-actions{grid-template-columns:1fr 1fr}.nav-finish{grid-column:1/-1}.nav-actions button{min-height:40px}.nav-substats{font-size:9px;flex-wrap:wrap}}
+  .nav-hud{left:18px;right:auto;top:90px;bottom:auto;transform:none;width:min(360px,calc(100vw - 36px));box-sizing:border-box;max-height:calc(100dvh - 110px);overflow:auto}
+  .nav-hud.open{animation:nav-slide-in .2s ease-out}
+  .nav-hud.dock-right{left:auto;right:18px}
+  .nav-hud-head{cursor:grab;touch-action:none;user-select:none;flex-wrap:wrap}
+  .nav-hud.panel-dragging .nav-hud-head{cursor:grabbing}
+  .nav-title-wrap{min-width:100px}.nav-view-switch{order:2}
+  .nav-panel-tools{display:flex;gap:4px;margin-left:auto}
+  .nav-panel-tools button{width:32px;height:32px;border:1px solid var(--brass);border-radius:6px;background:transparent;color:inherit;font-size:19px;cursor:pointer}
+  .nav-hud.compact :is(.nav-leg-grid,.nav-substats,.nav-progress-track,.nav-actions,.nav-view-switch){display:none}
+  .nav-hud.compact .nav-stats{grid-template-columns:1fr 1fr}
+  .nav-hud.compact .nav-stats>div:nth-child(n+3){display:none}
+  .nav-hud .nav-stats{grid-template-columns:repeat(2,1fr)}
+  .nav-hud .nav-leg-grid{grid-template-columns:1fr}
+  .nav-hud .nav-actions{grid-template-columns:1fr 1fr}.nav-hud .nav-finish{grid-column:1/-1}
+  .nav-hud .nav-substats{flex-wrap:wrap}
+  .nav-reopen{position:fixed;left:0;top:120px;z-index:2201;border:1px solid var(--brass);border-radius:0 9px 9px 0;padding:12px 10px;background:var(--bg,#102b43);color:var(--parchment);font:600 12px Inter,Arial,sans-serif;cursor:pointer}
+  .nav-reopen[hidden]{display:none}.nav-reopen.dock-right{left:auto;right:0;border-radius:9px 0 0 9px}
+  @keyframes nav-slide-in{from{opacity:0;translate:-12px 0}to{opacity:1;translate:0 0}}
+  @media(max-width:760px){.nav-hud{left:8px;right:auto;top:auto;bottom:max(8px,env(safe-area-inset-bottom));width:min(360px,calc(100vw - 16px));max-height:calc(100dvh - 100px)}.nav-hud.dock-right{left:auto;right:8px}.nav-hud-head{cursor:default;touch-action:auto}.nav-panel-tools button{width:36px;height:36px}.nav-reopen{top:auto;bottom:calc(18px + env(safe-area-inset-bottom))}}
+  @media(prefers-reduced-motion:reduce){.nav-hud.open{animation:none}}
 </style>
 
 <script>
@@ -219,7 +245,36 @@
     speak(`Προσοχή. Απομακρύνεσαι από τη διαδρομή. Είσαι περίπου ${Math.round(distance)} μέτρα εκτός πορείας.`);
   };
 
+  const reopenBtn = document.getElementById('navReopenBtn') as HTMLButtonElement | null;
+  const sizeBtn = document.getElementById('navSizeBtn');
+  const dockBtn = document.getElementById('navDockBtn');
+  const setCompact = (compact: boolean) => {
+    hud?.classList.toggle('compact', compact);
+    sizeBtn?.setAttribute('aria-expanded', String(!compact));
+    sizeBtn?.setAttribute('aria-label', compact ? 'Περισσότερα στοιχεία' : 'Μικρή κάρτα');
+    sizeBtn?.setAttribute('title', compact ? 'Μεγέθυνση' : 'Σμίκρυνση');
+    if (sizeBtn) sizeBtn.textContent = compact ? '＋' : '−';
+  };
+  sizeBtn?.addEventListener('click', () => setCompact(!hud?.classList.contains('compact')));
+  document.getElementById('navHideBtn')?.addEventListener('click', () => {
+    hud?.classList.remove('open');
+    if (reopenBtn) { reopenBtn.hidden = false; reopenBtn.focus(); }
+  });
+  reopenBtn?.addEventListener('click', () => {
+    hud?.classList.add('open');
+    reopenBtn.hidden = true;
+    document.getElementById('navHideBtn')?.focus();
+  });
+  dockBtn?.addEventListener('click', () => {
+    const right = !hud?.classList.contains('dock-right');
+    hud?.classList.toggle('dock-right', right);
+    reopenBtn?.classList.toggle('dock-right', right);
+    ['left','top','right','bottom','transform'].forEach(property => hud?.style.removeProperty(property));
+    dockBtn.setAttribute('aria-label', right ? 'Μεταφορά αριστερά' : 'Μεταφορά δεξιά');
+  });
   const setNavigationUi = (active: boolean) => {
+    if (reopenBtn) reopenBtn.hidden = true;
+    if (active) setCompact(true);
     hud?.classList.toggle('open', active);
     document.body.classList.toggle('navigation-active', active);
   };

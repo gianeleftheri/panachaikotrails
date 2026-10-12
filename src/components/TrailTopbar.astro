@@ -1,4 +1,5 @@
 ---
+import SosPanel from './SosPanel.astro';
 import { trailIcon } from '../lib/trail-icons';
 const { allowTrailSubmissions = false } = Astro.props;
 ---
@@ -8,6 +9,7 @@ const { allowTrailSubmissions = false } = Astro.props;
       <h1>Παναχαϊκό</h1>
       <p>Δίκτυο μονοπατιών · δεδομένα ΟΦΥΠΕΚΑ</p>
     </div>
+    <SosPanel />
   </div>
 
   <div class:list={['topbar-actions', { 'has-submit-cta': allowTrailSubmissions }]}>
@@ -40,3 +42,10 @@ const { allowTrailSubmissions = false } = Astro.props;
     <button class="shelter-btn" id="shelterBtn" type="button" title="Βρες το κοντινότερο καταφύγιο" aria-label="Βρες το κοντινότερο καταφύγιο"><span class="map-tool-icon icon-shelter"><Fragment set:html={trailIcon('shelter')} /></span><span class="tool-label">Καταφύγιο</span></button>
   </div>
 </header>
+
+<style>
+  :global(.topbar .brand){display:flex;align-items:center;gap:14px}
+  :global(.topbar){z-index:4200!important}
+  :global(body:has(#view3dOverlay.open) .topbar-actions){visibility:hidden}
+  @media(max-width:760px){:global(.topbar .brand){gap:10px}}
+</style>

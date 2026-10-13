@@ -258,6 +258,19 @@ body{font-family:Inter,Arial,sans-serif}
  .tile-bottom{font-size:14px}
 }
 
+/* Preview: compact accessibility controls alongside the weather. */
+.poster-meta .hero-right{display:flex;align-items:flex-start;gap:12px}
+.accessibility-tools{position:relative;flex-shrink:0;letter-spacing:0}
+.accessibility-toggle{display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid rgba(255,255,255,.52);border-radius:9px;background:rgba(255,255,255,.12);color:#fff;font-size:19px;cursor:pointer}
+.accessibility-toggle:hover,.accessibility-toggle[aria-expanded="true"]{background:rgba(255,255,255,.27)}
+.accessibility-toggle:focus-visible,.accessibility-actions button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.accessibility-panel{position:absolute;right:0;top:43px;z-index:12;width:218px;padding:13px;border:1px solid #20221d;border-radius:9px;background:#fffaf0;color:#20221d;box-shadow:0 7px 20px #20221d36;font:700 12px/1.5 Inter,Arial,sans-serif}
+.accessibility-panel[hidden]{display:none}
+.accessibility-actions{display:flex;gap:5px;margin-top:9px}
+.accessibility-actions button{flex:1;min-height:37px;border:1px solid #20221d88;border-radius:6px;background:#ced8b9;color:#20221d;font:800 13px Inter,Arial,sans-serif;cursor:pointer}
+.accessibility-actions button:hover{background:#dce7cb}
+@media(max-width:760px){.poster-meta .hero-right{gap:7px}.accessibility-toggle{width:30px;height:30px;font-size:17px}.accessibility-panel{right:0;top:38px}}
+
 </style>
 </head>
 <body>
@@ -290,7 +303,7 @@ body{font-family:Inter,Arial,sans-serif}
 
 <div class="eyebrow"><span class="location"><i class="dot" aria-hidden="true"></i>ΠΑΝΑΧΑΪΚΟ / ΑΧΑΪΑ</span><span>EXPLORE AT YOUR OWN PACE.</span></div>
 <header class="poster-hero" aria-label="Panachaiko Trails">
-<div class="poster-meta"><span>ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ</span><div class="hero-weather" aria-label="Θερμοκρασίες Πάτρας και Παναχαϊκού" aria-live="polite"><span>Πάτρα <strong id="temp-patra">— °C</strong></span><span>Παναχαϊκό <strong id="temp-panachaiko">— °C</strong></span></div></div>
+<div class="poster-meta"><span>ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ</span><div class="hero-right"><div class="hero-weather" aria-label="Θερμοκρασίες Πάτρας και Παναχαϊκού" aria-live="polite"><span>Πάτρα <strong id="temp-patra">— °C</strong></span><span>Παναχαϊκό <strong id="temp-panachaiko">— °C</strong></span></div><div class="accessibility-tools" id="accessibility-tools"><button type="button" class="accessibility-toggle" id="accessibility-toggle" aria-label="Ρυθμίσεις προσβασιμότητας και μεγέθους γραμμάτων" aria-expanded="false" aria-controls="accessibility-panel" title="Μέγεθος γραμμάτων">♿</button><div class="accessibility-panel" id="accessibility-panel" hidden><span>Μέγεθος γραμμάτων</span><div class="accessibility-actions"><button type="button" data-font-action="decrease" aria-label="Μικρότερα γράμματα">Α−</button><button type="button" data-font-action="reset" aria-label="Κανονικό μέγεθος γραμμάτων">100%</button><button type="button" data-font-action="increase" aria-label="Μεγαλύτερα γράμματα">Α+</button></div></div></div></div></div>
 <aside class="hero-map-stats" aria-label="Ο χάρτης σε αριθμούς"><dl>{mapStats.map(stat => <div><dt>{stat.label}</dt><dd>{stat.value}</dd></div>)}</dl><p>Στοιχεία χάρτη · όλες οι καταχωρημένες διαδρομές</p><div class="poster-bottom"><a href="/map">ΒΡΕΣ ΤΗ ΔΙΑΔΡΟΜΗ ΣΟΥ <span aria-hidden="true">↗</span></a></div></aside>
 <img class="poster-logo" src="/panachaiko-trails-logo.svg" alt="Panachaiko Trails" />
 </header>
@@ -385,6 +398,49 @@ function open(id){const d=document.getElementById(id);if(!(d instanceof HTMLDial
 document.querySelectorAll('[data-dialog]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();open(a.dataset.dialog)}));
 document.querySelectorAll('dialog').forEach(d=>{d.querySelector('.close').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()}})});
 if(location.hash)open(location.hash.slice(1));
+})();
+</script>
+
+<script is:inline>
+(function(){
+ const wrapper=document.getElementById('accessibility-tools');
+ const toggle=document.getElementById('accessibility-toggle');
+ const panel=document.getElementById('accessibility-panel');
+ if(!wrapper||!toggle||!panel)return;
+ let scale=1;
+ try{const saved=Number(localStorage.getItem('panachaiko-font-scale'));if(Number.isFinite(saved)&&saved>=.8&&saved<=1.5)scale=saved}catch(_){}
+ function applyFontScale(){
+  document.querySelectorAll('body *').forEach(el=>{
+   if(el.closest('#accessibility-tools,script,style,svg')||el.matches('script,style,svg'))return;
+   const hasText=Array.from(el.childNodes).some(n=>n.nodeType===3&&n.textContent.trim());
+   if(!hasText)return;
+   if(!el.dataset.a11yBaseSize){
+    el.dataset.a11yBaseSize=getComputedStyle(el).fontSize;
+    el.dataset.a11yOriginalSize=el.style.fontSize||'';
+   }
+   const base=parseFloat(el.dataset.a11yBaseSize);
+   if(!Number.isFinite(base))return;
+   el.style.fontSize=scale===1?el.dataset.a11yOriginalSize:(base*scale).toFixed(2)+'px';
+  });
+ }
+ let pending=false;
+ const observer=new MutationObserver(()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;if(scale!==1)applyFontScale()})});
+ observer.observe(document.body,{childList:true,subtree:true});
+ function setScale(value){
+  scale=Math.max(.8,Math.min(1.5,Math.round(value*10)/10));
+  applyFontScale();
+  try{localStorage.setItem('panachaiko-font-scale',String(scale))}catch(_){}
+  const reset=panel.querySelector('[data-font-action="reset"]');if(reset)reset.textContent=Math.round(scale*100)+'%';
+ }
+ toggle.addEventListener('click',()=>{const open=panel.hidden;panel.hidden=!open;toggle.setAttribute('aria-expanded',String(open))});
+ panel.addEventListener('click',event=>{
+  const btn=event.target.closest('[data-font-action]');if(!btn)return;
+  const action=btn.dataset.fontAction;
+  setScale(action==='increase'?scale+.1:action==='decrease'?scale-.1:1);
+ });
+ document.addEventListener('click',event=>{if(!wrapper.contains(event.target)){panel.hidden=true;toggle.setAttribute('aria-expanded','false')}});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'){panel.hidden=true;toggle.setAttribute('aria-expanded','false')}});
+ if(scale!==1)setScale(scale);
 })();
 </script>
 </body></html>

@@ -271,6 +271,19 @@ body{font-family:Inter,Arial,sans-serif}
 .accessibility-actions button:hover{background:#dce7cb}
 @media(max-width:760px){.poster-meta .hero-right{gap:7px}.accessibility-toggle{width:28px;height:28px;font-size:16px}.accessibility-panel{right:0;top:38px}}
 
+/* Panachaiko-branded square accessibility control. */
+.accessibility-toggle{
+ width:36px;height:36px;border:2px solid #20221d;border-radius:8px;
+ background:#ced8b9;color:#20221d;box-shadow:2px 2px 0 #20221d;
+ opacity:1;transition:background .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.accessibility-toggle svg{display:block;width:23px;height:23px;flex:none}
+.accessibility-toggle:hover,.accessibility-toggle[aria-expanded="true"]{
+ background:#dce7cb;color:#20221d;transform:translate(-1px,-1px);
+ box-shadow:3px 3px 0 #20221d;
+}
+@media(max-width:760px){.accessibility-toggle{width:34px;height:34px}.accessibility-toggle svg{width:21px;height:21px}}
+
 </style>
 </head>
 <body>
@@ -303,7 +316,7 @@ body{font-family:Inter,Arial,sans-serif}
 
 <div class="eyebrow"><span class="location"><i class="dot" aria-hidden="true"></i>ΠΑΝΑΧΑΪΚΟ / ΑΧΑΪΑ</span><span>EXPLORE AT YOUR OWN PACE.</span></div>
 <header class="poster-hero" aria-label="Panachaiko Trails">
-<div class="poster-meta"><span>ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ</span><div class="hero-right"><div class="hero-weather" aria-label="Θερμοκρασίες Πάτρας και Παναχαϊκού" aria-live="polite"><span>Πάτρα <strong id="temp-patra">— °C</strong></span><span>Παναχαϊκό <strong id="temp-panachaiko">— °C</strong></span></div><div class="accessibility-tools" id="accessibility-tools"><button type="button" class="accessibility-toggle" id="accessibility-toggle" aria-label="Ρυθμίσεις προσβασιμότητας και μεγέθους γραμμάτων" aria-expanded="false" aria-controls="accessibility-panel" title="Μέγεθος γραμμάτων">♿</button><div class="accessibility-panel" id="accessibility-panel" hidden><span>Μέγεθος γραμμάτων</span><div class="accessibility-actions"><button type="button" data-font-action="decrease" aria-label="Μικρότερα γράμματα">Α−</button><button type="button" data-font-action="reset" aria-label="Κανονικό μέγεθος γραμμάτων">100%</button><button type="button" data-font-action="increase" aria-label="Μεγαλύτερα γράμματα">Α+</button></div></div></div></div></div>
+<div class="poster-meta"><span>ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ</span><div class="hero-right"><div class="hero-weather" aria-label="Θερμοκρασίες Πάτρας και Παναχαϊκού" aria-live="polite"><span>Πάτρα <strong id="temp-patra">— °C</strong></span><span>Παναχαϊκό <strong id="temp-panachaiko">— °C</strong></span></div><div class="accessibility-tools" id="accessibility-tools"><button type="button" class="accessibility-toggle" id="accessibility-toggle" aria-label="Ρυθμίσεις προσβασιμότητας και μεγέθους γραμμάτων" aria-expanded="false" aria-controls="accessibility-panel" title="Προσβασιμότητα"><svg viewBox="0 0 32 32" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="17" cy="5.5" r="2.5"/><path d="M16 10v9h8l3 7"/><path d="M16 14h8"/><path d="M16 19h-3"/><path d="M12 14a10 10 0 1 0 11 11"/></svg></button><div class="accessibility-panel" id="accessibility-panel" hidden><span>Μέγεθος γραμμάτων</span><div class="accessibility-actions"><button type="button" data-font-action="decrease" aria-label="Μικρότερα γράμματα">Α−</button><button type="button" data-font-action="reset" aria-label="Κανονικό μέγεθος γραμμάτων">100%</button><button type="button" data-font-action="increase" aria-label="Μεγαλύτερα γράμματα">Α+</button></div></div></div></div></div>
 <aside class="hero-map-stats" aria-label="Ο χάρτης σε αριθμούς"><dl>{mapStats.map(stat => <div><dt>{stat.label}</dt><dd>{stat.value}</dd></div>)}</dl><p>Στοιχεία χάρτη · όλες οι καταχωρημένες διαδρομές</p><div class="poster-bottom"><a href="/map">ΒΡΕΣ ΤΗ ΔΙΑΔΡΟΜΗ ΣΟΥ <span aria-hidden="true">↗</span></a></div></aside>
 <img class="poster-logo" src="/panachaiko-trails-logo.svg" alt="Panachaiko Trails" />
 </header>

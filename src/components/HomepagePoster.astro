@@ -261,15 +261,15 @@ body{font-family:Inter,Arial,sans-serif}
 /* Preview: compact accessibility controls alongside the weather. */
 .poster-meta .hero-right{display:flex;align-items:flex-start;gap:12px}
 .accessibility-tools{position:relative;flex-shrink:0;letter-spacing:0}
-.accessibility-toggle{display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid rgba(255,255,255,.52);border-radius:9px;background:rgba(255,255,255,.12);color:#fff;font-size:19px;cursor:pointer}
-.accessibility-toggle:hover,.accessibility-toggle[aria-expanded="true"]{background:rgba(255,255,255,.27)}
+.accessibility-toggle{display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;color:rgba(255,255,255,.82);font-size:16px;cursor:pointer;transition:background .18s,color .18s}
+.accessibility-toggle:hover,.accessibility-toggle[aria-expanded="true"]{background:rgba(255,255,255,.12);color:#fff}
 .accessibility-toggle:focus-visible,.accessibility-actions button:focus-visible{outline:2px solid #fff;outline-offset:3px}
 .accessibility-panel{position:absolute;right:0;top:43px;z-index:12;width:218px;padding:13px;border:1px solid #20221d;border-radius:9px;background:#fffaf0;color:#20221d;box-shadow:0 7px 20px #20221d36;font:700 12px/1.5 Inter,Arial,sans-serif}
 .accessibility-panel[hidden]{display:none}
 .accessibility-actions{display:flex;gap:5px;margin-top:9px}
 .accessibility-actions button{flex:1;min-height:37px;border:1px solid #20221d88;border-radius:6px;background:#ced8b9;color:#20221d;font:800 13px Inter,Arial,sans-serif;cursor:pointer}
 .accessibility-actions button:hover{background:#dce7cb}
-@media(max-width:760px){.poster-meta .hero-right{gap:7px}.accessibility-toggle{width:30px;height:30px;font-size:17px}.accessibility-panel{right:0;top:38px}}
+@media(max-width:760px){.poster-meta .hero-right{gap:7px}.accessibility-toggle{width:28px;height:28px;font-size:16px}.accessibility-panel{right:0;top:38px}}
 
 </style>
 </head>

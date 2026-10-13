@@ -240,6 +240,15 @@ body{font-family:Inter,Arial,sans-serif}
   .poster-bottom a{font-size:clamp(14px,3.7vw,18px);padding:12px 16px;max-width:100%}
 }
 
+
+/* Preview: CTA under left-side statistics, bold explanatory note. */
+.hero-map-stats p{font-weight:850;opacity:1}
+.hero-map-stats .poster-bottom{display:flex;justify-content:flex-start;margin-top:20px}
+.hero-map-stats .poster-bottom a{font-size:clamp(16px,1.15vw,23px);white-space:normal}
+@media(max-width:1000px){
+ .hero-map-stats .poster-bottom{margin-top:18px}
+}
+
 </style>
 </head>
 <body>
@@ -273,9 +282,8 @@ body{font-family:Inter,Arial,sans-serif}
 <div class="eyebrow"><span class="location"><i class="dot" aria-hidden="true"></i>ΠΑΝΑΧΑΪΚΟ / ΑΧΑΪΑ</span><span>EXPLORE AT YOUR OWN PACE.</span></div>
 <header class="poster-hero" aria-label="Panachaiko Trails">
 <div class="poster-meta"><span>ΠΑΝΑΧΑΪΚΟ ΟΡΟΣ</span><div class="hero-weather" aria-label="Θερμοκρασίες Πάτρας και Παναχαϊκού" aria-live="polite"><span>Πάτρα <strong id="temp-patra">— °C</strong></span><span>Παναχαϊκό <strong id="temp-panachaiko">— °C</strong></span></div></div>
-<aside class="hero-map-stats" aria-label="Ο χάρτης σε αριθμούς"><dl>{mapStats.map(stat => <div><dt>{stat.label}</dt><dd>{stat.value}</dd></div>)}</dl><p>Στοιχεία χάρτη · όλες οι καταχωρημένες διαδρομές</p></aside>
+<aside class="hero-map-stats" aria-label="Ο χάρτης σε αριθμούς"><dl>{mapStats.map(stat => <div><dt>{stat.label}</dt><dd>{stat.value}</dd></div>)}</dl><p>Στοιχεία χάρτη · όλες οι καταχωρημένες διαδρομές</p><div class="poster-bottom"><a href="/map">ΒΡΕΣ ΤΗ ΔΙΑΔΡΟΜΗ ΣΟΥ <span aria-hidden="true">↗</span></a></div></aside>
 <img class="poster-logo" src="/panachaiko-trails-logo.svg" alt="Panachaiko Trails" />
-<div class="poster-bottom"><a href="/map">ΒΡΕΣ ΤΗ ΔΙΑΔΡΟΜΗ ΣΟΥ <span aria-hidden="true">↗</span></a></div>
 </header>
 <main id="hub" class="split">
 <section class="navigation">

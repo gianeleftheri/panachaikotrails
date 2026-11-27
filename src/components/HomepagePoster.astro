@@ -365,7 +365,7 @@ function renderCategory(root,items,news=false){
  root.replaceChildren();
  if(!items.length){const p=document.createElement('p');p.textContent='Δεν υπάρχουν ακόμη δημοσιευμένα άρθρα.';root.append(p);return}
  for(const item of items){
-  const a=document.createElement('a');a.className=news?'news-row':'entry-link';a.href='https://cms.panachaikotrails.gr/?p='+encodeURIComponent(item.id);
+  const a=document.createElement('a');a.className=news?'news-row':'entry-link';a.href='/article/'+encodeURIComponent(item.id);
   if(news){a.textContent=item.title;root.append(a);continue}
   const article=document.createElement('article');article.className='entry';
   if(item.image){try{const url=new URL(item.image);if(url.protocol==='https:'){const fig=document.createElement('figure'),img=document.createElement('img');img.src=url.href;img.alt=item.alt||'';img.loading='lazy';img.width=800;img.height=450;fig.append(img);a.append(fig)}}catch{}}

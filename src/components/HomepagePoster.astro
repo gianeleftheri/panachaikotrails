@@ -341,7 +341,7 @@ body{font-family:Inter,Arial,sans-serif}
 
 <div class="weather-cards" aria-label="Αναλυτικές μετρήσεις καιρού">
 {[{key:'patra',name:'ΠΑΤΡΑ',color:'#b8d9d8'},{key:'panachaiko',name:'ΠΑΝΑΧΑΪΚΟ',color:'#ead694'}].map(station => <section class="weather-card" style={`--weather-color:${station.color}`} aria-labelledby={`weather-title-${station.key}`}>
-<div class="weather-card-head"><h2 id={`weather-title-${station.key}`}>ΚΑΙΡΟΣ<br/>{station.name}</h2><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d={icons.sun}/></svg></div>
+<div class="weather-card-head"><h2 id={`weather-title-${station.key}`}>ΚΑΙΡΟΣ<br/>{station.name}</h2><svg id={`weather-icon-${station.key}`} viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Άγνωστες καιρικές συνθήκες"><path d="M18 18a6 6 0 1 1 9 5c-3 2-3 4-3 6M24 35h.01"/></svg></div>
 <div class="weather-card-body" id={`weather-detail-${station.key}`} aria-live="polite"><p class="weather-state">Φόρτωση μετρήσεων…</p></div>
 </section>)}
 </div>
@@ -392,21 +392,45 @@ function renderStationDetails(key,station){
  for(const [label,value] of rows){const row=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;row.append(dt,dd);metrics.append(row)}root.append(metrics);
  if(station?.source){const source=document.createElement('p');source.className='weather-source';source.textContent='Πηγή: '+station.source;root.append(source)}
 }
+const cloud='M12 31h24a8 8 0 0 0 0-16 12 12 0 0 0-23-2 9 9 0 0 0-1 18Z';
+const sun='<circle cx="24" cy="24" r="9"/><path d="M24 3v6M24 39v6M3 24h6M39 24h6M9 9l4 4M35 35l4 4M9 39l4-4M35 13l4-4"/>';
+const moon='<path d="M29 5a19 19 0 1 0 14 27A17 17 0 0 1 29 5Z"/>';
+function renderCondition(key, current){
+ const svg=document.getElementById('weather-icon-'+key);if(!svg)return;
+ const code=current?.weather_code, day=current?.is_day===1;
+ let label='Άγνωστες καιρικές συνθήκες', graphic='<path d="M18 18a6 6 0 1 1 9 5c-3 2-3 4-3 6M24 35h.01"/>';
+ const cloudSvg='<path d="'+cloud+'"/>';
+ if(code===0){label=day?'Ηλιοφάνεια':'Αίθρια νύχτα';graphic=day?sun:moon}
+ else if(code===1||code===2){label=day?'Ήλιος με σύννεφα':'Νύχτα με λίγα σύννεφα';graphic='<g transform="translate(15 0) scale(.62)">'+(day?sun:moon)+'</g><g transform="translate(0 10)">'+cloudSvg+'</g>'}
+ else if(code===3){label='Συννεφιά';graphic=cloudSvg}
+ else if([45,48].includes(code)){label='Ομίχλη';graphic='<g transform="translate(0 -5)">'+cloudSvg+'</g><path d="M9 34h30M13 40h22"/>'}
+ else if([51,53,55,61,63,65,80,81,82].includes(code)){label=code>=80?'Μπόρες':code<=55?'Ψιχάλα':'Βροχή';graphic=cloudSvg+'<path stroke="#246b9b" d="M15 35l-3 8M25 35l-3 8M35 35l-3 8"/>'}
+ else if([56,57,66,67].includes(code)){label='Παγωμένη βροχή';graphic=cloudSvg+'<path stroke="#246b9b" d="M15 35l-3 8M35 35l-3 8"/><circle cx="24" cy="40" r="2"/>'}
+ else if([71,73,75,77,85,86].includes(code)){label='Χιονόπτωση';graphic=cloudSvg+'<path stroke="#246b9b" d="M13 39h6M16 36v6M23 43h6M26 40v6M33 39h6M36 36v6"/>'}
+ else if([95,96,99].includes(code)){label=code===95?'Καταιγίδα':'Καταιγίδα με χαλάζι';graphic=cloudSvg+'<path fill="#f2b629" d="M25 30l-8 9h7l-3 7 13-12h-8l3-4Z"/>'}
+ svg.innerHTML=graphic;svg.setAttribute('aria-label',label+' · Εκτίμηση Open-Meteo');svg.setAttribute('title',label+' · Εκτίμηση Open-Meteo');
+ const detail=document.getElementById('weather-detail-'+key);if(detail){let note=detail.querySelector('.weather-condition');if(!note){note=document.createElement('p');note.className='weather-condition weather-state';detail.prepend(note)}note.textContent=label+(Number.isInteger(code)?' · Εκτίμηση Open-Meteo':'')}
+}
+async function loadConditions(){
+ const locations=[['patra',38.2466,21.7346,60],['panachaiko',38.228,21.788,1588]];
+ await Promise.all(locations.map(async ([key,lat,lon,elevation])=>{
+  try{const params=new URLSearchParams({latitude:String(lat),longitude:String(lon),elevation:String(elevation),current:'weather_code,is_day',timezone:'Europe/Athens'});
+   const r=await fetch('https://api.open-meteo.com/v1/forecast?'+params,{signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error();const data=await r.json();renderCondition(key,data.current);
+  }catch{renderCondition(key,null)}
+ }));
+}
+let weatherBusy=false;
 async function weather(){
+ if(weatherBusy)return;weatherBusy=true;
  try{
-  const r=await fetch('/api/weather-live',{signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error();const data=await r.json();
-  if(!data.stations)throw Error();
-  for(const key of ['patra','panachaiko']){
-   const station=data.stations[key],root=document.getElementById('temp-'+key);
-   renderStationDetails(key,station);
-   if(!root)continue;
-   const available=station&&station.status!=='unavailable'&&typeof station.temp==='number'&&Number.isFinite(station.temp);
-   root.textContent=available?format(station.temp)+' °C':'— °C';
-   root.title=station?.status==='stale'?'Παλαιότερη μέτρηση'+(station.observed?' · '+station.observed:''):available?'Τελευταία διαθέσιμη μέτρηση'+(station.observed?' · '+station.observed:''):'Μη διαθέσιμη θερμοκρασία';
-  }
- }catch{for(const key of ['patra','panachaiko']){renderStationDetails(key,null);const root=document.getElementById('temp-'+key);if(root){root.textContent='— °C';root.title='Μη διαθέσιμη θερμοκρασία'}}}
+  try{const r=await fetch('/api/weather-live',{signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error();const data=await r.json();if(!data.stations)throw Error();for(const key of ['patra','panachaiko'])renderStationDetails(key,data.stations[key]);}
+  catch{for(const key of ['patra','panachaiko'])renderStationDetails(key,null)}
+  await loadConditions();
+ }finally{weatherBusy=false}
 }
 weather();
+setInterval(()=>{if(document.visibilityState==='visible')weather()},180000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')weather()});
 function open(id){const d=document.getElementById(id);if(!(d instanceof HTMLDialogElement))return;if(!d.open)d.showModal();}
 document.querySelectorAll('[data-dialog]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();open(a.dataset.dialog)}));
 document.querySelectorAll('dialog').forEach(d=>{d.querySelector('.close').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()}})});

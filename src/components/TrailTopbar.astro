@@ -7,7 +7,6 @@ const { allowTrailSubmissions = false } = Astro.props;
   <a class="brand brand-home" href="/" aria-label="Παναχαϊκό – Επιστροφή στην αρχική σελίδα" title="Επιστροφή στην αρχική σελίδα">
     <div class="brand-text">
       <h1 class="map-brand-heading"><img class="map-brand-logo" src="/panachaiko-trails-logo.svg" alt="Panachaiko Trails" /></h1>
-      <p>Δίκτυο μονοπατιών · δεδομένα ΟΦΥΠΕΚΑ</p>
     </div>
   </a>
 
@@ -53,8 +52,26 @@ const { allowTrailSubmissions = false } = Astro.props;
   @media(max-width:760px){:global(.topbar .brand){gap:10px}}
   :global(.topbar .brand-home){color:inherit;text-decoration:none;cursor:pointer;min-width:0;pointer-events:auto}
   :global(.topbar .brand-home .map-brand-heading){margin:0!important;line-height:1!important}
-  :global(.topbar .map-brand-logo){display:block;width:clamp(116px,15vw,210px);height:42px;object-fit:contain;object-position:left center}
+  :global(.topbar .map-brand-logo){display:block;width:clamp(190px,20vw,300px);height:58px;object-fit:contain;object-position:left center}
   :global(.topbar .brand-home:hover .map-brand-logo){opacity:.8}
-  @media(max-width:760px){:global(.topbar .map-brand-logo){width:150px;height:34px}}
+  @media(max-width:760px){:global(.topbar .map-brand-logo){width:210px;height:48px}}
   :global(.topbar .brand-home:focus-visible){outline:2px solid currentColor;outline-offset:4px;border-radius:3px}
+  :global(.map-home-theme .topbar .brand-home .brand-text){display:block!important}
+  :global(.map-home-theme .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle,.submit-trail-cta,#sosButton)){height:56px!important;min-height:56px!important}
+  :global(.map-home-theme .topbar-actions .map-tool-icon){width:30px!important;height:30px!important;flex-basis:30px!important}
+  :global(.map-home-theme .topbar-actions .map-tool-icon svg){width:28px!important;height:28px!important}
+  @media(min-width:1101px){
+    :global(.map-home-theme .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child)){font-size:13px!important}
+    :global(.map-home-theme .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle,.submit-trail-cta)){padding-inline:9px!important;gap:5px!important}
+  }
+  @media(min-width:761px) and (max-width:1100px){
+    :global(.map-home-theme .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle)){width:52px!important;min-width:52px!important}
+    :global(.map-home-theme .topbar .map-brand-logo){width:190px;height:52px}
+  }
+  @media(max-width:760px){
+    :global(.map-home-theme .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle,.submit-trail-cta,#sosButton)){height:62px!important;min-height:62px!important}
+    :global(.map-home-theme .topbar-actions .map-tool-icon){width:25px!important;height:25px!important;flex-basis:25px!important}
+    :global(.map-home-theme .topbar-actions .map-tool-icon svg){width:24px!important;height:24px!important}
+    :global(.map-home-theme .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child)){font-size:9px!important;line-height:1.15!important}
+  }
 </style>

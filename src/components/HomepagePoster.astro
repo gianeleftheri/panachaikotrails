@@ -284,6 +284,8 @@ body{font-family:Inter,Arial,sans-serif}
 }
 @media(max-width:760px){.accessibility-toggle{width:44px;height:44px}.accessibility-toggle svg{width:28px;height:28px}.accessibility-panel{top:52px}}
 
+/* Keep section pictograms aligned to the right without decorative numbers. */
+.tile-top{justify-content:flex-end}
 </style>
 </head>
 <body>
@@ -322,10 +324,10 @@ body{font-family:Inter,Arial,sans-serif}
 </header>
 <main id="hub" class="split">
 <section class="navigation">
-<section class="updates"><div class="box-label"><h2>ΝΕΑ</h2><span>05</span></div><div id="updates-feed" aria-live="polite"><p>Φόρτωση δημοσιεύσεων…</p></div><a class="text-link" href="#news" data-dialog="news">Όλες οι ενημερώσεις ↗</a></section>
+<section class="updates"><div class="box-label"><h2>ΝΕΑ</h2></div><div id="updates-feed" aria-live="polite"><p>Φόρτωση δημοσιεύσεων…</p></div><a class="text-link" href="#news" data-dialog="news">Όλες οι ενημερώσεις ↗</a></section>
 <nav class="hub" aria-label="Κεντρική πλοήγηση">
-{menu.map((item,i)=><section class="tile editorial-tile" style={`--tile:${item.color}`} aria-labelledby={`tile-title-${item.id}`}>
-<a href={`#${item.id}`} data-dialog={item.id} class="tile-heading"><div class="tile-top"><span>0{i+1}</span><svg class="pixel-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={item.icon}/></svg></div><h2 id={`tile-title-${item.id}`}>{item.title}</h2></a>
+{menu.map((item)=><section class="tile editorial-tile" style={`--tile:${item.color}`} aria-labelledby={`tile-title-${item.id}`}>
+<a href={`#${item.id}`} data-dialog={item.id} class="tile-heading"><div class="tile-top"><svg class="pixel-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={item.icon}/></svg></div><h2 id={`tile-title-${item.id}`}>{item.title}</h2></a>
 <div class="tile-entries">
 {demoArticles.filter(entry=>entry.category===item.id).map(entry=><article class="entry"><a href={`#${entry.id}`} data-dialog={entry.id} class="entry-link"><figure><img src={entry.image} alt={entry.alt} loading="lazy" width="800" height="450"/><figcaption>Ενδεικτική φωτογραφία</figcaption></figure><span class="entry-meta">ΔΕΙΓΜΑ ΑΡΘΡΟΥ</span><h3>{entry.title}</h3><p>{entry.excerpt}</p><span class="entry-action">Διάβασε περισσότερα ↗</span></a></article>)}
 {featuredVideos.filter(video=>video.category===item.id).map(video=><article class="entry video-entry"><a class="entry-link" href={`https://www.youtube.com/watch?v=${video.id}`} target="_blank" rel="noopener noreferrer"><div class="video-thumb"><img src={`https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`} alt={`Μικρογραφία βίντεο: ${video.title}`} loading="lazy" width="480" height="360"/><span class="video-play" aria-hidden="true">▶</span></div><span class="entry-meta">YOUTUBE · ΠΑΝΑΧΑΪΚΟ</span><h3>{video.title}</h3><span class="entry-action">Δες το βίντεο ↗</span></a></article>)}

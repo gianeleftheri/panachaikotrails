@@ -161,6 +161,38 @@ if (app) {
       L.DomEvent.disableScrollPropagation(control);
       const toggle = control.querySelector<HTMLButtonElement>('.basemap-toggle');
       const menu = control.querySelector<HTMLElement>('.basemap-menu');
+      // This control is dynamically created and legacy map CSS may otherwise
+      // override its height. Match the actual adjacent toolbar button.
+      const syncBasemapSize = () => {
+        if (!toggle || !control.isConnected) return;
+        const reference = document.getElementById('shelterBtn');
+        if (!reference) return;
+        const rect = reference.getBoundingClientRect();
+        if (rect.height < 1 || rect.width < 1) return;
+        for (const el of [control, toggle]) {
+          for (const prop of ['height','min-height','max-height']) el.style.setProperty(prop, rect.height + 'px', 'important');
+          for (const prop of ['width','min-width','max-width']) el.style.setProperty(prop, rect.width + 'px', 'important');
+          el.style.setProperty('box-sizing','border-box','important');
+          el.style.setProperty('align-self','center','important');
+        }
+        control.style.setProperty('display','flex','important');
+        control.style.setProperty('padding','0','important');
+        toggle.style.setProperty('display','grid','important');
+        toggle.style.setProperty('grid-template-columns','minmax(0,1fr)','important');
+        toggle.style.setProperty('grid-template-rows', window.innerWidth <= 760 ? '28px 34px' : '36px 34px','important');
+        toggle.style.setProperty('align-content','center','important');
+        toggle.style.setProperty('justify-items','center','important');
+        toggle.style.setProperty('align-items','center','important');
+        toggle.style.setProperty('padding',window.innerWidth <= 760 ? '3px 1px' : '7px','important');
+        toggle.style.setProperty('gap',window.innerWidth <= 760 ? '3px' : '6px','important');
+      };
+      requestAnimationFrame(() => {
+        syncBasemapSize();
+        const reference = document.getElementById('shelterBtn');
+        if(reference && typeof ResizeObserver !== 'undefined') new ResizeObserver(syncBasemapSize).observe(reference);
+      });
+      window.addEventListener('resize', syncBasemapSize);
+
       toggle?.addEventListener('click', () => {
         const open = !control.classList.contains('open');
         control.classList.toggle('open', open);

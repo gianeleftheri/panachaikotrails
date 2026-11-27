@@ -30,8 +30,36 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 
 const num = (value: unknown): number | null => {
   if (value === null || value === undefined || value === '') return null;
-  const parsed = Number(String(value).replace(',', '.').replace(/[^0-9.+-]/g, ''));
+  const cleaned = String(value).replace(',', '.').replace(/[^0-9.+-]/g, '');
+  if (!cleaned || !/\d/.test(cleaned)) return null;
+  const parsed = Number(cleaned);
   return Number.isFinite(parsed) ? parsed : null;
+};
+
+const athensTime = (year: number, month: number, day: number, hour: number, minute: number): number => {
+  const wall = Date.UTC(year, month - 1, day, hour, minute);
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Athens', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  });
+  let instant = wall;
+  for (let i = 0; i < 3; i++) {
+    const parts = Object.fromEntries(formatter.formatToParts(new Date(instant)).map(p => [p.type, p.value]));
+    const local = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute);
+    instant += wall - local;
+  }
+  return instant;
+};
+
+const freshness = (at: number): Station['status'] =>
+  Number.isFinite(at) && Date.now() - at <= 90 * 60_000 && at - Date.now() <= 5 * 60_000 ? 'live' : 'stale';
+
+const observedTime = (value: unknown): number => {
+  if (!value) return NaN;
+  const raw = String(value).trim();
+  const local = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (local) return athensTime(+local[3], +local[2], +local[1], +local[4], +local[5]);
+  return /(?:Z|[+-]\d{2}:?\d{2}|GMT|UTC)\s*$/i.test(raw) ? Date.parse(raw) : NaN;
 };
 
 const firstNumber = (text: string, pattern: RegExp): number | null => {
@@ -123,7 +151,7 @@ const patraFromJson = async (): Promise<Station | null> => {
       observed: observedRaw ? String(observedRaw) : null,
       source: 'MeteoPatras · Davis Vantage Pro 2',
       sourceUrl: 'https://meteopatras.eu/pwsWD/',
-      status: 'live',
+      status: freshness(observedTime(observedRaw)),
     };
   } catch {
     return null;
@@ -158,7 +186,7 @@ const patraFromHtml = async (): Promise<Station> => {
     return {
       ...base, temp, feels, humidity, wind, windDir, pressure, rainToday, rainRate, dewPoint,
       observed: observedMatch?.[1] ?? null,
-      status: 'live',
+      status: 'stale',
     };
   } catch {
     return base;
@@ -173,7 +201,6 @@ const panachaikoFromHtml = async (): Promise<Station> => {
     let lastError: unknown = null;
     for (const candidate of [
       sourceUrl + '?v=' + Math.floor(Date.now() / 180000),
-      'http://penteli.meteo.gr/stations/panachaiko/?v=' + Math.floor(Date.now() / 180000),
     ]) {
       try {
         html = await fetchText(candidate);
@@ -200,14 +227,14 @@ const panachaikoFromHtml = async (): Promise<Station> => {
 
     if (temp === null || humidity === null) return base;
 
-    let status: Station['status'] = 'live';
+    let status: Station['status'] = 'stale';
     let observed: string | null = null;
     if (observedMatch) {
       observed = `${observedMatch[1]} ${observedMatch[2]}`;
       const [d,m,y] = observedMatch[1].split('/').map(Number);
       const [hh,mm] = observedMatch[2].split(':').map(Number);
-      const at = new Date(y, m - 1, d, hh, mm).getTime();
-      if (Number.isFinite(at) && Date.now() - at > 90 * 60 * 1000) status = 'stale';
+      const at = athensTime(y, m, d, hh, mm);
+      status = freshness(at);
     }
 
     return {

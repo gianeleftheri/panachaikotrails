@@ -31,7 +31,7 @@ const { allowTrailSubmissions = false } = Astro.props;
     )}
     <button class="locate-btn" id="locateBtn" type="button" title="Η θέση μου (GPS)" aria-label="Η θέση μου (GPS)" disabled>
       <span class="map-tool-icon icon-gps"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" fill="#ff3c98" stroke="#0b2633" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.5" fill="#ffdf00" stroke="#0b2633" stroke-width="1.6"/></svg></span>
-      <span class="tool-label">Η θέση μου (GPS)</span>
+      <span class="tool-label">Η θέση μου<br/>(GPS)</span>
     </button>
     <button class="locate-btn recenter-btn" id="recenterBtn" type="button" title="Ακολούθησε τη θέση μου" aria-label="Ακολούθησε τη θέση μου" disabled>
       <span class="map-tool-icon icon-follow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="#b9e52b" stroke="#0b2633" stroke-width="1.8"/><circle cx="12" cy="12" r="1.8" fill="#ff3c98"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="#0b2633" stroke-width="2" stroke-linecap="round"/></svg></span>
@@ -120,5 +120,18 @@ const { allowTrailSubmissions = false } = Astro.props;
     :global(.map-home-theme .topbar .topbar-actions :is(.map-tool-icon,.basemap-icon)){width:26px!important;height:26px!important;flex-basis:26px!important}
     :global(.map-home-theme .topbar .topbar-actions :is(.map-tool-icon,.basemap-icon) svg){width:26px!important;height:26px!important}
     :global(.map-home-theme .topbar #sosButton){font-size:15px!important}
+  }
+  /* One exact control box, irrespective of legacy Leaflet/basemap styles. */
+  :global(.map-home-theme .topbar .topbar-actions){--control-height:94px;align-items:center!important}
+  :global(.map-home-theme .topbar .topbar-actions .basemap-toggle),:global(.map-home-theme .topbar .topbar-actions .basemap-control .basemap-toggle),:global(.map-home-theme .topbar .topbar-actions #sosButton){height:var(--control-height)!important;min-height:var(--control-height)!important;max-height:var(--control-height)!important;align-self:center!important;box-sizing:border-box!important}
+  :global(.map-home-theme .topbar .topbar-actions .basemap-toggle){width:100%!important;min-width:0!important;max-width:none!important;display:grid!important;grid-template-rows:36px 34px!important;align-content:center!important;justify-content:stretch!important;justify-items:center!important;align-items:center!important;gap:6px!important;padding:7px!important;position:relative!important;top:auto!important}
+  :global(.map-home-theme .topbar .topbar-actions .basemap-control){height:var(--control-height)!important;min-height:var(--control-height)!important;max-height:var(--control-height)!important;align-self:center!important}
+  :global(.map-home-theme .topbar .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.submit-trail-cta)){grid-template-rows:36px 34px!important;justify-content:stretch!important;min-width:0!important}
+  :global(.map-home-theme .topbar .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child,.submit-trail-cta span)){white-space:normal!important;max-width:100%!important;min-width:0!important;overflow-wrap:anywhere!important;line-height:1.2!important;align-self:center!important;display:block!important}
+  :global(.map-home-theme .topbar .topbar-actions #locateBtn .tool-label){max-width:90px!important}
+  @media(min-width:761px) and (max-width:1100px){:global(.map-home-theme .topbar .topbar-actions){--control-height:84px}}
+  @media(max-width:760px){
+    :global(.map-home-theme .topbar .topbar-actions){--control-height:78px}
+    :global(.map-home-theme .topbar .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.submit-trail-cta,.basemap-toggle)){grid-template-rows:28px 34px!important;gap:3px!important;padding:3px 1px!important}
   }
 </style>

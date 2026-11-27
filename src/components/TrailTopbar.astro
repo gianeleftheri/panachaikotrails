@@ -74,4 +74,22 @@ const { allowTrailSubmissions = false } = Astro.props;
     :global(.map-home-theme .topbar-actions .map-tool-icon svg){width:24px!important;height:24px!important}
     :global(.map-home-theme .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child)){font-size:9px!important;line-height:1.15!important}
   }
+  :global(.map-home-theme .topbar .map-brand-logo){width:clamp(220px,24vw,360px);height:64px}
+  :global(.map-home-theme .topbar .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle,.submit-trail-cta)){display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:center!important;height:64px!important;min-height:64px!important;padding:3px 8px!important;gap:3px!important}
+  :global(.map-home-theme .topbar .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child,.submit-trail-cta span)){display:block!important;font-size:12px!important;line-height:1.15!important;text-align:center;white-space:normal!important}
+  :global(.map-home-theme .topbar .topbar-actions .map-tool-icon svg){width:32px!important;height:32px!important}
+  :global(.map-home-theme .topbar #sosButton){height:64px!important;min-height:64px!important;font-size:19px!important}
+  @media(min-width:1101px){:global(.map-home-theme .topbar .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle)){min-width:76px!important}}
+  @media(min-width:761px) and (max-width:1100px){
+    :global(.map-home-theme .topbar .map-brand-logo){width:220px;height:60px}
+    :global(.map-home-theme .topbar .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle)){width:62px!important;min-width:62px!important;padding:3px!important}
+    :global(.map-home-theme .topbar .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child)){font-size:10px!important}
+  }
+  @media(max-width:760px){
+    :global(.map-home-theme .topbar .map-brand-logo){width:min(260px,80vw);height:55px}
+    :global(.map-home-theme .topbar .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.basemap-toggle,.submit-trail-cta)){height:68px!important;min-height:68px!important;padding:2px 1px!important}
+    :global(.map-home-theme .topbar .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child,.submit-trail-cta span)){font-size:9px!important;overflow-wrap:anywhere}
+    :global(.map-home-theme .topbar .topbar-actions .map-tool-icon svg){width:26px!important;height:26px!important}
+    :global(.map-home-theme .topbar #sosButton){height:68px!important;min-height:68px!important;font-size:15px!important}
+  }
 </style>

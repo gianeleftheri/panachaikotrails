@@ -347,7 +347,7 @@ body{font-family:Inter,Arial,sans-serif}
 <div class="weather-card-body" id={`weather-detail-${station.key}`} aria-live="polite"><p class="weather-state">Φόρτωση μετρήσεων…</p></div>
 </section>)}
 </div>
-<p class="dashboard-note">Διαδρομές, σημεία ενδιαφέροντος και πληροφορίες για την επόμενη εξόρμησή σου.</p>
+
 </section>
 </main>
 <footer class="footer"><a href="/map">ΑΝΟΙΓΜΑ ΧΑΡΤΗ ↗</a></footer>
@@ -392,7 +392,7 @@ function renderStationDetails(key,station){
  ['Σημείο δρόσου',measurement(station?.dewPoint,'°C')]
  ];
  for(const [label,value] of rows){const row=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;row.append(dt,dd);metrics.append(row)}root.append(metrics);
- if(station?.source){const source=document.createElement('p');source.className='weather-source';source.textContent='Πηγή: '+station.source;root.append(source)}
+
 }
 const cloud='M12 31h24a8 8 0 0 0 0-16 12 12 0 0 0-23-2 9 9 0 0 0-1 18Z';
 const sun='<circle cx="24" cy="24" r="9"/><path d="M24 3v6M24 39v6M3 24h6M39 24h6M9 9l4 4M35 35l4 4M9 39l4-4M35 13l4-4"/>';
@@ -411,7 +411,7 @@ function renderCondition(key, current){
  else if([71,73,75,77,85,86].includes(code)){label='Χιονόπτωση';graphic=cloudSvg+'<path stroke="#246b9b" d="M13 39h6M16 36v6M23 43h6M26 40v6M33 39h6M36 36v6"/>'}
  else if([95,96,99].includes(code)){label=code===95?'Καταιγίδα':'Καταιγίδα με χαλάζι';graphic=cloudSvg+'<path fill="#f2b629" d="M25 30l-8 9h7l-3 7 13-12h-8l3-4Z"/>'}
  svg.innerHTML=graphic;svg.setAttribute('aria-label',label+' · Εκτίμηση Open-Meteo');svg.setAttribute('title',label+' · Εκτίμηση Open-Meteo');
- const detail=document.getElementById('weather-detail-'+key);if(detail){let note=detail.querySelector('.weather-condition');if(!note){note=document.createElement('p');note.className='weather-condition weather-state';detail.prepend(note)}note.textContent=label+(Number.isInteger(code)?' · Εκτίμηση Open-Meteo':'')}
+
 }
 async function loadConditions(){
  const locations=[['patra',38.2466,21.7346,60],['panachaiko',38.228,21.788,1588]];

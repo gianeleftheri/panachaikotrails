@@ -92,4 +92,31 @@ const { allowTrailSubmissions = false } = Astro.props;
     :global(.map-home-theme .topbar .topbar-actions .map-tool-icon svg){width:26px!important;height:26px!important}
     :global(.map-home-theme .topbar #sosButton){height:68px!important;min-height:68px!important;font-size:15px!important}
   }
+  /* Uniform map toolbar: equal-size controls, including basemap and SOS. */
+  :global(.map-home-theme .topbar){height:104px!important;padding:8px clamp(12px,2vw,32px)!important;gap:16px!important}
+  :global(.map-home-theme .topbar .map-brand-logo){width:clamp(180px,20vw,340px);height:84px!important}
+  :global(.map-home-theme .topbar .brand-home){flex:0 1 auto}
+  :global(.map-home-theme .topbar .topbar-actions){--control-width:clamp(62px,7.25vw,116px);display:flex;gap:8px!important;align-items:center;justify-content:flex-end;min-width:0}
+  :global(.map-home-theme .topbar .topbar-actions > :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.submit-trail-cta,#sosButton,.basemap-control)),:global(.map-home-theme .topbar .topbar-actions .basemap-toggle){box-sizing:border-box!important;width:var(--control-width)!important;min-width:var(--control-width)!important;max-width:var(--control-width)!important;flex:0 0 var(--control-width)!important;height:80px!important;min-height:80px!important;margin:0!important}
+  :global(.map-home-theme .topbar .topbar-actions :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.submit-trail-cta,.basemap-toggle)){padding:6px 4px!important;gap:5px!important;justify-content:center!important;align-items:center!important}
+  :global(.map-home-theme .topbar .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child,.submit-trail-cta span)){width:100%;font-size:12px!important;line-height:1.15!important;font-weight:700!important;white-space:normal!important;text-align:center;overflow-wrap:normal}
+  :global(.map-home-theme .topbar .topbar-actions .map-tool-icon){width:34px!important;height:34px!important;flex-basis:34px!important}
+  :global(.map-home-theme .topbar .topbar-actions .map-tool-icon svg){width:34px!important;height:34px!important}
+  :global(.map-home-theme .topbar #sosButton){font-size:22px!important}
+  @media(min-width:761px) and (max-width:1100px){
+    :global(.map-home-theme .topbar){height:94px!important;padding:6px 10px!important;gap:8px!important}
+    :global(.map-home-theme .topbar .map-brand-logo){width:clamp(110px,16vw,180px);height:72px!important}
+    :global(.map-home-theme .topbar .topbar-actions){--control-width:clamp(48px,7.2vw,76px);gap:4px!important}
+    :global(.map-home-theme .topbar .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child,.submit-trail-cta span)){font-size:10px!important}
+  }
+  @media(max-width:760px){
+    :global(.map-home-theme .topbar){height:84px!important;padding:5px 12px!important}
+    :global(.map-home-theme .topbar .map-brand-logo){width:min(300px,80vw);height:68px!important}
+    :global(.map-home-theme .topbar .topbar-actions){display:grid;gap:3px!important;--control-width:100%}
+    :global(.map-home-theme .topbar .topbar-actions > :is(.trail-menu-toggle,.locate-btn,.shelter-btn,.submit-trail-cta,#sosButton,.basemap-control)),:global(.map-home-theme .topbar .topbar-actions .basemap-toggle){width:100%!important;min-width:0!important;max-width:none!important;height:70px!important;min-height:70px!important}
+    :global(.map-home-theme .topbar .topbar-actions :is(.btn-label,.tool-label,.basemap-toggle>span:last-child,.submit-trail-cta span)){font-size:9px!important;overflow-wrap:anywhere}
+    :global(.map-home-theme .topbar .topbar-actions .map-tool-icon){width:26px!important;height:26px!important;flex-basis:26px!important}
+    :global(.map-home-theme .topbar .topbar-actions .map-tool-icon svg){width:26px!important;height:26px!important}
+    :global(.map-home-theme .topbar #sosButton){font-size:15px!important}
+  }
 </style>
